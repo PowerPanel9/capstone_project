@@ -2,13 +2,13 @@
 
 # SITE Capstone Project
 
-SITE Course Year: **20__**
+SITE Course Year: **2026**
 
-Cohort: **Add Company Sponsor Name**
+Cohort: **Salesforce**
 
-Team Member Names:**Insert Team Member Names**
+Team Member Names:**Ariane Doris Umuhire, Ardelia Putridaryana, Zainab Adeola**
 
-Mentors Names: **Insert Professional Mentor Names**
+Mentors Names: **Sankar Rao, Bhogi, Bhavna Hirani, Mayank Dwivedi**
 
 Project Code Repository Links
 
