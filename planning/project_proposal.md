@@ -1,6 +1,6 @@
 # Project Proposal
 
-Pod Members: **Zainab Adeola, Ariane Doris Umunire, Ardelia Putridaryana**
+Pod Members: **Zainab Adeola, Ariane Doris Umuhire, Ardelia Putridaryana**
 
 ## Problem Statement
 
