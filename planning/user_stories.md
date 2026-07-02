@@ -60,10 +60,10 @@ The following table outlines the user stories prioritized for this project.
 | 4 | As a client, I want to be able to show that a job listing has been completed or filled, so I don't get any more providers applying to my listing. | Client | Completed Listing |
 | 5 | As a provider, I want to be able to talk with my client about the job, so I can get more information about a listing. | Both | Inbox |
 | 6 | As a client, I want to know which provider is qualified and trustworthy for the job, so I can ensure that my job gets done efficiently and effectively. | Client | Reviews |
-| 7 | As a client, I want to be able to post my listings with images or without images, so providers can understand what I need. | Client | Post Listings |
+| 7 | As a client, I want to be able to post my listings with images, so providers can see a visual of the service to be completed.| Client | Post Listings |
 | 8 | As a client, I want to be able to post a listing with no images, so I can maintain my privacy regarding the service I need completed. | Client | Post Listing |
 | 9 | As a provider, I want to display my previous work, so I can attract new clients. | Provider | Skills Tab |
-| 10 | As a provider, I want to set my profile, so I can be connected to parents looking for babysitters in my neighborhood. | Provider | User Profile |
+| 10 | As a provider, I want to set my profile, so I can attract parents looking for a babysitter. | Provider | User Profile |
 | 11 | As a client, I want to be able to see all the applicants under my listing, so I can identify providers relevant to the specific listing. | Client | Listing Page |
 | 12 | As a provider, I want to be able to click into a listing, so I can get more information about the listing. | Provider | Listing Page |
 | 13 | As a provider, I want to be able to scroll through posted listings and see which ones may interest me. | Provider | Feed Scroll |
