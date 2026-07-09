@@ -388,6 +388,9 @@ _(Standing section — maintained throughout Sprints 1–4. Record significant d
 
 | Decision | Context | Alternatives Considered | Tradeoffs |
 |---|---|---|---|
-| _(TODO)_ | | | |
+| Decided to use LocationIQ APIs for locations and address storage | Locations stored in logitudes and latitudes format instead of text formats.| Mapbox| Mapbox required to put down your credit card before accessing tokens. |
+| Using dayjs library for time and date for booking and displaying | dayjs is a library that helps in storing times and dates in databases and bookings. | Doing it manually. | Doing it manually is hard and takes alot of time. |
+|Make separate AI agent, and bookmark endpoints. | Because our AI feature will require an AI agent | Putting bookmark as a boolen in listing.|  Would bookmark everything instead of one listing | 
+| Made a separate model for bookmark | Bookmark is a many to many relationship.| Bookmark was apart of listing datamodel. | Would bookmark everything instead of one listing.|
 
 ---
