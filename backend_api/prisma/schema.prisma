@@ -1,15 +1,155 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+// listing.status — "completed, in progress, or open"
+enum ListingStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+}
+
+// application.status — "pending, accepted, or rejected"
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model User {
+  id               Int      @id @default(autoincrement())
+  name             String
+  imageUrl         String?  @map("image_url") // Profile picture of the user
+  isClient         Boolean  @default(false) @map("is_client") // true = client, false = provider
+  email            String   @unique // Email of the user for sign in
+  password         String // Password (encrypted) of the user
+  createdAt        DateTime @default(now()) @map("created_at")
+  bio              String? // Description of the user
+  skills           String[] // List of skills for providers
+  location         String? // Map / nearby-location feature (type TBD)
+  resumeUrl        String?  @map("resume_url") // Optional link to resume
+  certificationUrl String?  @map("certification_url") // Optional link to certifications
+
+  // Relations
+  listings          Listing[] // Listings this user created
+  bookmarks         Bookmark[] // Listings this user bookmarked
+  reviewsWritten    Review[]  @relation("ReviewsWritten") // Reviews this user left
+  reviewsReceived   Review[]  @relation("ReviewsReceived") // Reviews about this user
+  messagesSent      Message[] @relation("MessagesSent")
+  messagesReceived  Message[] @relation("MessagesReceived")
+  applications      Application[] // Applications this user (as provider) submitted
+  agentConversations AgentConversation[]
+
+  @@map("user")
+}
+
+model Listing {
+  id             Int           @id @default(autoincrement())
+  title          String // Title/header of the job listing
+  imageUrl       String?       @map("image_url") // Optional picture of job listing
+  userId         Int           @map("user_id") // Creator of the listing (FK -> user)
+  isBookmarked   Boolean       @default(false) @map("is_bookmarked")
+  description    String // Description of the job
+  price          Decimal // How much the listing pays
+  skillsRequired String[]      @map("skills_required") // Highlighted skills needed
+  location       String // Where this job/service is needed
+  status         ListingStatus @default(OPEN)
+  createdByAgent Boolean       @default(false) @map("created_by_agent") // AI agent vs. manual
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id])
+  bookmarks    Bookmark[]
+  applications Application[]
+
+  @@map("listing")
+}
+
+model Bookmark {
+  id           Int      @id @default(autoincrement())
+  listingId    Int      @map("listing_id") // Listing being bookmarked (FK -> listing)
+  userId       Int      @map("user_id") // User who bookmarked (FK -> user)
+  isBookmarked Boolean  @default(true) @map("is_bookmarked")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  listing Listing @relation(fields: [listingId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, listingId]) // A user can bookmark a given listing only once
+  @@map("bookmark")
+}
+
+model Review {
+  id          Int     @id @default(autoincrement())
+  stars       Int // 1–5 rating
+  revieweeId  Int     @map("reviewee_id") // Person receiving the review (FK -> user)
+  reviewerId  Int     @map("reviewer_id") // Person leaving the review (FK -> user)
+  title       String // Title/header of the review
+  description String // Description of the review
+  imageUrl    String? @map("image_url") // Optional picture for the review
+
+  // Relations
+  reviewee User @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+  reviewer User @relation("ReviewsWritten", fields: [reviewerId], references: [id])
+
+  @@map("review")
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  userIdFrom Int      @map("user_id_from") // Sender (FK -> user)
+  userIdTo   Int      @map("user_id_to") // Recipient (FK -> user)
+  content    String // Message being sent/received
+  imageUrl   String?  @map("image_url") // Optional attached picture
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  sender    User @relation("MessagesSent", fields: [userIdFrom], references: [id])
+  recipient User @relation("MessagesReceived", fields: [userIdTo], references: [id])
+
+  @@map("message")
+}
+
+model Application {
+  id         Int               @id @default(autoincrement())
+  providerId Int               @map("provider_id") // Provider who applied (FK -> user)
+  listingId  Int               @map("listing_id") // Listing applied to (FK -> listing)
+  status     ApplicationStatus @default(PENDING)
+  createdAt  DateTime          @default(now()) @map("created_at")
+  firstName  String            @map("first_name") // First name of the applicant
+  lastName   String            @map("last_name") // Last name of the applicant
+
+  // Relations
+  provider User    @relation(fields: [providerId], references: [id])
+  listing  Listing @relation(fields: [listingId], references: [id])
+
+  @@unique([providerId, listingId]) // Prevent applying to the same listing twice
+  @@map("application")
+}
+
+model AgentConversation {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id") // User who started the conversation (FK -> user)
+  messages    Json // Full message history between user and agent
+  actionTaken String   @map("action_taken") // "matched_providers" | "matched_listings" | "created_listing"
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("agent_conversation")
 }
