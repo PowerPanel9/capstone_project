@@ -110,16 +110,19 @@ The main purpose of our project is to create a centralized platform that connect
 
 ## 5. Wireframes
 
-_(TODO — at least 3 screens. Add links or embedded images below. For each screen, note the components it implies.)_
+1. **Screen name:** Home / Feed
+   
+   ![Home Feed Wireframe](assets/home-feed-wireframe.png)
+   
+   - Components implied: Navbar, ListingCard, SearchBar, FilterBar, Footer
 
-1. **Screen name:** _(e.g., Home / Feed)_ — link:
-   - Components implied:
 2. **Screen name:** _(e.g., Listing Detail)_ — link:
    - Components implied:
 3. **Screen name:** _(e.g., Profile)_ — link:
    - Components implied:
 
 ---
+
 
 ## 6. Data Model
 
@@ -128,9 +131,9 @@ _(TODO — at least 3 screens. Add links or embedded images below. For each scre
 | Column Name | Type | Description |
 |---|---|---|
 | id | Integer | Primary key |
-| name | Text | Name of the user |
+| first_name | Text | First name of the user |
+| last_name | Text | Last name of the user |
 | image_url | Text | Profile picture of the user |
-| is_client | Boolean | Checks if user is client, if not then they are automatically a provider |
 | email | Text | Email of the user for sign in |
 | password | Text | Password (encrypted) of the user |
 | created_at | Date | Date of profile creation |
@@ -200,6 +203,7 @@ _(TODO — at least 3 screens. Add links or embedded images below. For each scre
 | created_at | Date | Date that the provider applied to the listing |
 | first_name | Text | First name of the user applying |
 | last_name | Text | Last name of the user applying |
+| phone | Text | Phone number of the user applying |
 
 ### `agent_conversation`
 
@@ -222,18 +226,18 @@ _(TODO — at least 3 screens. Add links or embedded images below. For each scre
 | Create | POST | `/api/auth/register` | Register a user | `{ name, email, password }` | `{ id, name, email, createdAt }` | 400 if email already exists, or if missing required fields | 10 |
 | Create | POST | `/api/auth/login` | Log in an existing user | `{ email, password }` | `{ token, user: { id, name, email } }` | 401 if wrong password, 404 if user not found | 10 |
 | Delete | POST | `/api/auth/logout` | Log out existing user | `{ }` | `{ message: "Logged out successfully" }` | 401 if not authenticated | 10 |
-| Read | GET | `/api/users` | Get currently logged in user | — | `{ id, name, email, image_url, bio, skills, location }` | 401 if no valid token | 10 |
-| Update | PUT | `/api/users` | Update user profile | `{ name, image_url, bio, skills, location, resume_url, certification_url }` | `{ id, name, image_url, bio, skills, location, resume_url, certification_url }` | 401 if not authenticated, 404 if user not found | 3, 10 |
+| Read | GET | `/api/auth/me` | Get currently logged in user | — | `{ id, name, email, image_url, bio, skills, location }` | 401 if no valid token | 10 |
+| Update | PUT | `/api/users/me` | Update user profile | `{ name, image_url, bio, skills, location, resume_url, certification_url }` | `{ id, name, image_url, bio, skills, location, resume_url, certification_url }` | 401 if not authenticated, 404 if user not found | 3, 10 |
 
 ### Listing
 
 | CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
 |---|---|---|---|---|---|---|---|
-| Create | POST | `/api/listing` | Create a new listing | `{ title, image_url, description, price, skillsRequired, location }` | `{ id, title, description, price, skills_required, location, image_url, status, user_id, createdAt }` | 400 if missing required fields, 401 if not authenticated | 7, 8 |
+| Create | POST | `/api/listings` | Create a new listing | `{ title, image_url, description, price, skills_required, location }` | `{ id, title, description, price, skills_required, location, image_url, status, user_id, created_at }` | 400 if missing required fields, 401 if not authenticated | 7, 8 |
 | Read | GET | `/api/listings` | Get all listings | — | `[{ id, title, description, price, skills_required, location, image_url, status, user_id }]` | 404 if listing is not found | 12, 13 |
 | Read | GET | `/api/listings/:id` | Get one listing by ID | — | `{ id, title, description, price, skills_required, location, image_url, status, user_id }` | 404 if listing is not found | 11, 12 |
 | Read | GET | `/api/listings/user/:user_id` | Get all listings by a specific user | — | `[{ id, title, description, price, skills_required, location, status }]` | 404 if user not found | 11 |
-| Update | PUT | `/api/listings/:id` | Update a listing | `{ title, description, price, skillsRequired, location, imageURL, status }` | `{ id, title, description, price, skills_required, location, image_url, status }` | 404 if listing not found, 401 if not owner | 4, 7 |
+| Update | PUT | `/api/listings/:id` | Update a listing | `{ title, description, price, skills_required, location, image_url, status }` | `{ id, title, description, price, skills_required, location, image_url, status }` | 404 if listing not found, 401 if not owner | 4, 7 |
 | Delete | DELETE | `/api/listings/:id` | Delete a listing | — | `{ message: "Listing deleted successfully" }` | 404 if listing not found, 401 if not owner | 7 |
 
 ### Review
@@ -241,35 +245,43 @@ _(TODO — at least 3 screens. Add links or embedded images below. For each scre
 | CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
 |---|---|---|---|---|---|---|---|
 | Create | POST | `/api/reviews` | Create a review | `{ stars, title, description, image_url }` | `{ id, stars, title, description, image_url, reviewee_id, reviewer_id }` | 400 if missing required fields, 401 if not authenticated | 6 |
-| Read | GET | `/api/reviews` | Get all reviews | — | `{ id, stars, title, description, imageURL, revieweeId, reviewerId }` | 404 if review not found | 6 |
-| Read | GET | `/api/reviews/:id` | Get one review by ID | — | `{ id, stars, title, description, imageURL, revieweeId, reviewerId }` | 404 if review not found | 6 |
-| Delete | DELETE | `/api/review/:id` | Delete a review | — | `{ message: "Review deleted successfully" }` | — | 6 |
+| Read | GET | `/api/reviews/:id` | Get one review by ID | — | `{ id, stars, title, description, image_url, reviewee_id, reviewer_id }` | 404 if review not found | 6 |
+| Read | GET | `/api/reviews/user/:user_id` | Get all reviews for a specific user | — | `[{ id, stars, title, description, image_url, reviewee_id, reviewer_id }]` | 404 if user not found | 6 |
+| Delete | DELETE | `/api/reviews/:id` | Delete a review | — | `{ message: "Review deleted successfully" }` | — | 6 |
 
 ### Messages
 
 | CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
 |---|---|---|---|---|---|---|---|
-| Create | POST | `/api/messages` | Send a message | `{ user_id_to, content, imageURL }` | `{ id, user_id_from, user_id_to, content, image_url, createdAt }` | 400 if missing required fields, 401 if not authenticated, 404 if recipient not found | 5 |
-| Read | GET | `/api/messages/:userId` | Get all messages between current user and another user | — | `[{ id, user_id_from, user_id_to, content, image_url, createdAt }]` | 404 if no messages found, 401 if not authenticated | 5 |
-| Read | GET | `/api/messages.inbox` | Get all conversations for current user (inbox) | — | `[{ user_id_from, user_id_to, content, createdAt }]` | 401 if not authenticated | 5 |
+| Create | POST | `/api/messages` | Send a message | `{ user_id_to, content, image_url }` | `{ id, user_id_from, user_id_to, content, image_url, created_at }` | 400 if missing required fields, 401 if not authenticated, 404 if recipient not found | 5 |
+| Read | GET | `/api/messages/:user_id` | Get all messages between current user and another user | — | `[{ id, user_id_from, user_id_to, content, image_url, created_at }]` | 404 if no messages found, 401 if not authenticated | 5 |
+| Read | GET | `/api/messages/inbox` | Get all conversations for current user (inbox) | — | `[{ user_id_from, user_id_to, content, created_at }]` | 401 if not authenticated | 5 |
 
 ### Application
 
 | CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
 |---|---|---|---|---|---|---|---|
-| Create | POST | `/api/applications` | Apply to a listing | `{ listing_id }` | `{ id, provider_id, listing_id, status, createdAt }` | 400 if already applied, 401 if not authenticated, 404 if listing not found | 12 |
-| Read | GET | `/api/applications/listing/:listing_id` | Get all applications for a listing (client view) | — | `[{ id, user_id_from, user_id_to, content, image_url, createdAt }]` | 404 if no messages found, 401 if not authenticated | 11 |
-| Read | GET | `/api/applications/user` | Get all applications by current user (provider view) | — | `[{ user_id_from, user_id_to, content, createdAt }]` | 401 if not authenticated | 12 |
+| Create | POST | `/api/applications` | Apply to a listing | `{ listing_id, first_name, last_name, phone }` | `{ id, provider_id, listing_id, status, created_at, first_name, last_name, phone }` | 400 if already applied, 401 if not authenticated, 404 if listing not found | 12 |
+| Read | GET | `/api/applications/listing/:listing_id` | Get all applications for a listing (client view) | — | `[{ id, provider_id, listing_id, status, created_at, first_name, last_name, phone }]` | 404 if no listing found, 401 if not authenticated | 11 |
+| Read | GET | `/api/applications/user` | Get all applications by current user (provider view) | — | `[{ id, provider_id, listing_id, status, created_at, first_name, last_name, phone }]` | 401 if not authenticated | 12 |
 | Update | PUT | `/api/applications/:id` | Accept or reject an application | `{ status }` | `{ id, provider_id, listing_id, status }` | 404 if application not found, 401 if not listing owner | 11 |
-| Delete | DELETE | `/api/applications/:id` | Withdraw an application (provider view) | — | `{ message: "Application withdrawn" }` | 404 if application not found, 401 if not applicant | 12 |
+| Delete | DELETE | `/api/applications/:id` | Withdraw an application (provider view) | — | `{ message: "Application withdraw" }` | 404 if application not found, 401 if not applicant | 12 |
+
+### Bookmark
+
+| CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
+|---|---|---|---|---|---|---|---|
+| Create | POST | `/api/bookmarks` | Bookmark a listing | `{ listing_id }` | `{ id, user_id, listing_id, created_at }` | 400 if already bookmarked, 401 if not authenticated | 13 |
+| Read | GET | `/api/bookmarks` | Get all bookmarks for current user | — | `[{ id, listing_id, user_id, created_at }]` | 401 if not authenticated | 13 |
+| Delete | DELETE | `/api/bookmarks/:id` | Remove a bookmark | — | `{ message: "Bookmark removed successfully" }` | 404 if bookmark not found, 401 if not owner | 13 |
 
 ### Agent
 
 | CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
 |---|---|---|---|---|---|---|---|
-| Create | POST | `/api/agent/match` | Send a query to provider AI agent for provider matching | `{ query, user_id, context }` | `{ results: [{ provider, reason, match_score }], agent_message }` | 401 if not authenticated, 500 if agent fails | AI 1, AI 2 |
+| Create | POST | `/api/agent/match` | Send a query to the AI agent for provider or listing matching | `{ query, user_id, context: { skills, location, recent_listings } }` | `{ results: [{ id, name, skills, location, match_score, reason }], agent_message, action_taken }` | 401 if not authenticated, 500 if agent fails | AI 1, AI 2, AI 4 |
 | Create | POST | `/api/agent/create-listing` | Send a description to the agent to create a listing | `{ query, user_id }` | `{ listing: { title, description, price, skills_required, location, status }, agent_message }` | 400 if agent can't extract enough info, 401 if not authenticated, 500 if agent fails | AI 3 |
-| Read | GET | `/api/agent/history/:user_id` | Get past agent interactions | — | `[{ query, action, results, createdAt }]` | 401 if not authenticated | AI 1, AI 3 |
+| Read | GET | `/api/agent/history/:user_id` | Get past agent interactions | — | `[{ query, action, results, created_at }]` | 401 if not authenticated | AI 1, AI 3 |
 
 ---
 
@@ -376,9 +388,12 @@ _How you'll know it's working:_
 
 ### AI Feature Decisions Log
 
-| Decision | Sprint | What changed | Why |
+| Decision | Context | Alternatives Considered | Tradeoffs |
 |---|---|---|---|
-| _(TODO — e.g., Moved AI call from frontend to backend)_ | | | |
+| AI calls run on backend | Need to keep API keys secure and access database. | Frontend AI calls. | More secure but slightly slower. |
+| Chat-style input instead of forms | Users describe what they need in plain language. | Search filters with dropdowns. | More flexible but less precise. |
+| Store conversation history | Users can review past AI interactions. | Only store final results. | Uses more storage but helpful for debugging. |
+| Separate match and create endpoints | Different actions need different validation. | Single `/api/agent` endpoint. | Clearer API but more routes to maintain. |
 
 ---
 
