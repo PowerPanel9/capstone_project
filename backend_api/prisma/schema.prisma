@@ -31,9 +31,9 @@ enum ApplicationStatus {
 
 model User {
   id               Int      @id @default(autoincrement())
-  name             String
+  firstName  String         @map("first_name") // First name of the user
+  lastName   String         @map("last_name") // Last name of the user
   imageUrl         String?  @map("image_url") // Profile picture of the user
-  isClient         Boolean  @default(false) @map("is_client") // true = client, false = provider
   email            String   @unique // Email of the user for sign in
   password         String // Password (encrypted) of the user
   createdAt        DateTime @default(now()) @map("created_at")
@@ -61,7 +61,6 @@ model Listing {
   title          String // Title/header of the job listing
   imageUrl       String?       @map("image_url") // Optional picture of job listing
   userId         Int           @map("user_id") // Creator of the listing (FK -> user)
-  isBookmarked   Boolean       @default(false) @map("is_bookmarked")
   description    String // Description of the job
   price          Decimal // How much the listing pays
   skillsRequired String[]      @map("skills_required") // Highlighted skills needed
@@ -130,8 +129,6 @@ model Application {
   listingId  Int               @map("listing_id") // Listing applied to (FK -> listing)
   status     ApplicationStatus @default(PENDING)
   createdAt  DateTime          @default(now()) @map("created_at")
-  firstName  String            @map("first_name") // First name of the applicant
-  lastName   String            @map("last_name") // Last name of the applicant
 
   // Relations
   provider User    @relation(fields: [providerId], references: [id])
