@@ -1,0 +1,70 @@
+.topbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  background: #fff;
+  border-bottom: 1px solid #D8DCF5;
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1E2340;
+  letter-spacing: -0.2px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6B7280;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.topbar-btn:hover {
+  background: #ECEDF8;
+  color: #1E2340;
+}
+
+.search-wrap {
+  position: relative;
+  margin-left: auto;
+}
+
+.search-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.search-input {
+  padding: 8px 16px 8px 38px;
+  background: #ECEDF8;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 224px;
+  outline: none;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 2px #BAC4E8;
+}

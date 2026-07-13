@@ -1,0 +1,149 @@
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  width: 256px;
+}
+
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
+  flex-shrink: 0;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: #7B8FC8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  color: #fff;
+}
+
+.logo-name {
+  font-weight: 800;
+  font-size: 18px;
+  color: #1E2340;
+  letter-spacing: -0.3px;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s;
+  text-align: left;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  width: 100%;
+  font-family: inherit;
+}
+
+.nav-btn.active {
+  background: #D8DCF5;
+  color: #6678B8;
+  font-weight: 700;
+}
+
+.nav-btn:not(.active) {
+  color: #6B7280;
+}
+
+.nav-btn:not(.active):hover {
+  background: #ECEDF8;
+  color: #1E2340;
+}
+
+.cta-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(to right, #8B9FD4, #9BAEE0);
+  color: #fff;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  box-shadow: 0 1px 4px rgba(139, 159, 212, 0.3);
+  width: 100%;
+  font-family: inherit;
+}
+
+.btn-primary:hover {
+  opacity: 0.88;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(to right, #ECEDF8, #D8DCF5);
+  color: #8B9FD4;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  width: 100%;
+  font-family: inherit;
+}
+
+.btn-secondary:hover {
+  opacity: 0.85;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #ECEDF8;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E2340;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-handle {
+  font-size: 12px;
+  color: #9CA3AF;
+}
