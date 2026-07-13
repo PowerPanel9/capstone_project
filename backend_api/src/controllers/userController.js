@@ -1,6 +1,6 @@
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
-
+const { forwardGeocode, reverseGeocode } = require('../utils/geocoder');
 // Get all users
 const getUsers = async (req, res) => {
     try {
@@ -34,20 +34,56 @@ const getUserById = async (req, res) => {
 
 const updateUser = async (req, res) => {
     try {
-        const { id } = req.params;
-        const {firstName, lastName, imageUrl, bio, skills, location, resumeUrl, certificationUrl} = req.body;
-        const updatedUser = await prisma.user.update({
-            where: { id: parseInt(id) },
-            data: {
-                firstname,
-                lastname,
-                imageUrl,
-                bio,
-                skills,
-                location,
-                resumeUrl,
-                certificationsUrl,
+        const userId = req.user.userId;
+        const {firstName, lastName, imageUrl, bio, skills, addressText,latitude,longitude,resumeUrl, certificationUrl} = req.body;
+        const data  = {
+            firstName,
+            lastName,
+            imageUrl,
+            bio,
+            skills,
+            location: {
+                latitude,
+                longitude,
             },
+            resumeUrl,
+            certificationsUrl
+    
+        }
+        if (addressText) {
+            const {latitude, longitude, locationText} = await forwardGeocode(addressText);
+            data.latitude = latitude;
+            data.longitude = longitude;
+            data.locationText = locationText;
+        }
+
+        if (latitude !=null  && longitude !=null) {
+            const lat = Number(latitude);
+            const lon = Number(longitude);
+           if(lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            return res.status(400).json({ error: "Invalid latitude/longitude range" });
+          }
+          data.latitude = lat;
+          data.longitude = lon;
+          data.locationText = await reverseGeocode(lat, lon);
+        }
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data,
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                bio: true,
+                skills: true,
+                latitude: true,
+                longitude: true,
+                locationText: true,
+                imageUrl: true,
+                resumeUrl: true,
+                certificationUrl: true,
+              },
         });
         res.status(200).json(updatedUser);
     } catch (error) {
