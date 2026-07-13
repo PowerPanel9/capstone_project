@@ -4,9 +4,10 @@ import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { currentUser } from '../../data/mockUser';
 import { mockListings } from '../../data/mockListings';
 import { mockApplications } from '../../data/mockApplications';
+import { mockIncomingApplications } from '../../data/mockIncomingApplications';
 import './UserProfileView.css';
 
-function UserProfileView() {
+function UserProfileView({ userMode, onToggleMode }) {
   const [activeTab, setActiveTab] = useState("All");
   const tabs = ["All", "Listings", "Experience", "About", "Applications"];
 
@@ -19,12 +20,14 @@ function UserProfileView() {
             <div className="profile-avatar-wrap">
               <div className="profile-avatar">{currentUser.initials}</div>
             </div>
-            <button className="edit-btn">Edit Profile</button>
+            <button className="edit-btn" onClick={onToggleMode}>
+              Switch to {userMode === 'client' ? 'Provider' : 'Client'} Mode
+            </button>
           </div>
           <h1 className="profile-name">{currentUser.fullName}</h1>
           <div className="profile-sub">
             <MapPin size={13} />
-            {currentUser.location} · {currentUser.role}
+            {currentUser.location} · {userMode === 'client' ? 'Client' : 'Provider'}
           </div>
           <div className="stats-row">
             {[[currentUser.stats.listings, "Listings"], [currentUser.stats.reviews, "Reviews"], [currentUser.stats.rating, "Rating"]].map(([num, label]) => (
@@ -140,8 +143,14 @@ function UserProfileView() {
         </div>
       )}
 
-      {activeTab === "Applications" && (
+      {activeTab === "Applications" && userMode === "provider" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ fontWeight: 700, color: "#374151", fontSize: 15, marginBottom: 4 }}>
+            Jobs You Applied To
+          </div>
+          <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 8 }}>
+            Track the status of your job applications
+          </div>
           {mockApplications.map((app) => (
             <div key={app.title} className="mini-card">
               <ProfilePicture initials={app.company.slice(0, 2).toUpperCase()} size="xs" />
@@ -150,6 +159,37 @@ function UserProfileView() {
                 <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{app.company}</div>
               </div>
               <span style={{ background: app.bg, color: app.col, padding: "4px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
+                {app.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === "Applications" && userMode === "client" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ fontWeight: 700, color: "#374151", fontSize: 15, marginBottom: 4 }}>
+            Applications Received
+          </div>
+          <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 8 }}>
+            Providers who have applied to your job listings
+          </div>
+          {mockIncomingApplications.map((app) => (
+            <div key={app.id} className="mini-card">
+              <ProfilePicture initials={app.providerAvatar} size="xs" />
+              <div className="mini-info">
+                <div className="mini-title">{app.providerName}</div>
+                <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>Applied to: {app.listingTitle}</div>
+              </div>
+              <span style={{
+                background: app.status === "Pending" ? "#FEF3C7" : app.status === "Accepted" ? "#CCFBF1" : "#FEE2E2",
+                color: app.status === "Pending" ? "#B45309" : app.status === "Accepted" ? "#0F766E" : "#B91C1C",
+                padding: "4px 12px",
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 700,
+                whiteSpace: "nowrap"
+              }}>
                 {app.status}
               </span>
             </div>

@@ -18,7 +18,7 @@
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: #7B8FC8;
+  background: var(--primary, #7B8FC8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,8 +58,8 @@ nav {
 }
 
 .nav-btn.active {
-  background: #D8DCF5;
-  color: #6678B8;
+  background: #E5E7EB;
+  color: var(--primary-dark, #6678B8);
   font-weight: 700;
 }
 
@@ -68,7 +68,7 @@ nav {
 }
 
 .nav-btn:not(.active):hover {
-  background: #ECEDF8;
+  background: #F3F4F6;
   color: #1E2340;
 }
 
@@ -84,7 +84,7 @@ nav {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(to right, #8B9FD4, #9BAEE0);
+  background: var(--primary-gradient, linear-gradient(to right, #8B9FD4, #9BAEE0));
   color: #fff;
   border: none;
   padding: 12px 16px;
@@ -107,8 +107,8 @@ nav {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(to right, #ECEDF8, #D8DCF5);
-  color: #8B9FD4;
+  background: #F3F4F6;
+  color: var(--primary-light, #8B9FD4);
   border: none;
   padding: 12px 16px;
   border-radius: 16px;
@@ -130,7 +130,7 @@ nav {
   gap: 12px;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #ECEDF8;
+  border-top: 1px solid #F3F4F6;
   flex-shrink: 0;
 }
 

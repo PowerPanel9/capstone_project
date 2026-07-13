@@ -8,12 +8,12 @@ const avatarColors = {
   DK: { background: "#CFFAFE", color: "#0E7490" },
   PN: { background: "#FFE4E6", color: "#BE123C" },
   TG: { background: "#FFEDD5", color: "#C2410C" },
-  AR: { background: "#ECEDF8", color: "#6678B8" }
+  AR: { background: "#F3F4F6", color: "#4B5563" }
 };
 
 function ProfilePicture({ initials, size = "md" }) {
   const sizeClass = `avatar-${size}`;
-  const colors = avatarColors[initials] ?? { background: "#ECEDF8", color: "#6678B8" };
+  const colors = avatarColors[initials] ?? { background: "#F3F4F6", color: "#4B5563" };
 
   return (
     <div className={`avatar ${sizeClass}`} style={colors}>

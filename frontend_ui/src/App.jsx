@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar/Sidebar';
 import TopBar from './components/TopBar/TopBar';
 import HomeView from './components/HomeView/HomeView';
@@ -21,6 +21,22 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [bookmarks, setBookmarks] = useState(new Set());
   const [search, setSearch] = useState("");
+  const [userMode, setUserMode] = useState("provider");
+
+  // Load saved mode from localStorage on mount
+  useEffect(() => {
+    const savedMode = localStorage.getItem('worklyUserMode');
+    if (savedMode) {
+      setUserMode(savedMode);
+    }
+  }, []);
+
+  // Toggle between client and provider mode
+  const toggleUserMode = () => {
+    const newMode = userMode === 'client' ? 'provider' : 'client';
+    setUserMode(newMode);
+    localStorage.setItem('worklyUserMode', newMode);
+  };
 
   const navigate = (newView, data) => {
     if (newView === "listing" && data) {
@@ -60,10 +76,11 @@ function App() {
   const isMessagesView = view === "messages";
 
   return (
-    <div className="app">
+    <div className={`app ${userMode}-mode`}>
       <aside className="sidebar" style={{ width: sidebarOpen ? 256 : 0 }}>
         <Sidebar
           currentView={view}
+          userMode={userMode}
           navigate={navigate}
           onOpenAI={() => setShowAIModal(true)}
           onOpenCreate={() => navigate("create-listing")}
@@ -92,6 +109,7 @@ function App() {
           {view === "listing" && selectedListing && (
             <ListingDetailView
               listing={selectedListing}
+              userMode={userMode}
               onBack={() => setView("home")}
               onApply={() => setShowApplyModal(true)}
             />
@@ -99,7 +117,12 @@ function App() {
 
           {view === "messages" && <MessagesView />}
 
-          {view === "profile" && <UserProfileView />}
+          {view === "profile" && (
+            <UserProfileView
+              userMode={userMode}
+              onToggleMode={toggleUserMode}
+            />
+          )}
 
           {view === "create-listing" && <CreateListingView onDone={() => setView("home")} />}
 

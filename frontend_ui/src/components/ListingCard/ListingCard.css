@@ -1,7 +1,7 @@
 .card {
   background: #fff;
   border-radius: 24px;
-  border: 1px solid #D8DCF5;
+  border: 1px solid #E5E7EB;
   box-shadow: 0 1px 3px rgba(139, 159, 212, 0.1);
   cursor: pointer;
   overflow: hidden;
@@ -16,7 +16,7 @@
 .card-img {
   height: 208px;
   overflow: hidden;
-  background: #ECEDF8;
+  background: #F3F4F6;
 }
 
 .card-img img {
@@ -65,8 +65,8 @@
 }
 
 .badge {
-  background: #ECEDF8;
-  color: #7B8FC8;
+  background: #F3F4F6;
+  color: var(--primary, #7B8FC8);
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 12px;
@@ -85,16 +85,16 @@
   align-items: center;
   justify-content: center;
   transition: background 0.15s, color 0.15s;
-  color: #BAC4E8;
+  color: #D1D5DB;
 }
 
 .bookmark-btn:hover {
-  background: #ECEDF8;
-  color: #7B8FC8;
+  background: #F3F4F6;
+  color: var(--primary, #7B8FC8);
 }
 
 .bookmark-btn.active {
-  color: #7B8FC8;
+  color: var(--primary, #7B8FC8);
 }
 
 .card-title {
@@ -119,8 +119,8 @@
 }
 
 .tag {
-  background: #ECEDF8;
-  color: #7B8FC8;
+  background: #F3F4F6;
+  color: var(--primary, #7B8FC8);
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
@@ -132,7 +132,7 @@
   justify-content: space-between;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #ECEDF8;
+  border-top: 1px solid #F3F4F6;
 }
 
 .card-rate {

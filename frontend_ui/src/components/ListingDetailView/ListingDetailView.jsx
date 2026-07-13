@@ -2,7 +2,7 @@ import { ChevronLeft, Clock, MapPin, Star, Briefcase, Check } from 'lucide-react
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import './ListingDetailView.css';
 
-function ListingDetailView({ listing, onBack, onApply }) {
+function ListingDetailView({ listing, userMode, onBack, onApply }) {
   return (
     <div className="detail-wrap">
       <button className="back-btn" onClick={onBack}>
@@ -35,9 +35,11 @@ function ListingDetailView({ listing, onBack, onApply }) {
                 {listing.poster.location}
               </p>
             </div>
-            <button className="apply-btn" onClick={onApply}>
-              Apply Now
-            </button>
+            {userMode === 'provider' && (
+              <button className="apply-btn" onClick={onApply}>
+                Apply Now
+              </button>
+            )}
           </div>
 
           <div className="stats-grid">

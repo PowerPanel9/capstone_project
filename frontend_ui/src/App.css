@@ -7,7 +7,7 @@
 
 .sidebar {
   background: #fff;
-  border-right: 1px solid #D8DCF5;
+  border-right: 1px solid #E5E7EB;
   flex-shrink: 0;
   overflow: hidden;
   transition: width 0.3s;

@@ -60,7 +60,7 @@
 .field-input {
   width: 100%;
   padding: 10px 16px;
-  background: #ECEDF8;
+  background: #F3F4F6;
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -69,11 +69,11 @@
 }
 
 .field-input:focus {
-  box-shadow: 0 0 0 2px #AABAE8;
+  box-shadow: 0 0 0 2px var(--primary-light, #AABAE8);
 }
 
 .exp-wrap {
-  background: #F5F4FC;
+  background: #F9FAFB;
   border-radius: 16px;
   padding: 16px;
   display: flex;
@@ -85,7 +85,7 @@
   width: 100%;
   padding: 8px 12px;
   background: #fff;
-  border: 1px solid #ECEDF8;
+  border: 1px solid #F3F4F6;
   border-radius: 12px;
   font-size: 14px;
   font-family: inherit;
@@ -93,7 +93,7 @@
 }
 
 .exp-input:focus {
-  box-shadow: 0 0 0 2px #BAC4E8;
+  box-shadow: 0 0 0 2px #D1D5DB;
 }
 
 .add-more-btn {
@@ -116,7 +116,7 @@
 
 .modal-submit {
   width: 100%;
-  background: #7B8FC8;
+  background: var(--primary, #7B8FC8);
   color: #fff;
   border: none;
   padding: 16px;
@@ -130,5 +130,5 @@
 }
 
 .modal-submit:hover {
-  background: #6678B8;
+  background: var(--primary-dark, #6678B8);
 }

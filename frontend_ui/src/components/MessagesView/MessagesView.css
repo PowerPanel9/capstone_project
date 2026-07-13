@@ -6,7 +6,7 @@
 .conv-list {
   width: 288px;
   background: #fff;
-  border-right: 1px solid #D8DCF5;
+  border-right: 1px solid #E5E7EB;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -14,7 +14,7 @@
 
 .conv-search {
   padding: 16px;
-  border-bottom: 1px solid #ECEDF8;
+  border-bottom: 1px solid #F3F4F6;
 }
 
 .conv-search-inner {
@@ -33,7 +33,7 @@
 .conv-search-input {
   width: 100%;
   padding: 10px 12px 10px 36px;
-  background: #ECEDF8;
+  background: #F3F4F6;
   border: none;
   border-radius: 16px;
   font-size: 14px;
@@ -61,12 +61,12 @@
 }
 
 .conv-item:hover {
-  background: #F5F4FC;
+  background: #F9FAFB;
 }
 
 .conv-item.active {
-  background: #F5F4FC;
-  border-right: 2px solid #7B8FC8;
+  background: #F9FAFB;
+  border-right: 2px solid var(--primary, #7B8FC8);
 }
 
 .conv-avatar-wrap {
@@ -80,7 +80,7 @@
   right: -4px;
   width: 16px;
   height: 16px;
-  background: #7B8FC8;
+  background: var(--primary, #7B8FC8);
   color: #fff;
   border-radius: 50%;
   font-size: 9px;
@@ -133,7 +133,7 @@
   align-items: center;
   gap: 12px;
   padding: 16px 24px;
-  border-bottom: 1px solid #ECEDF8;
+  border-bottom: 1px solid #F3F4F6;
   flex-shrink: 0;
 }
 
@@ -185,13 +185,13 @@
 }
 
 .chat-bubble.me {
-  background: #7B8FC8;
+  background: var(--primary, #7B8FC8);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 
 .chat-bubble.them {
-  background: #ECEDF8;
+  background: #F3F4F6;
   color: #1E2340;
   border-bottom-left-radius: 4px;
 }
@@ -211,7 +211,7 @@
 
 .chat-input-bar {
   padding: 16px;
-  border-top: 1px solid #ECEDF8;
+  border-top: 1px solid #F3F4F6;
   flex-shrink: 0;
 }
 
@@ -219,7 +219,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #ECEDF8;
+  background: #F3F4F6;
   border-radius: 16px;
   padding: 12px 16px;
 }
@@ -236,7 +236,7 @@
 .send-btn {
   width: 32px;
   height: 32px;
-  background: #7B8FC8;
+  background: var(--primary, #7B8FC8);
   border: none;
   border-radius: 10px;
   display: flex;
@@ -249,5 +249,5 @@
 }
 
 .send-btn:hover {
-  background: #6678B8;
+  background: var(--primary-dark, #6678B8);
 }

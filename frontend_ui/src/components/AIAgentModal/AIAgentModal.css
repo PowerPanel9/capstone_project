@@ -15,7 +15,7 @@
   align-items: center;
   gap: 12px;
   padding: 20px;
-  border-bottom: 1px solid #ECEDF8;
+  border-bottom: 1px solid #F3F4F6;
   flex-shrink: 0;
 }
 
@@ -23,7 +23,7 @@
   width: 40px;
   height: 40px;
   border-radius: 14px;
-  background: #7B8FC8;
+  background: var(--primary, #7B8FC8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -65,7 +65,7 @@
   width: 28px;
   height: 28px;
   border-radius: 10px;
-  background: #ECEDF8;
+  background: #F3F4F6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,13 +82,13 @@
 }
 
 .ai-bubble.ai {
-  background: #ECEDF8;
+  background: #F3F4F6;
   color: #1E2340;
   border-bottom-left-radius: 4px;
 }
 
 .ai-bubble.user {
-  background: #7B8FC8;
+  background: var(--primary, #7B8FC8);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
@@ -102,9 +102,9 @@
 
 .suggestion-btn {
   font-size: 12px;
-  background: #ECEDF8;
+  background: #F3F4F6;
   color: #374151;
-  border: 1px solid #D8DCF5;
+  border: 1px solid #E5E7EB;
   border-radius: 999px;
   padding: 6px 12px;
   font-weight: 600;
@@ -114,12 +114,12 @@
 }
 
 .suggestion-btn:hover {
-  background: #D8DCF5;
+  background: #E5E7EB;
 }
 
 .ai-input-bar {
   padding: 16px;
-  border-top: 1px solid #ECEDF8;
+  border-top: 1px solid #F3F4F6;
   flex-shrink: 0;
 }
 
@@ -127,7 +127,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #ECEDF8;
+  background: #F3F4F6;
   border-radius: 16px;
   padding: 10px 16px;
 }
@@ -144,7 +144,7 @@
 .ai-send-btn {
   width: 32px;
   height: 32px;
-  background: #7B8FC8;
+  background: var(--primary, #7B8FC8);
   border: none;
   border-radius: 10px;
   display: flex;
@@ -157,5 +157,5 @@
 }
 
 .ai-send-btn:hover {
-  background: #6678B8;
+  background: var(--primary-dark, #6678B8);
 }

@@ -9,7 +9,7 @@
   margin-bottom: 24px;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #8B9FD4, #7B8FC8, #9BAEE0);
+  background: var(--primary-gradient-ai, linear-gradient(135deg, #8B9FD4, #7B8FC8, #9BAEE0));
 }
 
 .ai-banner-blob1 {
@@ -79,7 +79,7 @@
 
 .ai-ask-btn {
   background: #fff;
-  color: #8B9FD4;
+  color: var(--primary-light, #8B9FD4);
   border: none;
   padding: 6px 16px;
   border-radius: 10px;
@@ -116,7 +116,7 @@
 
 .view-all {
   font-size: 14px;
-  color: #7B8FC8;
+  color: var(--primary, #7B8FC8);
   font-weight: 600;
   background: none;
   border: none;

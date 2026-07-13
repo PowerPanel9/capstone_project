@@ -3,12 +3,12 @@ import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { currentUser } from '../../data/mockUser';
 import './Sidebar.css';
 
-function Sidebar({ currentView, navigate, onOpenAI, onOpenCreate }) {
+function Sidebar({ currentView, userMode, navigate, onOpenAI, onOpenCreate }) {
   const navItems = [
     { icon: Home, label: "Home", view: "home" },
     { icon: User, label: "Profile", view: "profile" },
     { icon: MessageSquare, label: "Messages", view: "messages" },
-    { icon: Bookmark, label: "Bookmarks", view: "bookmarks" }
+    ...(userMode === 'provider' ? [{ icon: Bookmark, label: "Bookmarks", view: "bookmarks" }] : [])
   ];
 
   return (
@@ -34,10 +34,12 @@ function Sidebar({ currentView, navigate, onOpenAI, onOpenCreate }) {
       </nav>
 
       <div className="cta-wrap">
-        <button className="btn-primary" onClick={onOpenCreate}>
-          <Plus size={15} />
-          Post a Listing
-        </button>
+        {userMode === 'client' && (
+          <button className="btn-primary" onClick={onOpenCreate}>
+            <Plus size={15} />
+            Post a Listing
+          </button>
+        )}
         <button className="btn-secondary" onClick={onOpenAI}>
           <Sparkles size={15} />
           AI Assistant
@@ -48,7 +50,7 @@ function Sidebar({ currentView, navigate, onOpenAI, onOpenCreate }) {
         <ProfilePicture initials={currentUser.initials} size="xs" />
         <div style={{ minWidth: 0 }}>
           <p className="user-name">{currentUser.fullName}</p>
-          <p className="user-handle">{currentUser.handle}</p>
+          <p className="user-handle">{userMode === 'client' ? 'Client' : 'Provider'}</p>
         </div>
       </div>
     </div>
