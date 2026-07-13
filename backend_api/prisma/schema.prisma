@@ -98,7 +98,6 @@ model Bookmark {
   id           Int      @id @default(autoincrement())
   listingId    Int      @map("listing_id") // Listing being bookmarked (FK -> listing)
   userId       Int      @map("user_id") // User who bookmarked (FK -> user)
-  isBookmarked Boolean  @default(true) @map("is_bookmarked")
   createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations

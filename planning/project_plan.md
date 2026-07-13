@@ -166,7 +166,6 @@ The main purpose of our project is to create a centralized platform that connect
 | id | Integer | Primary key |
 | listing_id | Integer | Id of the listing being bookmarked (Foreign key) |
 | user_id | Integer | Id of the user who bookmarked the listing (Foreign key) |
-| is_bookmarked | Boolean | Shows whether a listing has been bookmarked by the user |
 | created_at | Date | When the listing gets bookmarked by the user |
 
 ### `review`
