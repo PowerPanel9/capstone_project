@@ -9,7 +9,9 @@ import './UserProfileView.css';
 
 function UserProfileView({ userMode, onToggleMode }) {
   const [activeTab, setActiveTab] = useState("All");
-  const tabs = ["All", "Listings", "Experience", "About", "Applications"];
+  const tabs = userMode === 'client'
+    ? ["All", "Listings", "Experience", "About", "Applications"]
+    : ["All", "Experience", "About", "Applications"];
 
   return (
     <div className="profile-wrap">
