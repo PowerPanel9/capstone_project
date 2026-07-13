@@ -177,7 +177,7 @@ async function createListing(req, res) {
         price,
         skillsRequired: skills_required || [],
         location,
-        userId: req.user.id, // the owner is whoever is logged in
+        userId: req.user.userId, // the owner is whoever is logged in (from the token)
       },
     });
 
@@ -206,7 +206,7 @@ async function updateListing(req, res) {
     }
 
     // Contract: 401 if not owner.
-    if (listing.userId !== req.user.id) {
+    if (listing.userId !== req.user.userId) {
       return res.status(401).json({ error: "Not authorized" });
     }
 
@@ -279,7 +279,7 @@ async function deleteListing(req, res) {
       return res.status(404).json({ error: "Listing not found" });
     }
 
-    if (listing.userId !== req.user.id) {
+    if (listing.userId !== req.user.userId) {
       return res.status(401).json({ error: "Not authorized" });
     }
 
