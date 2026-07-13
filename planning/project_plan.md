@@ -233,11 +233,13 @@ The main purpose of our project is to create a centralized platform that connect
 
 | CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
 |---|---|---|---|---|---|---|---|
-| Create | POST | `/api/listings` | Create a new listing | `{ title, image_url, description, price, skills_required, location }` | `{ id, title, description, price, skills_required, location, image_url, status, user_id, created_at }` | 400 if missing required fields, 401 if not authenticated | 7, 8 |
-| Read | GET | `/api/listings` | Get all listings | — | `[{ id, title, description, price, skills_required, location, image_url, status, user_id }]` | 404 if listing is not found | 12, 13 |
-| Read | GET | `/api/listings/:id` | Get one listing by ID | — | `{ id, title, description, price, skills_required, location, image_url, status, user_id }` | 404 if listing is not found | 11, 12 |
-| Read | GET | `/api/listings/user/:user_id` | Get all listings by a specific user | — | `[{ id, title, description, price, skills_required, location, status }]` | 404 if user not found | 11 |
-| Update | PUT | `/api/listings/:id` | Update a listing | `{ title, description, price, skills_required, location, image_url, status }` | `{ id, title, description, price, skills_required, location, image_url, status }` | 404 if listing not found, 401 if not owner | 4, 7 |
+| Create | POST | `/api/listings` | Create a new listing | `{ title, category, custom_category, image_url, description, price, skills_required, location }` | `{ id, title, category, custom_category, description, price, skills_required, location, image_url, status, user_id, created_at }` | 400 if missing required fields, 400 if invalid category, 400 if category is OTHER and custom_category missing, 401 if not authenticated | 7, 8 |
+| Read | GET | `/api/listings` | Get all listings (supports `?search=`, `?category=`, `?custom_category=`, `?location=` filters for the search bar) | — | `[{ id, title, category, custom_category, description, price, skills_required, location, image_url, status, user_id }]` | 400 if invalid category, 404 if listing is not found | 12, 13 |
+| Read | GET | `/api/listings/:id` | Get one listing by ID | — | `{ id, title, category, custom_category, description, price, skills_required, location, image_url, status, user_id }` | 404 if listing is not found | 11, 12 |
+| Read | GET | `/api/listings/user/:user_id` | Get all listings by a specific user | — | `[{ id, title, category, custom_category, description, price, skills_required, location, status }]` | 404 if user not found | 11 |
+| Update | PUT | `/api/listings/:id` | Update a listing | `{ title, category, custom_category, description, price, skills_required, location, image_url, status }` | `{ id, title, category, custom_category, description, price, skills_required, location, image_url, status }` | 400 if invalid category, 400 if category is OTHER and custom_category missing, 404 if listing not found, 401 if not owner | 4, 7 |
+
+> **Note on `custom_category`:** required only when `category` is `OTHER` (free text the user types, e.g. "dog walking"). For any fixed category it is ignored and stored as `null`. The search bar matches it partially and case-insensitively, and the main `?search=` keyword also searches this field.
 | Delete | DELETE | `/api/listings/:id` | Delete a listing | — | `{ message: "Listing deleted successfully" }` | 404 if listing not found, 401 if not owner | 7 |
 
 ### Review
