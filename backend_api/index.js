@@ -1,35 +1,33 @@
 // index.js
 // This is the entry point for the backend server.
-// It creates the Express app, applies some middleware, connects the routes,
+// It creates the Express app, applies middleware, connects routes,
 // and starts listening for requests.
-
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 require("dotenv").config();
 
-// Import the listing routes (all /api/listings endpoints live in here).
+const authRoutes = require("./src/routes/authRoutes");
 const listingsRoutes = require("./src/routes/listingsRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ----- Middleware (runs on every request, before the routes) -----
-app.use(cors());            // let the React frontend call this API
-app.use(express.json());    // parse incoming JSON bodies into req.body
-app.use(morgan("dev"));     // log each request to the terminal (helpful while testing)
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(morgan("dev"));
 
-// ----- Routes -----
-// Any URL starting with /api/listings is handled by listingsRoutes.
-// So router.get("/") inside that file becomes GET /api/listings, etc.
+// Routes
+app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingsRoutes);
 
-// A simple health-check route so you can confirm the server is alive.
+// Basic test route
 app.get("/", (req, res) => {
-  res.send("Side Hustle API is running");
+  res.json({ message: "Server is running!" });
 });
 
-// ----- Start the server -----
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
