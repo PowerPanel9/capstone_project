@@ -19,6 +19,7 @@ const UserProfile = ({ userId }) => {
         <div>
             <h1>User Profile</h1>
             <p>Name: {userData.firstName} {userData.lastName}</p>
+            <p>Hello {userData.firstName}</p>
             <p>Email: {userData.email}</p>
             
         </div>
