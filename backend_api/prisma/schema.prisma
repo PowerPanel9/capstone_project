@@ -35,7 +35,8 @@ model User {
   lastName   String         @map("last_name") // Last name of the user
   imageUrl         String?  @map("image_url") // Profile picture of the user
   email            String   @unique // Email of the user for sign in
-  password         String // Password (encrypted) of the user
+  password         String? // Password (encrypted) - NULL for OAuth users
+  authProvider     String   @default("local") @map("auth_provider") // "local" or "google"
   createdAt        DateTime @default(now()) @map("created_at")
   bio              String? // Description of the user
   skills           String[] // List of skills for providers

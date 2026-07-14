@@ -25,7 +25,7 @@ function CreateListingView({ onDone }) {
 
       <div className="form-card">
         <div>
-          <label className="form-label">Job Title</label>
+          <label className="form-label">Listing Title</label>
           <input
             className="form-input"
             value={form.title}
