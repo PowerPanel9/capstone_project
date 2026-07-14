@@ -2,8 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
-import UserProfile from './components/userProfile';
-
+import UserProfile from "./components/userProfile/userProfile";
 const App = () => {
   const [user, setUser] = useState(null);
 
