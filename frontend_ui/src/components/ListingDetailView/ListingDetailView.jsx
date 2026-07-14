@@ -1,8 +1,14 @@
 import { ChevronLeft, Clock, MapPin, Star, Briefcase, Check } from 'lucide-react';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
+import { fullName, initials } from '../../utils/user';
 import './ListingDetailView.css';
 
 function ListingDetailView({ listing, userMode, onBack, onApply }) {
+  // Show the user's typed-in category text when the category is OTHER,
+  // otherwise show the fixed category value.
+  const categoryLabel =
+    listing.category === "OTHER" ? listing.customCategory : listing.category;
+
   return (
     <div className="detail-wrap">
       <button className="back-btn" onClick={onBack}>
@@ -11,9 +17,9 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
       </button>
 
       <div className="detail-card">
-        {listing.image && (
+        {listing.imageUrl && (
           <div className="detail-img">
-            <img src={listing.image} alt={listing.title} />
+            <img src={listing.imageUrl} alt={listing.title} />
           </div>
         )}
 
@@ -21,10 +27,10 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
           <div className="detail-top">
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span className="badge">{listing.category}</span>
+                <span className="badge">{categoryLabel}</span>
                 <span style={{ fontSize: 12, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 4 }}>
                   <Clock size={10} />
-                  {listing.posted}
+                  {new Date(listing.createdAt).toLocaleDateString()}
                 </span>
               </div>
               <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1E2340", letterSpacing: "-0.4px", marginBottom: 4 }}>
@@ -32,7 +38,7 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
               </h1>
               <p style={{ fontSize: 14, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 6 }}>
                 <MapPin size={13} />
-                {listing.poster.location}
+                {listing.user?.location ?? listing.location}
               </p>
             </div>
             {userMode === 'provider' && (
@@ -45,15 +51,11 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
           <div className="stats-grid">
             <div>
               <div className="stat-label">Rate</div>
-              <div className="stat-val">{listing.rate}</div>
+              <div className="stat-val">${listing.price}</div>
             </div>
             <div>
-              <div className="stat-label">Work type</div>
-              <div className="stat-val" style={{ fontSize: 14 }}>{listing.type}</div>
-            </div>
-            <div>
-              <div className="stat-label">Applicants</div>
-              <div className="stat-val">{listing.applicants}</div>
+              <div className="stat-label">Category</div>
+              <div className="stat-val" style={{ fontSize: 14 }}>{categoryLabel}</div>
             </div>
           </div>
 
@@ -62,15 +64,15 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
               <div>
                 <div className="section-title">About this role</div>
                 <p className="about-text">
-                  {listing.description} This is an exciting opportunity for someone passionate about their craft and looking to make a real impact on a high-growth team.
+                  {listing.description}
                 </p>
               </div>
 
               <div>
                 <div className="section-title">Required Skills</div>
                 <div className="skill-tags">
-                  {[...listing.tags, "Communication", "Problem Solving"].map((tag) => (
-                    <span key={tag} className="skill-tag">{tag}</span>
+                  {listing.skillsRequired.map((skill) => (
+                    <span key={skill} className="skill-tag">{skill}</span>
                   ))}
                 </div>
               </div>
@@ -79,10 +81,10 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
             <div className="client-card">
               <div className="client-title">About the Client</div>
               <div className="client-row">
-                <ProfilePicture initials={listing.poster.avatar} size="xs" />
+                <ProfilePicture initials={initials(listing.user)} size="xs" />
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 14, color: "#1E2340" }}>
-                    {listing.poster.name}
+                    {fullName(listing.user)}
                   </p>
                   <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#6B7280" }}>
                     <Star size={11} />
@@ -91,7 +93,7 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
                 </div>
               </div>
               <div className="client-details">
-                <p><MapPin size={12} />{listing.poster.location}</p>
+                <p><MapPin size={12} />{listing.user?.location ?? listing.location}</p>
                 <p><Briefcase size={12} />8 jobs posted</p>
                 <p><Check size={12} />Payment verified</p>
               </div>

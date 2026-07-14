@@ -75,12 +75,17 @@
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   margin-bottom: 32px;
   padding: 20px;
   background: #F9FAFB;
   border-radius: 16px;
+}
+
+/* Center each stat within its column so Rate and Category fill the row evenly */
+.stats-grid > div {
+  text-align: left;
 }
 
 .stat-label {
