@@ -1,0 +1,46 @@
+[
+  {
+    "userEmail": "marcus.chen@seed.local",
+    "messages": [
+      {
+        "role": "user",
+        "content": "I need help finding someone to mow my lawn"
+      },
+      {
+        "role": "assistant",
+        "content": "I can help you with that! I found 3 providers in your area who specialize in lawn care. Would you like me to show you their profiles?"
+      },
+      {
+        "role": "user",
+        "content": "Yes please"
+      },
+      {
+        "role": "assistant",
+        "content": "Great! I've matched you with Riley Patel who has excellent reviews for lawn care in Lincoln, NE. They're available this weekend."
+      }
+    ],
+    "actionTaken": "matched_providers"
+  },
+  {
+    "userEmail": "sarah.mills@seed.local",
+    "messages": [
+      {
+        "role": "user",
+        "content": "I'm moving out and need a deep clean"
+      },
+      {
+        "role": "assistant",
+        "content": "I can help you create a listing for deep cleaning services. What's your budget and timeline?"
+      },
+      {
+        "role": "user",
+        "content": "Around $90 and flexible this week"
+      },
+      {
+        "role": "assistant",
+        "content": "Perfect! I've created a listing for a 2-bedroom apartment deep clean with your budget. I found Jamie Thompson who specializes in move-out cleaning!"
+      }
+    ],
+    "actionTaken": "created_listing"
+  }
+]

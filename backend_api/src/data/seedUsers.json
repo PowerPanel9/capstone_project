@@ -1,0 +1,80 @@
+[
+  {
+    "firstName": "Alex",
+    "lastName": "Rivera",
+    "email": "alex.rivera@seed.local",
+    "password": "seed-password",
+    "authProvider": "local",
+    "bio": "Experienced handyman and general contractor. I've been helping homeowners with repairs and renovations for over 10 years.",
+    "skills": ["Plumbing", "Electrical", "Carpentry", "Painting"],
+    "location": "Lincoln, NE",
+    "imageUrl": null,
+    "resumeUrl": null,
+    "certificationUrl": null
+  },
+  {
+    "firstName": "Jamie",
+    "lastName": "Thompson",
+    "email": "jamie.thompson@seed.local",
+    "password": "seed-password",
+    "authProvider": "local",
+    "bio": "Professional cleaner with attention to detail. I specialize in deep cleaning and move-out services.",
+    "skills": ["Deep Cleaning", "Move-Out Cleaning", "Organizing"],
+    "location": "Omaha, NE",
+    "imageUrl": null,
+    "resumeUrl": null,
+    "certificationUrl": null
+  },
+  {
+    "firstName": "Taylor",
+    "lastName": "Kim",
+    "email": "taylor.kim@seed.local",
+    "password": "seed-password",
+    "authProvider": "local",
+    "bio": "Math tutor and recent education graduate. I love helping students build confidence in STEM subjects.",
+    "skills": ["Math", "Pre-Algebra", "Algebra", "Tutoring", "Test Prep"],
+    "location": "Remote",
+    "imageUrl": null,
+    "resumeUrl": null,
+    "certificationUrl": null
+  },
+  {
+    "firstName": "Morgan",
+    "lastName": "Davis",
+    "email": "morgan.davis@seed.local",
+    "password": "seed-password",
+    "authProvider": "local",
+    "bio": "Certified childcare provider with CPR and First Aid training. I have 5 years of experience working with children ages 2-12.",
+    "skills": ["Childcare", "First Aid", "CPR", "Early Education"],
+    "location": "Bellevue, NE",
+    "imageUrl": null,
+    "resumeUrl": null,
+    "certificationUrl": null
+  },
+  {
+    "firstName": "Casey",
+    "lastName": "Martinez",
+    "email": "casey.martinez@seed.local",
+    "password": "seed-password",
+    "authProvider": "local",
+    "bio": "Professional mover and fitness enthusiast. I can handle heavy lifting and make your move stress-free.",
+    "skills": ["Heavy Lifting", "Moving", "Packing", "Loading"],
+    "location": "Omaha, NE",
+    "imageUrl": null,
+    "resumeUrl": null,
+    "certificationUrl": null
+  },
+  {
+    "firstName": "Riley",
+    "lastName": "Patel",
+    "email": "riley.patel@seed.local",
+    "password": "seed-password",
+    "authProvider": "local",
+    "bio": "Landscaper and lawn care specialist. I take pride in making your yard look its best year-round.",
+    "skills": ["Lawn Care", "Landscaping", "Trimming", "Garden Maintenance"],
+    "location": "Lincoln, NE",
+    "imageUrl": null,
+    "resumeUrl": null,
+    "certificationUrl": null
+  }
+]
