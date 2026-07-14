@@ -1,0 +1,131 @@
+.home-wrap {
+  padding: 24px;
+  width: 100%;
+}
+
+.ai-banner {
+  border-radius: 24px;
+  padding: 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  background: var(--primary-gradient-ai, linear-gradient(135deg, #8B9FD4, #7B8FC8, #9BAEE0));
+}
+
+.ai-banner-blob1 {
+  position: absolute;
+  top: -48px;
+  right: -48px;
+  width: 192px;
+  height: 192px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ai-banner-blob2 {
+  position: absolute;
+  bottom: -40px;
+  left: 33%;
+  width: 112px;
+  height: 112px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ai-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.ai-title {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  letter-spacing: -0.3px;
+}
+
+.ai-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ai-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.ai-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ai-ask-btn {
+  background: #fff;
+  color: var(--primary-light, #8B9FD4);
+  border: none;
+  padding: 6px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+  font-family: inherit;
+}
+
+.ai-ask-btn:hover {
+  opacity: 0.9;
+}
+
+.ai-ask-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.feed-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1E2340;
+  letter-spacing: -0.3px;
+}
+
+.view-all {
+  font-size: 14px;
+  color: var(--primary, #7B8FC8);
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.listing-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

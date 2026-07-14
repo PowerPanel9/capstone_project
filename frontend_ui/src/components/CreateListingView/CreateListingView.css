@@ -1,0 +1,149 @@
+.create-wrap {
+  padding: 24px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.create-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.create-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1E2340;
+  letter-spacing: -0.4px;
+}
+
+.create-sub {
+  font-size: 14px;
+  color: #9CA3AF;
+  margin-top: 4px;
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #F3F4F6;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4B5563;
+  transition: background 0.15s;
+}
+
+.close-btn:hover {
+  background: #E5E7EB;
+}
+
+.form-card {
+  background: #fff;
+  border-radius: 24px;
+  border: 1px solid #E5E7EB;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  background: #F3F4F6;
+  border: none;
+  border-radius: 16px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  box-shadow: 0 0 0 2px var(--primary-light, #AABAE8);
+}
+
+.form-textarea {
+  resize: none;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.upload-area {
+  border: 2px dashed #E5E7EB;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.upload-area:hover {
+  border-color: var(--primary-light, #AABAE8);
+}
+
+.upload-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #F3F4F6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  color: #9CA3AF;
+}
+
+.upload-area:hover .upload-icon {
+  background: #E5E7EB;
+}
+
+.upload-text {
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-top: 4px;
+}
+
+.submit-btn {
+  width: 100%;
+  background: var(--primary, #7B8FC8);
+  color: #fff;
+  border: none;
+  padding: 16px;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.submit-btn:hover {
+  background: var(--primary-dark, #6678B8);
+}
