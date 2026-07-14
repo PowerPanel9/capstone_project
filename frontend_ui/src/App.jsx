@@ -9,11 +9,16 @@ import CreateListingView from './components/CreateListingView/CreateListingView'
 import ApplicationModal from './components/ApplicationModal/ApplicationModal';
 import AIAgentModal from './components/AIAgentModal/AIAgentModal';
 import ListingCard from './components/ListingCard/ListingCard';
+import LandingPage from './components/LandingPage/LandingPage';
+import AuthModal from './components/AuthModal/AuthModal';
 import { mockListings } from './data/mockListings';
 import { Bookmark } from 'lucide-react';
 import './App.css';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authModalMode, setAuthModalMode] = useState(null); // 'login' or 'register' or null
   const [view, setView] = useState("home");
   const [selectedListing, setSelectedListing] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -22,6 +27,17 @@ function App() {
   const [bookmarks, setBookmarks] = useState(new Set());
   const [search, setSearch] = useState("");
   const [userMode, setUserMode] = useState("provider");
+
+  // Check if user is already logged in on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+
+    if (token && user) {
+      setIsAuthenticated(true);
+      setCurrentUser(JSON.parse(user));
+    }
+  }, []);
 
   // Load saved mode from localStorage on mount
   useEffect(() => {
@@ -64,6 +80,20 @@ function App() {
       listing.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const handleAuthSuccess = (user) => {
+    setIsAuthenticated(true);
+    setCurrentUser(user);
+    setAuthModalMode(null); // Close modal
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setView("home");
+  };
+
   const pageTitles = {
     home: "Home",
     listing: selectedListing?.title ?? "Listing",
@@ -75,6 +105,27 @@ function App() {
 
   const isMessagesView = view === "messages";
 
+  // Show landing page if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <>
+        <LandingPage
+          onOpenLogin={() => setAuthModalMode('login')}
+          onOpenSignup={() => setAuthModalMode('register')}
+        />
+        {authModalMode && (
+          <AuthModal
+            mode={authModalMode}
+            onClose={() => setAuthModalMode(null)}
+            onSuccess={handleAuthSuccess}
+            onSwitchMode={() => setAuthModalMode(authModalMode === 'login' ? 'register' : 'login')}
+          />
+        )}
+      </>
+    );
+  }
+
+  // Show main app if authenticated
   return (
     <div className={`app ${userMode}-mode`}>
       <aside className="sidebar" style={{ width: sidebarOpen ? 256 : 0 }}>
