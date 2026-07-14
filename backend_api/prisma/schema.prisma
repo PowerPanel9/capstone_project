@@ -25,6 +25,21 @@ enum ApplicationStatus {
   REJECTED
 }
 
+// listing.category — used by the search bar / FilterBar to filter listings.
+// OTHER is a catch-all so any side hustle still has a valid category.
+enum ListingCategory {
+  CLEANING
+  TUTORING
+  PLUMBING
+  GARDENING
+  BEAUTY
+  BABYSITTING
+  MOVING
+  HANDYMAN
+  DELIVERY
+  OTHER
+}
+
 // ---------------------------------------------------------------------------
 // Models
 // ---------------------------------------------------------------------------
@@ -58,9 +73,11 @@ model User {
 }
 
 model Listing {
-  id             Int           @id @default(autoincrement())
+  id             Int             @id @default(autoincrement())
   title          String // Title/header of the job listing
-  imageUrl       String?       @map("image_url") // Optional picture of job listing
+  category       ListingCategory // Category used for filtering (required)
+  customCategory String?         @map("custom_category") // Free-text category, only used when category = OTHER
+  imageUrl       String?         @map("image_url") // Optional picture of job listing
   userId         Int           @map("user_id") // Creator of the listing (FK -> user)
   description    String // Description of the job
   price          Decimal // How much the listing pays
@@ -82,7 +99,6 @@ model Bookmark {
   id           Int      @id @default(autoincrement())
   listingId    Int      @map("listing_id") // Listing being bookmarked (FK -> listing)
   userId       Int      @map("user_id") // User who bookmarked (FK -> user)
-  isBookmarked Boolean  @default(true) @map("is_bookmarked")
   createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations

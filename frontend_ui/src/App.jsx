@@ -9,7 +9,7 @@ import CreateListingView from './components/CreateListingView/CreateListingView'
 import ApplicationModal from './components/ApplicationModal/ApplicationModal';
 import AIAgentModal from './components/AIAgentModal/AIAgentModal';
 import ListingCard from './components/ListingCard/ListingCard';
-import { mockListings } from './data/mockListings';
+import { getListings } from './api/listings';
 import { Bookmark } from 'lucide-react';
 import './App.css';
 
@@ -23,6 +23,11 @@ function App() {
   const [search, setSearch] = useState("");
   const [userMode, setUserMode] = useState("provider");
 
+  // Listings now come from the backend API instead of a hardcoded mock array.
+  const [listings, setListings] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   // Load saved mode from localStorage on mount
   useEffect(() => {
     const savedMode = localStorage.getItem('worklyUserMode');
@@ -30,6 +35,30 @@ function App() {
       setUserMode(savedMode);
     }
   }, []);
+
+  // Fetch listings from the API. Re-runs whenever the search text changes so the
+  // backend does the filtering (GET /api/listings?search=...).
+  useEffect(() => {
+    let ignore = false; // guards against a slow response overwriting a newer one
+    setIsLoading(true);
+    setError(null);
+
+    getListings({ search })
+      .then((data) => {
+        if (!ignore) setListings(data);
+      })
+      .catch((err) => {
+        console.error("Failed to load listings:", err);
+        if (!ignore) setError("Could not load listings. Is the backend running?");
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [search]);
 
   // Toggle between client and provider mode
   const toggleUserMode = () => {
@@ -56,13 +85,6 @@ function App() {
       return newBookmarks;
     });
   };
-
-  const filteredListings = mockListings.filter(
-    (listing) =>
-      search === "" ||
-      listing.title.toLowerCase().includes(search.toLowerCase()) ||
-      listing.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase()))
-  );
 
   const pageTitles = {
     home: "Home",
@@ -97,13 +119,17 @@ function App() {
 
         <div className={`content ${isMessagesView ? "messages" : ""}`}>
           {view === "home" && (
-            <HomeView
-              listings={filteredListings}
-              bookmarks={bookmarks}
-              onBookmark={toggleBookmark}
-              onNavigate={navigate}
-              onOpenAI={() => setShowAIModal(true)}
-            />
+            <>
+              {isLoading && <p className="feed-status">Loading listings…</p>}
+              {error && <p className="feed-status feed-error">{error}</p>}
+              <HomeView
+                listings={listings}
+                bookmarks={bookmarks}
+                onBookmark={toggleBookmark}
+                onNavigate={navigate}
+                onOpenAI={() => setShowAIModal(true)}
+              />
+            </>
           )}
 
           {view === "listing" && selectedListing && (
@@ -129,7 +155,7 @@ function App() {
           {view === "bookmarks" && (
             <div className="home-wrap">
               <div className="listing-feed">
-                {mockListings.filter((l) => bookmarks.has(l.id)).map((listing) => (
+                {listings.filter((l) => bookmarks.has(l.id)).map((listing) => (
                   <ListingCard
                     key={listing.id}
                     listing={listing}
