@@ -1,14 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
 import './HomeView.css';
 
-function HomeView({ listings, bookmarks, onBookmark, onNavigate, onOpenAI }) {
+function HomeView({ listings, bookmarks, onBookmark }) {
   const [aiInput, setAiInput] = useState("");
+  const navigate = useNavigate();
 
   const handleAskAI = () => {
     if (aiInput.trim()) {
-      onOpenAI();
+      // TODO: Open AI modal
+      console.log('AI Query:', aiInput);
     }
   };
 
@@ -55,7 +58,7 @@ function HomeView({ listings, bookmarks, onBookmark, onNavigate, onOpenAI }) {
             listing={listing}
             bookmarked={bookmarks.has(listing.id)}
             onBookmark={() => onBookmark(listing.id)}
-            onClick={() => onNavigate("listing", listing)}
+            onClick={() => navigate(`/listing/${listing.id}`)}
           />
         ))}
       </div>

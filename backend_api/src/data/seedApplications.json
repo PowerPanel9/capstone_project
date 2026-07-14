@@ -1,0 +1,32 @@
+[
+  {
+    "providerEmail": "riley.patel@seed.local",
+    "listingTitle": "Weekend Lawn Mowing & Yard Cleanup",
+    "status": "ACCEPTED"
+  },
+  {
+    "providerEmail": "jamie.thompson@seed.local",
+    "listingTitle": "Deep Clean for 2-Bedroom Apartment",
+    "status": "PENDING"
+  },
+  {
+    "providerEmail": "taylor.kim@seed.local",
+    "listingTitle": "After-School Math Tutor (7th Grade)",
+    "status": "ACCEPTED"
+  },
+  {
+    "providerEmail": "alex.rivera@seed.local",
+    "listingTitle": "Fix a Leaky Kitchen Sink",
+    "status": "PENDING"
+  },
+  {
+    "providerEmail": "morgan.davis@seed.local",
+    "listingTitle": "Saturday Evening Babysitter for Two Kids",
+    "status": "ACCEPTED"
+  },
+  {
+    "providerEmail": "casey.martinez@seed.local",
+    "listingTitle": "Help Moving a Couch and Boxes",
+    "status": "PENDING"
+  }
+]

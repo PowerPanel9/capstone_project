@@ -1,10 +1,6 @@
 import { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Briefcase, FileText } from 'lucide-react';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
-import { currentUser } from '../../data/mockUser';
-import { mockListings } from '../../data/mockListings';
-import { mockApplications } from '../../data/mockApplications';
-import { mockIncomingApplications } from '../../data/mockIncomingApplications';
 import './UserProfileView.css';
 
 function UserProfileView({ userMode, onToggleMode }) {
@@ -106,6 +102,23 @@ const handleSaveProfile = async () => {
   }
 };
 
+  // TODO: Fetch user profile data from backend API
+  // Replace this placeholder with real user data
+  const currentUser = {
+    firstName: "User",
+    lastName: "Name",
+    location: "Location",
+    bio: "User bio will be loaded from the backend.",
+    skills: []
+  };
+
+  // TODO: Fetch user's listings from backend API
+  const userListings = [];
+
+  // TODO: Fetch applications data from backend API
+  const applications = [];
+  const incomingApplications = [];
+
   return (
     <div className="profile-wrap">
       <div className="profile-card">
@@ -113,7 +126,9 @@ const handleSaveProfile = async () => {
         <div className="profile-body">
           <div className="profile-top-row">
             <div className="profile-avatar-wrap">
-              <div className="profile-avatar">{currentUser.initials}</div>
+              <div className="profile-avatar">
+                {currentUser.firstName[0]}{currentUser.lastName[0]}
+              </div>
             </div>
             <button className="edit-btn" onClick={onToggleMode}>
               Switch to {userMode === 'client' ? 'Provider' : 'Client'} Mode
@@ -123,13 +138,13 @@ const handleSaveProfile = async () => {
 </button>
 
           </div>
-          <h1 className="profile-name">{currentUser.fullName}</h1>
+          <h1 className="profile-name">{currentUser.firstName} {currentUser.lastName}</h1>
           <div className="profile-sub">
             <MapPin size={13} />
             {currentUser.location} · {userMode === 'client' ? 'Client' : 'Provider'}
           </div>
           <div className="stats-row">
-            {[[currentUser.stats.listings, "Listings"], [currentUser.stats.reviews, "Reviews"], [currentUser.stats.rating, "Rating"]].map(([num, label]) => (
+            {[[0, "Listings"], [0, "Reviews"], [0, "Rating"]].map(([num, label]) => (
               <div key={label}>
                 <div className="stat-n">{num}</div>
                 <div className="stat-l">{label}</div>
@@ -155,61 +170,70 @@ const handleSaveProfile = async () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div className="info-card">
-              <div className="info-card-title">Personal Details</div>
+              <div className="info-card-title">Bio</div>
               <div className="info-card-content">
-                <p>{currentUser.personalDetails.jobTitle}</p>
-                <p>{currentUser.personalDetails.availability}</p>
-                <p>{currentUser.personalDetails.experience}</p>
+                <p style={{ fontSize: 14, color: "#4B5563" }}>{currentUser.bio}</p>
               </div>
             </div>
             <div className="info-card">
               <div className="info-card-title">Skills</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {currentUser.skills.map((skill) => (
-                  <span key={skill} className="tag">{skill}</span>
-                ))}
+                {currentUser.skills.length > 0 ? (
+                  currentUser.skills.map((skill) => (
+                    <span key={skill} className="tag">{skill}</span>
+                  ))
+                ) : (
+                  <p style={{ fontSize: 13, color: "#9CA3AF" }}>No skills added yet</p>
+                )}
               </div>
             </div>
           </div>
 
           <div style={{ fontWeight: 700, color: "#4B5563", fontSize: 14 }}>Listings</div>
-          {mockListings.slice(0, 2).map((listing) => (
-            <div key={listing.id} className="mini-card">
-              <ProfilePicture initials={listing.poster.avatar} size="xs" />
-              <div className="mini-info">
-                <div className="mini-title">{listing.title}</div>
-                <div className="mini-desc">{listing.description}</div>
-                <div className="mini-meta">
-                  <span className="mini-rate">{listing.rate}</span>
-                  <span className="mini-type">{listing.type}</span>
+          {userListings.length > 0 ? (
+            userListings.slice(0, 2).map((listing) => (
+              <div key={listing.id} className="mini-card">
+                <ProfilePicture initials="LS" size="xs" />
+                <div className="mini-info">
+                  <div className="mini-title">{listing.title}</div>
+                  <div className="mini-desc">{listing.description}</div>
                 </div>
               </div>
-              <span className="badge">{listing.category}</span>
+            ))
+          ) : (
+            <div style={{ padding: 20, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
+              No listings yet
             </div>
-          ))}
+          )}
         </div>
       )}
 
       {activeTab === "Listings" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {mockListings.map((listing) => (
-            <div key={listing.id} className="mini-card">
-              <ProfilePicture initials={listing.poster.avatar} size="xs" />
-              <div className="mini-info">
-                <div className="mini-title">{listing.title}</div>
-                <div className="mini-desc">{listing.description}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                  {listing.tags.map((tag) => (
-                    <span key={tag} className="tag" style={{ fontSize: 11 }}>{tag}</span>
-                  ))}
+          {userListings.length > 0 ? (
+            userListings.map((listing) => (
+              <div key={listing.id} className="mini-card">
+                <ProfilePicture initials="LS" size="xs" />
+                <div className="mini-info">
+                  <div className="mini-title">{listing.title}</div>
+                  <div className="mini-desc">{listing.description}</div>
                 </div>
               </div>
-              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 13, color: "#1E2340" }}>{listing.rate}</div>
-                <div style={{ fontSize: 12, color: "#9CA3AF" }}>{listing.type}</div>
-              </div>
+            ))
+          ) : (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              padding: '40px 20px',
+              color: '#9CA3AF',
+              textAlign: 'center'
+            }}>
+              <Briefcase size={32} style={{ marginBottom: 12 }} />
+              <p style={{ fontSize: 14, fontWeight: 600 }}>No listings yet</p>
+              <small style={{ fontSize: 12 }}>Create a listing to get started</small>
             </div>
-          ))}
+          )}
         </div>
       )}
 
@@ -222,21 +246,15 @@ const handleSaveProfile = async () => {
             </p>
           </div>
           <div className="info-card" style={{ padding: 24 }}>
-            <div className="info-card-title" style={{ marginBottom: 16 }}>Personal Details</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
-              {[
-                ["Availability", currentUser.detailedInfo.availability],
-                ["Preferred type", currentUser.detailedInfo.preferredType],
-                ["Languages", currentUser.detailedInfo.languages],
-                ["Time zone", currentUser.detailedInfo.timeZone],
-                ["Response time", currentUser.detailedInfo.responseTime],
-                ["Member since", currentUser.detailedInfo.memberSince]
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#1E2340" }}>{value}</div>
-                </div>
-              ))}
+            <div className="info-card-title" style={{ marginBottom: 16 }}>Skills</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {currentUser.skills.length > 0 ? (
+                currentUser.skills.map((skill) => (
+                  <span key={skill} className="tag">{skill}</span>
+                ))
+              ) : (
+                <p style={{ fontSize: 13, color: "#9CA3AF" }}>No skills added yet</p>
+              )}
             </div>
           </div>
         </div>
@@ -250,18 +268,29 @@ const handleSaveProfile = async () => {
           <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 8 }}>
             Track the status of your job applications
           </div>
-          {mockApplications.map((app) => (
-            <div key={app.title} className="mini-card">
-              <ProfilePicture initials={app.company.slice(0, 2).toUpperCase()} size="xs" />
-              <div className="mini-info">
-                <div className="mini-title">{app.title}</div>
-                <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{app.company}</div>
+          {applications.length > 0 ? (
+            applications.map((app) => (
+              <div key={app.id} className="mini-card">
+                <ProfilePicture initials="AP" size="xs" />
+                <div className="mini-info">
+                  <div className="mini-title">{app.title}</div>
+                </div>
               </div>
-              <span style={{ background: app.bg, color: app.col, padding: "4px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
-                {app.status}
-              </span>
+            ))
+          ) : (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              padding: '40px 20px',
+              color: '#9CA3AF',
+              textAlign: 'center'
+            }}>
+              <FileText size={32} style={{ marginBottom: 12 }} />
+              <p style={{ fontSize: 14, fontWeight: 600 }}>No applications yet</p>
+              <small style={{ fontSize: 12 }}>Applications you submit will appear here</small>
             </div>
-          ))}
+          )}
         </div>
       )}
 
@@ -273,26 +302,30 @@ const handleSaveProfile = async () => {
           <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 8 }}>
             Providers who have applied to your job listings
           </div>
-          {mockIncomingApplications.map((app) => (
-            <div key={app.id} className="mini-card">
-              <ProfilePicture initials={app.providerAvatar} size="xs" />
-              <div className="mini-info">
-                <div className="mini-title">{app.providerName}</div>
-                <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>Applied to: {app.listingTitle}</div>
+          {incomingApplications.length > 0 ? (
+            incomingApplications.map((app) => (
+              <div key={app.id} className="mini-card">
+                <ProfilePicture initials="AP" size="xs" />
+                <div className="mini-info">
+                  <div className="mini-title">{app.providerName}</div>
+                  <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>Applied to: {app.listingTitle}</div>
+                </div>
               </div>
-              <span style={{
-                background: app.status === "Pending" ? "#FEF3C7" : app.status === "Accepted" ? "#CCFBF1" : "#FEE2E2",
-                color: app.status === "Pending" ? "#B45309" : app.status === "Accepted" ? "#0F766E" : "#B91C1C",
-                padding: "4px 12px",
-                borderRadius: 999,
-                fontSize: 12,
-                fontWeight: 700,
-                whiteSpace: "nowrap"
-              }}>
-                {app.status}
-              </span>
+            ))
+          ) : (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              padding: '40px 20px',
+              color: '#9CA3AF',
+              textAlign: 'center'
+            }}>
+              <FileText size={32} style={{ marginBottom: 12 }} />
+              <p style={{ fontSize: 14, fontWeight: 600 }}>No applications received</p>
+              <small style={{ fontSize: 12 }}>Applications from providers will appear here</small>
             </div>
-          ))}
+          )}
         </div>
       )}
       {isEditModalOpen && (

@@ -1,14 +1,16 @@
 import { Home, User, MessageSquare, Bookmark, Plus, Sparkles } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
-import { currentUser } from '../../data/mockUser';
+import { fullName, initials } from '../../utils/user';
 import './Sidebar.css';
 
-function Sidebar({ currentView, userMode, navigate, onOpenAI, onOpenCreate }) {
+function Sidebar({ currentUser, userMode }) {
+
   const navItems = [
-    { icon: Home, label: "Home", view: "home" },
-    { icon: User, label: "Profile", view: "profile" },
-    { icon: MessageSquare, label: "Messages", view: "messages" },
-    ...(userMode === 'provider' ? [{ icon: Bookmark, label: "Bookmarks", view: "bookmarks" }] : [])
+    { icon: Home, label: "Home", path: "/home" },
+    { icon: User, label: "Profile", path: "/user/profile" },
+    { icon: MessageSquare, label: "Messages", path: "/messages" },
+    ...(userMode === 'provider' ? [{ icon: Bookmark, label: "Bookmarks", path: "/user/bookmarks" }] : [])
   ];
 
   return (
@@ -21,35 +23,35 @@ function Sidebar({ currentView, userMode, navigate, onOpenAI, onOpenCreate }) {
       </div>
 
       <nav>
-        {navItems.map(({ icon: Icon, label, view }) => (
-          <button
-            key={view}
-            onClick={() => navigate(view)}
-            className={`nav-btn ${currentView === view ? "active" : ""}`}
+        {navItems.map(({ icon: Icon, label, path }) => (
+          <NavLink
+            key={path}
+            to={path}
+            className={({ isActive }) => `nav-btn ${isActive ? "active" : ""}`}
           >
             <Icon size={17} />
             {label}
-          </button>
+          </NavLink>
         ))}
       </nav>
 
       <div className="cta-wrap">
         {userMode === 'client' && (
-          <button className="btn-primary" onClick={onOpenCreate}>
+          <NavLink to="/listing/create" className="btn-primary">
             <Plus size={15} />
             Post a Listing
-          </button>
+          </NavLink>
         )}
-        <button className="btn-secondary" onClick={onOpenAI}>
+        <button className="btn-secondary">
           <Sparkles size={15} />
           AI Assistant
         </button>
       </div>
 
       <div className="user-row">
-        <ProfilePicture initials={currentUser.initials} size="xs" />
+        <ProfilePicture initials={initials(currentUser)} size="xs" />
         <div style={{ minWidth: 0 }}>
-          <p className="user-name">{currentUser.fullName}</p>
+          <p className="user-name">{fullName(currentUser)}</p>
           <p className="user-handle">{userMode === 'client' ? 'Client' : 'Provider'}</p>
         </div>
       </div>

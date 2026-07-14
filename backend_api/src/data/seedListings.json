@@ -1,0 +1,80 @@
+[
+  {
+    "title": "Weekend Lawn Mowing & Yard Cleanup",
+    "category": "GARDENING",
+    "poster": {
+      "firstName": "Marcus",
+      "lastName": "Chen",
+      "location": "Lincoln, NE"
+    },
+    "price": 40,
+    "description": "Need someone reliable to mow the front and back lawn, trim the edges, and bag the clippings every other weekend. Small yard, should take about an hour.",
+    "skillsRequired": ["Lawn Care", "Landscaping"],
+    "imageUrl": "https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?w=900&h=480&fit=crop&auto=format"
+  },
+  {
+    "title": "Deep Clean for 2-Bedroom Apartment",
+    "category": "CLEANING",
+    "poster": {
+      "firstName": "Sarah",
+      "lastName": "Mills",
+      "location": "Omaha, NE"
+    },
+    "price": 90,
+    "description": "Looking for a thorough deep clean before a move-out: kitchen, two bathrooms, floors, and windows. Supplies provided. Flexible on timing this week.",
+    "skillsRequired": ["Deep Cleaning", "Move-Out Cleaning"],
+    "imageUrl": null
+  },
+  {
+    "title": "After-School Math Tutor (7th Grade)",
+    "category": "TUTORING",
+    "poster": {
+      "firstName": "Jordan",
+      "lastName": "Lee",
+      "location": "Remote"
+    },
+    "price": 30,
+    "description": "Seeking a patient tutor to help my 7th grader with pre-algebra twice a week over video call. Goal is to build confidence before end-of-year exams.",
+    "skillsRequired": ["Math", "Pre-Algebra", "Tutoring"],
+    "imageUrl": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=900&h=480&fit=crop&auto=format"
+  },
+  {
+    "title": "Fix a Leaky Kitchen Sink",
+    "category": "PLUMBING",
+    "poster": {
+      "firstName": "Emily",
+      "lastName": "Park",
+      "location": "Lincoln, NE"
+    },
+    "price": 75,
+    "description": "The pipe under my kitchen sink has a slow leak and the faucet drips. Need someone with plumbing experience to diagnose and repair. Parts can be reimbursed.",
+    "skillsRequired": ["Plumbing", "Pipe Repair"],
+    "imageUrl": null
+  },
+  {
+    "title": "Saturday Evening Babysitter for Two Kids",
+    "category": "BABYSITTING",
+    "poster": {
+      "firstName": "Priya",
+      "lastName": "Nair",
+      "location": "Bellevue, NE"
+    },
+    "price": 60,
+    "description": "Need a trustworthy babysitter for our 4- and 6-year-old on Saturday evening (5-10pm). Dinner is prepped; mostly playtime and bedtime routine.",
+    "skillsRequired": ["Childcare", "First Aid"],
+    "imageUrl": "https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=900&h=480&fit=crop&auto=format"
+  },
+  {
+    "title": "Help Moving a Couch and Boxes",
+    "category": "MOVING",
+    "poster": {
+      "firstName": "Tom",
+      "lastName": "Garcia",
+      "location": "Omaha, NE"
+    },
+    "price": 50,
+    "description": "Moving a few blocks away and need an extra set of hands for a couch, a mattress, and about 15 boxes. Truck is already rented — just need muscle for two hours.",
+    "skillsRequired": ["Heavy Lifting", "Moving"],
+    "imageUrl": null
+  }
+]

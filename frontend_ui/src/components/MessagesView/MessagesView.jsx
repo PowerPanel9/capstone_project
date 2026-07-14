@@ -1,13 +1,10 @@
-import { useState } from 'react';
-import { Search, Send } from 'lucide-react';
-import ProfilePicture from '../ProfilePicture/ProfilePicture';
-import { mockConversations } from '../../data/mockConversations';
-import { mockChatMessages } from '../../data/mockChatMessages';
+import { Search, MessageSquare } from 'lucide-react';
 import './MessagesView.css';
 
 function MessagesView() {
-  const [activeConversation, setActiveConversation] = useState(mockConversations[0]);
-  const [message, setMessage] = useState("");
+  // TODO: Fetch conversations and messages from backend API
+  // Replace this empty state with real data
+  const conversations = [];
 
   return (
     <div className="messages-wrap">
@@ -20,65 +17,43 @@ function MessagesView() {
         </div>
 
         <div className="conv-items">
-          {mockConversations.map((conv) => (
-            <button
-              key={conv.id}
-              className={`conv-item ${activeConversation.id === conv.id ? "active" : ""}`}
-              onClick={() => setActiveConversation(conv)}
-            >
-              <div className="conv-avatar-wrap">
-                <ProfilePicture initials={conv.avatar} size="xs" />
-                {conv.unread > 0 && <span className="conv-unread">{conv.unread}</span>}
-              </div>
-              <div className="conv-info">
-                <div className="conv-top">
-                  <span className="conv-name">{conv.name}</span>
-                  <span className="conv-time">{conv.time}</span>
-                </div>
-                <div className="conv-msg">{conv.lastMsg}</div>
-              </div>
-            </button>
-          ))}
+          {conversations.length === 0 ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '40px 20px',
+              color: '#9CA3AF',
+              textAlign: 'center'
+            }}>
+              <MessageSquare size={32} style={{ marginBottom: 12 }} />
+              <p style={{ fontSize: 14, fontWeight: 600 }}>No conversations yet</p>
+              <small style={{ fontSize: 12 }}>Messages will appear here</small>
+            </div>
+          ) : (
+            conversations.map((conv) => (
+              <button key={conv.id} className="conv-item">
+                {/* Conversation item content */}
+              </button>
+            ))
+          )}
         </div>
       </div>
 
       <div className="chat-panel">
-        <div className="chat-header">
-          <ProfilePicture initials={activeConversation.avatar} size="xs" />
-          <div>
-            <div className="chat-header-name">{activeConversation.name}</div>
-            <div className="online-dot">
-              <span className="dot-teal" />
-              Online
-            </div>
-          </div>
-        </div>
-
-        <div className="chat-messages">
-          {mockChatMessages.map((msg) => (
-            <div key={msg.id} className={`chat-msg ${msg.from === "me" ? "me" : ""}`}>
-              <div className={`chat-bubble ${msg.from === "me" ? "me" : "them"}`}>
-                {msg.text}
-                <div className={`bubble-time ${msg.from === "me" ? "me" : "them"}`}>
-                  {msg.time}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="chat-input-bar">
-          <div className="chat-input-inner">
-            <input
-              className="chat-input"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type a message..."
-            />
-            <button className="send-btn">
-              <Send size={13} />
-            </button>
-          </div>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          color: '#9CA3AF',
+          textAlign: 'center'
+        }}>
+          <MessageSquare size={48} style={{ marginBottom: 16 }} />
+          <p style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>No conversation selected</p>
+          <small style={{ fontSize: 13 }}>Select a conversation to start messaging</small>
         </div>
       </div>
     </div>

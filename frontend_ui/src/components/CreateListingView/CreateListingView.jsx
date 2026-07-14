@@ -30,7 +30,7 @@ function CreateListingView({ onDone }) {
             className="form-input"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="e.g. Senior React Developer"
+            placeholder="Babysitter for 6 Year Old Needed"
           />
         </div>
 
@@ -42,7 +42,7 @@ function CreateListingView({ onDone }) {
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             >
-              {["Engineering", "Design", "Marketing", "Data", "Writing", "Finance"].map((cat) => (
+              {["Cleaning", "Tutor", "Plumber", "Gardener", "Babysitter", "Moving", "Handyman", "Delivery", "Other"].map((cat) => (
                 <option key={cat}>{cat}</option>
               ))}
             </select>
@@ -75,7 +75,7 @@ function CreateListingView({ onDone }) {
             className="form-input"
             value={form.tags}
             onChange={(e) => setForm({ ...form, tags: e.target.value })}
-            placeholder="e.g. React, TypeScript (comma-separated)"
+            placeholder="e.g. English Speaking, Comfortable with Children (comma-separated)"
           />
         </div>
 

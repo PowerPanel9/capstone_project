@@ -1,0 +1,38 @@
+[
+  {
+    "fromEmail": "marcus.chen@seed.local",
+    "toEmail": "riley.patel@seed.local",
+    "content": "Hi Riley! I saw your application for the lawn mowing job. Your profile looks great! Are you available this Saturday?",
+    "imageUrl": null
+  },
+  {
+    "fromEmail": "riley.patel@seed.local",
+    "toEmail": "marcus.chen@seed.local",
+    "content": "Hi Marcus! Yes, I'm available this Saturday morning. I can start around 9 AM if that works for you.",
+    "imageUrl": null
+  },
+  {
+    "fromEmail": "sarah.mills@seed.local",
+    "toEmail": "jamie.thompson@seed.local",
+    "content": "Hello! I'm interested in your deep cleaning services. Do you provide your own supplies or should I have everything ready?",
+    "imageUrl": null
+  },
+  {
+    "fromEmail": "jamie.thompson@seed.local",
+    "toEmail": "sarah.mills@seed.local",
+    "content": "Hi Sarah! I bring all my own professional-grade supplies, so you don't need to worry about anything. When would you like me to come by?",
+    "imageUrl": null
+  },
+  {
+    "fromEmail": "jordan.lee@seed.local",
+    "toEmail": "taylor.kim@seed.local",
+    "content": "Hi Taylor! Thanks for applying. Can you tell me a bit more about your tutoring experience with 7th graders?",
+    "imageUrl": null
+  },
+  {
+    "fromEmail": "taylor.kim@seed.local",
+    "toEmail": "jordan.lee@seed.local",
+    "content": "Of course! I've been tutoring middle school students for 3 years. I focus on building confidence and making math fun. I'd love to help your child succeed!",
+    "imageUrl": null
+  }
+]
