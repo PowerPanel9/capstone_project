@@ -1,19 +1,3 @@
-<<<<<<< HEAD
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-
-import UserProfile from "./components/userProfile/userProfile";
-const App = () => {
-  const [user, setUser] = useState(null);
-
-  return (
-    <BrowserRouter>
-    <Routes>
-      <Route path="/Profile" element = {user ? <UserProfile userId={user.id} /> : <Navigate to="/login" />} />
-    </Routes>
-    </BrowserRouter>
-=======
 import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar/Sidebar';
 import TopBar from './components/TopBar/TopBar';
@@ -173,7 +157,6 @@ function App() {
 
       {showAIModal && <AIAgentModal onClose={() => setShowAIModal(false)} />}
     </div>
->>>>>>> main
   )
 }
 export default App;

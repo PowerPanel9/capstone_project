@@ -4,6 +4,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoute");
+const messageRoutes = require("./routes/messageRoutes");
 const app = express();
 const PORT = process.env.PORT || 3000;
 // Middleware
@@ -19,6 +20,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 
 app.use("/users", userRoutes);
+app.use("/messages", messageRoutes);
 
 // Start the server
 app.listen(PORT, () => {

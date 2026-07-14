@@ -12,6 +12,99 @@ function UserProfileView({ userMode, onToggleMode }) {
   const tabs = userMode === 'client'
     ? ["All", "Listings", "Experience", "About", "Applications"]
     : ["All", "Experience", "About", "Applications"];
+const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+const [newSkill, setNewSkill] = useState("");
+const [isSaving, setIsSaving] = useState(false);
+const [saveError, setSaveError] = useState("");
+
+const [profile, setProfile] = useState({
+  id: currentUser.id || null,
+  firstName: currentUser.firstName || "",
+  lastName: currentUser.lastName || "",
+  email: currentUser.email || "",
+  imageUrl: currentUser.imageUrl || "",
+  bio: currentUser.bio || "",
+  location: currentUser.location || "",
+  skills: Array.isArray(currentUser.skills) ? currentUser.skills : [],
+  resumeUrl: currentUser.resumeUrl || "",
+  certificationUrl: currentUser.certificationUrl || "",
+});
+const [formData, setFormData] = useState({
+  imageUrl: "",
+  bio: "",
+  location: "",
+  skills: [],
+  resumeUrl: "",
+  certificationUrl: "",
+});
+
+const openEditModal = () => {
+  setFormData({
+    imageUrl: profile.imageUrl || "",
+    bio: profile.bio || "",
+    location: profile.location || "",
+    skills: Array.isArray(profile.skills) ? [...profile.skills] : [],
+    resumeUrl: profile.resumeUrl || "",
+    certificationUrl: profile.certificationUrl || "",
+  });
+  setNewSkill("");
+  setSaveError("");
+  setIsEditModalOpen(true);
+};
+
+const closeEditModal = () => {
+  setIsEditModalOpen(false);
+};
+
+const handleFieldChange = (event) => {
+  const { name, value } = event.target;
+  setFormData((prev) => ({ ...prev, [name]: value }));
+};
+
+const addSkill = () => {
+  const trimmed = newSkill.trim();
+  if (!trimmed) return;
+  if (formData.skills.includes(trimmed)) return;
+  setFormData((prev) => ({ ...prev, skills: [...prev.skills, trimmed] }));
+  setNewSkill("");
+};
+
+const removeSkill = (skillToRemove) => {
+  setFormData((prev) => ({
+    ...prev,
+    skills: prev.skills.filter((skill) => skill !== skillToRemove),
+  }));
+};
+
+const handleSaveProfile = async () => {
+  try {
+    setIsSaving(true);
+    setSaveError("");
+
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${profile.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Failed to update profile");
+    }
+
+    const updated = await res.json();
+    setProfile((prev) => ({ ...prev, ...updated }));
+    setIsEditModalOpen(false);
+  } catch (error) {
+    setSaveError(error.message || "Error saving profile");
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   return (
     <div className="profile-wrap">
@@ -25,6 +118,10 @@ function UserProfileView({ userMode, onToggleMode }) {
             <button className="edit-btn" onClick={onToggleMode}>
               Switch to {userMode === 'client' ? 'Provider' : 'Client'} Mode
             </button>
+            <button className="edit-btn" onClick={openEditModal}>
+  Edit Profile
+</button>
+
           </div>
           <h1 className="profile-name">{currentUser.fullName}</h1>
           <div className="profile-sub">
@@ -196,6 +293,70 @@ function UserProfileView({ userMode, onToggleMode }) {
               </span>
             </div>
           ))}
+        </div>
+      )}
+      {isEditModalOpen && (
+        <div className="profile-modal-backdrop">
+          <div className="profile-modal">
+            <div className="profile-modal-header">
+              <h2>Edit Profile</h2>
+              <p>Update your public profile details</p>
+            </div>
+
+            <div className="profile-modal-static">
+              <div>
+                <span className="modal-static-label">Name</span>
+                <p>{profile.firstName} {profile.lastName}</p>
+              </div>
+              <div>
+                <span className="modal-static-label">Email</span>
+                <p>{profile.email}</p>
+              </div>
+            </div>
+
+            <label className="modal-label" htmlFor="profile-location">Location</label>
+            <input id="profile-location" name="location" value={formData.location} onChange={handleFieldChange} />
+
+            <label className="modal-label" htmlFor="profile-bio">Bio</label>
+            <textarea id="profile-bio" name="bio" value={formData.bio} onChange={handleFieldChange} rows={4} />
+
+            <label className="modal-label" htmlFor="profile-image">Image URL</label>
+            <input id="profile-image" name="imageUrl" value={formData.imageUrl} onChange={handleFieldChange} />
+
+            <label className="modal-label" htmlFor="profile-resume">Resume URL</label>
+            <input id="profile-resume" name="resumeUrl" value={formData.resumeUrl} onChange={handleFieldChange} />
+
+            <label className="modal-label" htmlFor="profile-certification">Certification URL</label>
+            <input id="profile-certification" name="certificationUrl" value={formData.certificationUrl} onChange={handleFieldChange} />
+
+            <label className="modal-label">Skills</label>
+            <div className="skills-row">
+              {formData.skills.map((skill) => (
+                <span key={skill} className="modal-skill-tag">
+                  {skill}
+                  <button type="button" className="skill-remove-btn" onClick={() => removeSkill(skill)}>x</button>
+                </span>
+              ))}
+            </div>
+
+            <div className="skill-add-row">
+              <input
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                placeholder="Add skill"
+              />
+              <button type="button" className="modal-btn modal-btn-secondary" onClick={addSkill}>Add</button>
+            </div>
+
+            {saveError && <p className="error-text">{saveError}</p>}
+
+            <div className="modal-actions">
+              <button type="button" className="modal-btn modal-btn-secondary" onClick={closeEditModal}>Cancel</button>
+              <button type="button" className="modal-btn modal-btn-primary" onClick={handleSaveProfile} disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
