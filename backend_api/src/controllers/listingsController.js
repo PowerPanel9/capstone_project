@@ -78,7 +78,11 @@ async function getAllListings(req, res) {
       where.location = { contains: location, mode: "insensitive" };
     }
 
-    const listings = await prisma.listing.findMany({ where });
+    const listings = await prisma.listing.findMany({
+      where,
+      include: { user: true }, // attach the creator so the frontend can show poster info
+      orderBy: { createdAt: "desc" }, // newest listings first for the feed
+    });
     return res.status(200).json(listings);
   } catch (error) {
     console.error("getAllListings error:", error.message);
@@ -95,6 +99,7 @@ async function getListingById(req, res) {
 
     const listing = await prisma.listing.findUnique({
       where: { id },
+      include: { user: true }, // attach the creator so the detail view can show poster info
     });
 
     if (!listing) {
