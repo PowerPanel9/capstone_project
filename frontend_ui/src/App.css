@@ -1,0 +1,62 @@
+<<<<<<< HEAD
+=======
+.app {
+  display: flex;
+  height: 100vh;
+  background: #fff;
+  overflow: hidden;
+}
+
+.sidebar {
+  background: #fff;
+  border-right: 1px solid #E5E7EB;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.3s;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.content {
+  flex: 1;
+  background: #F2F3FB;
+  overflow-y: auto;
+}
+
+.content.messages {
+  overflow: hidden;
+}
+
+.home-wrap {
+  padding: 24px;
+  width: 100%;
+}
+
+.listing-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 64px 0;
+  color: #9CA3AF;
+}
+
+.empty-state p {
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.empty-state small {
+  font-size: 14px;
+  display: block;
+  margin-top: 4px;
+}
+>>>>>>> main

@@ -1,0 +1,41 @@
+<<<<<<< HEAD
+=======
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #fff;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Provider Mode Colors (Default) */
+.provider-mode {
+  --primary: #7B8FC8;
+  --primary-light: #8B9FD4;
+  --primary-dark: #6678B8;
+  --primary-gradient: linear-gradient(to right, #8B9FD4, #9BAEE0);
+  --primary-gradient-ai: linear-gradient(135deg, #8B9FD4, #7B8FC8, #9BAEE0);
+}
+
+/* Client Mode Colors (Teal) */
+.client-mode {
+  --primary: #14B8A6;
+  --primary-light: #5EEAD4;
+  --primary-dark: #0D9488;
+  --primary-gradient: linear-gradient(to right, #14B8A6, #5EEAD4);
+  --primary-gradient-ai: linear-gradient(135deg, #14B8A6, #0D9488, #5EEAD4);
+}
+>>>>>>> main
