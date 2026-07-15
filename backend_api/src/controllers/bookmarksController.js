@@ -73,7 +73,9 @@ async function getMyBookmarks(req, res) {
 
     const bookmarks = await prisma.bookmark.findMany({
       where: { userId },
-      include: { listing: true }, // attach the listing each bookmark points to
+      // attach each bookmarked listing AND that listing's owner, so the
+      // frontend can render the same cards as the main feed (poster name, etc.)
+      include: { listing: { include: { user: true } } },
     });
 
     return res.status(200).json(bookmarks);

@@ -32,3 +32,16 @@ export async function getListingById(id) {
   const response = await api.get(`/api/listings/${id}`);
   return response.data;
 }
+
+// POST /api/listings  -> create a new listing.
+// This route is protected, so we send the logged-in user's token (saved to
+// localStorage by the AuthModal). `listing` must already use the backend's
+// snake_case field names (title, category, custom_category, price,
+// skills_required, location, image_url).
+export async function createListing(listing) {
+  const token = localStorage.getItem("token");
+  const response = await api.post("/api/listings", listing, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return response.data;
+}
