@@ -2,7 +2,7 @@ import { Menu, Search } from 'lucide-react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import './TopBar.css';
 
-function TopBar({ onToggleSidebar }) {
+function TopBar({ onToggleSidebar, onLogout }) {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -49,6 +49,9 @@ function TopBar({ onToggleSidebar }) {
           />
         </div>
       )}
+      <button className="logout-btn" onClick={onLogout}>
+        Logout
+      </button>
     </div>
   );
 }

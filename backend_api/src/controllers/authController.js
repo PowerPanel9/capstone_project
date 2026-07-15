@@ -1,6 +1,7 @@
 const {PrismaClient} = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const prisma = new PrismaClient();
 
 const SALT_ROUNDS = 10;
@@ -120,4 +121,83 @@ const makeUserPublic = (user) => {
     };
 };
 
-module.exports = { register, login, getMe, logout };
+// Google OAuth: Step 1 - Redirect user to Google login
+const googleLogin = (req, res) => {
+    // Build the Google authorization URL
+    const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+
+    const params = new URLSearchParams({
+        client_id: process.env.CLIENT_ID,
+        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+        response_type: 'code',
+        scope: 'profile email',
+        access_type: 'offline',
+        prompt: 'consent'
+    });
+
+    // Redirect user to Google's login page
+    const url = `${googleAuthUrl}?${params.toString()}`;
+    res.redirect(url);
+};
+
+// Google OAuth: Step 2 - Handle callback from Google
+const googleCallback = async (req, res) => {
+    const { code } = req.query;
+
+    if (!code) {
+        return res.status(400).json({ error: 'Authorization code not provided' });
+    }
+
+    try {
+        // Exchange authorization code for access token
+        const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+            code,
+            client_id: process.env.CLIENT_ID,
+            client_secret: process.env.CLIENT_SECRET,
+            redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+            grant_type: 'authorization_code'
+        });
+
+        const { access_token } = tokenResponse.data;
+
+        // Use access token to get user info from Google
+        const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: {
+                Authorization: `Bearer ${access_token}`
+            }
+        });
+
+        const { id: googleId, email, given_name, family_name, picture } = userInfoResponse.data;
+
+        // Check if user exists in database
+        let user = await prisma.user.findUnique({
+            where: { email: email.toLowerCase() }
+        });
+
+        if (!user) {
+            // Create new user if they don't exist
+            user = await prisma.user.create({
+                data: {
+                    firstName: given_name || 'User',
+                    lastName: family_name || '',
+                    email: email.toLowerCase(),
+                    imageUrl: picture || null,
+                    authProvider: 'google',
+                    password: null // OAuth users don't have passwords
+                }
+            });
+        }
+
+        // Create JWT token for our app
+        const token = buildToken(user.id);
+
+        // Redirect user back to frontend with token
+        res.redirect(`${process.env.FRONTEND_URL}/auth/success?token=${token}`);
+
+    } catch (error) {
+        console.error('Google OAuth Error:', error.response?.data || error.message);
+        res.redirect(`${process.env.FRONTEND_URL}/auth/failure`);
+    }
+};
+
+module.exports = { register, login, getMe, logout, googleLogin, googleCallback };

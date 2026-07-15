@@ -11,6 +11,8 @@ import ApplicationModal from './components/ApplicationModal/ApplicationModal';
 import AIAgentModal from './components/AIAgentModal/AIAgentModal';
 import LandingPage from './components/LandingPage/LandingPage';
 import AuthModal from './components/AuthModal/AuthModal';
+import AuthSuccess from './components/AuthSuccess';
+import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById } from './api/listings';
 import { Bookmark } from 'lucide-react';
@@ -128,7 +130,7 @@ function App() {
           </aside>
 
           <div className="main">
-            <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} onLogout={handleLogout} />
 
             <div className="content">
               <Routes>
@@ -233,6 +235,8 @@ function App() {
               />
             }
           />
+          <Route path="/auth/success" element={<AuthSuccess />} />
+          <Route path="/auth/failure" element={<AuthFailure />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       )}
