@@ -15,6 +15,8 @@ function HomeView({ listings, bookmarks, onBookmark }) {
     }
   };
 
+  const safeListings = Array.isArray(listings) ? listings : [];
+
   return (
     <div className="home-wrap">
       <div className="ai-banner">
@@ -52,7 +54,7 @@ function HomeView({ listings, bookmarks, onBookmark }) {
       </div>
 
       <div className="listing-feed">
-        {listings.map((listing) => (
+        {safeListings.map((listing) => (
           <ListingCard
             key={listing.id}
             listing={listing}

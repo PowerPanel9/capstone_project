@@ -3,6 +3,16 @@ import { MapPin, Briefcase, FileText } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
 import "./UserProfileView.css";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+async function readJsonSafe(response) {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    return null;
+  }
+  return response.json();
+}
+
 function UserProfileView({ userMode, onToggleMode }) {
   const [activeTab, setActiveTab] = useState("All");
   const tabs =
@@ -53,19 +63,22 @@ function UserProfileView({ userMode, onToggleMode }) {
         setIsLoadingProfile(true);
         setProfileError("");
 
-        const meResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+        const meResponse = await fetch(`${API_BASE_URL}/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!meResponse.ok) {
-          throw new Error("Unable to verify your login session");
+          throw new Error("Unable to verify your login session. Check backend URL/server.");
         }
 
-        const me = await meResponse.json();
+        const me = await readJsonSafe(meResponse);
+        if (!me || !me.id) {
+          throw new Error("Invalid auth response. Expected JSON user data.");
+        }
 
-        const profileResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${me.id}`, {
+        const profileResponse = await fetch(`${API_BASE_URL}/users/${me.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -75,7 +88,10 @@ function UserProfileView({ userMode, onToggleMode }) {
           throw new Error("Unable to load your profile");
         }
 
-        const userProfile = await profileResponse.json();
+        const userProfile = await readJsonSafe(profileResponse);
+        if (!userProfile) {
+          throw new Error("Invalid profile response. Expected JSON user data.");
+        }
         if (ignore) return;
 
         setProfile({
@@ -155,7 +171,7 @@ function UserProfileView({ userMode, onToggleMode }) {
       setSaveError("");
 
       const token = localStorage.getItem("token");
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${profile.id}`, {
+      const res = await fetch(`${API_BASE_URL}/users/${profile.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -165,11 +181,14 @@ function UserProfileView({ userMode, onToggleMode }) {
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+        const err = (await readJsonSafe(res)) || {};
         throw new Error(err.message || "Failed to update profile");
       }
 
-      const updated = await res.json();
+      const updated = await readJsonSafe(res);
+      if (!updated) {
+        throw new Error("Invalid update response. Expected JSON user data.");
+      }
       setProfile((prev) => ({
         ...prev,
         ...updated,
