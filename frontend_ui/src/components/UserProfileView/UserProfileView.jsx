@@ -1,116 +1,189 @@
-import { useState } from 'react';
-import { MapPin, Briefcase, FileText } from 'lucide-react';
-import ProfilePicture from '../ProfilePicture/ProfilePicture';
-import './UserProfileView.css';
+import { useEffect, useState } from "react";
+import { MapPin, Briefcase, FileText } from "lucide-react";
+import ProfilePicture from "../ProfilePicture/ProfilePicture";
+import "./UserProfileView.css";
 
 function UserProfileView({ userMode, onToggleMode }) {
   const [activeTab, setActiveTab] = useState("All");
-  const tabs = userMode === 'client'
-    ? ["All", "Listings", "Experience", "About", "Applications"]
-    : ["All", "Experience", "About", "Applications"];
-const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-const [newSkill, setNewSkill] = useState("");
-const [isSaving, setIsSaving] = useState(false);
-const [saveError, setSaveError] = useState("");
+  const tabs =
+    userMode === "client"
+      ? ["All", "Listings", "Experience", "About", "Applications"]
+      : ["All", "Experience", "About", "Applications"];
 
-const [profile, setProfile] = useState({
-  id: currentUser.id || null,
-  firstName: currentUser.firstName || "",
-  lastName: currentUser.lastName || "",
-  email: currentUser.email || "",
-  imageUrl: currentUser.imageUrl || "",
-  bio: currentUser.bio || "",
-  location: currentUser.location || "",
-  skills: Array.isArray(currentUser.skills) ? currentUser.skills : [],
-  resumeUrl: currentUser.resumeUrl || "",
-  certificationUrl: currentUser.certificationUrl || "",
-});
-const [formData, setFormData] = useState({
-  imageUrl: "",
-  bio: "",
-  location: "",
-  skills: [],
-  resumeUrl: "",
-  certificationUrl: "",
-});
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [newSkill, setNewSkill] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [profileError, setProfileError] = useState("");
 
-const openEditModal = () => {
-  setFormData({
-    imageUrl: profile.imageUrl || "",
-    bio: profile.bio || "",
-    location: profile.location || "",
-    skills: Array.isArray(profile.skills) ? [...profile.skills] : [],
-    resumeUrl: profile.resumeUrl || "",
-    certificationUrl: profile.certificationUrl || "",
-  });
-  setNewSkill("");
-  setSaveError("");
-  setIsEditModalOpen(true);
-};
-
-const closeEditModal = () => {
-  setIsEditModalOpen(false);
-};
-
-const handleFieldChange = (event) => {
-  const { name, value } = event.target;
-  setFormData((prev) => ({ ...prev, [name]: value }));
-};
-
-const addSkill = () => {
-  const trimmed = newSkill.trim();
-  if (!trimmed) return;
-  if (formData.skills.includes(trimmed)) return;
-  setFormData((prev) => ({ ...prev, skills: [...prev.skills, trimmed] }));
-  setNewSkill("");
-};
-
-const removeSkill = (skillToRemove) => {
-  setFormData((prev) => ({
-    ...prev,
-    skills: prev.skills.filter((skill) => skill !== skillToRemove),
-  }));
-};
-
-const handleSaveProfile = async () => {
-  try {
-    setIsSaving(true);
-    setSaveError("");
-
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${profile.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(formData),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to update profile");
-    }
-
-    const updated = await res.json();
-    setProfile((prev) => ({ ...prev, ...updated }));
-    setIsEditModalOpen(false);
-  } catch (error) {
-    setSaveError(error.message || "Error saving profile");
-  } finally {
-    setIsSaving(false);
-  }
-};
-
-  // TODO: Fetch user profile data from backend API
-  // Replace this placeholder with real user data
-  const currentUser = {
+  const [profile, setProfile] = useState({
+    id: null,
     firstName: "User",
     lastName: "Name",
-    location: "Location",
+    email: "",
+    imageUrl: "",
     bio: "User bio will be loaded from the backend.",
-    skills: []
+    location: "Location",
+    skills: [],
+    resumeUrl: "",
+    certificationUrl: "",
+  });
+
+  const [formData, setFormData] = useState({
+    imageUrl: "",
+    bio: "",
+    location: "",
+    skills: [],
+    resumeUrl: "",
+    certificationUrl: "",
+  });
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setProfileError("Log in to load your profile.");
+        return;
+      }
+
+      try {
+        setIsLoadingProfile(true);
+        setProfileError("");
+
+        const meResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!meResponse.ok) {
+          throw new Error("Unable to verify your login session");
+        }
+
+        const me = await meResponse.json();
+
+        const profileResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${me.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!profileResponse.ok) {
+          throw new Error("Unable to load your profile");
+        }
+
+        const userProfile = await profileResponse.json();
+        if (ignore) return;
+
+        setProfile({
+          id: userProfile.id ?? me.id ?? null,
+          firstName: userProfile.firstName || "User",
+          lastName: userProfile.lastName || "Name",
+          email: userProfile.email || me.email || "",
+          imageUrl: userProfile.imageUrl || "",
+          bio: userProfile.bio || "",
+          location: userProfile.location || "",
+          skills: Array.isArray(userProfile.skills) ? userProfile.skills : [],
+          resumeUrl: userProfile.resumeUrl || "",
+          certificationUrl: userProfile.certificationUrl || "",
+        });
+      } catch (error) {
+        if (!ignore) {
+          setProfileError(error.message || "Failed to load profile");
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoadingProfile(false);
+        }
+      }
+    };
+
+    loadProfile();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const openEditModal = () => {
+    setFormData({
+      imageUrl: profile.imageUrl || "",
+      bio: profile.bio || "",
+      location: profile.location || "",
+      skills: Array.isArray(profile.skills) ? [...profile.skills] : [],
+      resumeUrl: profile.resumeUrl || "",
+      certificationUrl: profile.certificationUrl || "",
+    });
+    setNewSkill("");
+    setSaveError("");
+    setIsEditModalOpen(true);
   };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleFieldChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const addSkill = () => {
+    const trimmed = newSkill.trim();
+    if (!trimmed) return;
+    if (formData.skills.includes(trimmed)) return;
+    setFormData((prev) => ({ ...prev, skills: [...prev.skills, trimmed] }));
+    setNewSkill("");
+  };
+
+  const removeSkill = (skillToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((skill) => skill !== skillToRemove),
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      if (!profile.id) {
+        throw new Error("Profile id not found");
+      }
+
+      setIsSaving(true);
+      setSaveError("");
+
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${profile.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to update profile");
+      }
+
+      const updated = await res.json();
+      setProfile((prev) => ({
+        ...prev,
+        ...updated,
+        skills: Array.isArray(updated.skills) ? updated.skills : [],
+      }));
+      setIsEditModalOpen(false);
+    } catch (error) {
+      setSaveError(error.message || "Error saving profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const currentUser = profile;
 
   // TODO: Fetch user's listings from backend API
   const userListings = [];
@@ -134,15 +207,18 @@ const handleSaveProfile = async () => {
               Switch to {userMode === 'client' ? 'Provider' : 'Client'} Mode
             </button>
             <button className="edit-btn" onClick={openEditModal}>
-  Edit Profile
-</button>
-
+              Edit Profile
+            </button>
           </div>
           <h1 className="profile-name">{currentUser.firstName} {currentUser.lastName}</h1>
           <div className="profile-sub">
             <MapPin size={13} />
             {currentUser.location} · {userMode === 'client' ? 'Client' : 'Provider'}
           </div>
+          {isLoadingProfile && (
+            <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>Loading profile...</p>
+          )}
+          {profileError && <p className="error-text" style={{ marginBottom: 12 }}>{profileError}</p>}
           <div className="stats-row">
             {[[0, "Listings"], [0, "Reviews"], [0, "Rating"]].map(([num, label]) => (
               <div key={label}>

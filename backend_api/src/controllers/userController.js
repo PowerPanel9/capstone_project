@@ -2,6 +2,19 @@ const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 const { forwardGeocode, reverseGeocode } = require('../utils/geocoder');
 
+const userProfileSelect = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    email: true,
+    bio: true,
+    skills: true,
+    location: true,
+    imageUrl: true,
+    resumeUrl: true,
+    certificationUrl: true,
+};
+
 // Get all users
 const getUsers = async (req, res) => {
     try {
@@ -25,6 +38,7 @@ const getUserById = async (req, res) => {
 
         const user = await prisma.user.findUnique({
             where: { id },
+            select: userProfileSelect,
         });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -38,9 +52,19 @@ const getUserById = async (req, res) => {
 
 const updateUser = async (req, res) => {
     try {
-        const userId = req.user?.userId ?? Number(req.params.id);
-        if (!Number.isInteger(userId) || userId <= 0) {
+        const paramUserId = Number(req.params.id);
+        const authUserId = req.user?.userId;
+
+        if (!Number.isInteger(paramUserId) || paramUserId <= 0) {
             return res.status(400).json({ message: "Invalid user id" });
+        }
+
+        if (!Number.isInteger(authUserId) || authUserId <= 0) {
+            return res.status(401).json({ message: "Unauthorized user" });
+        }
+
+        if (authUserId !== paramUserId) {
+            return res.status(403).json({ message: "You can only update your own profile" });
         }
 
         const {
@@ -56,7 +80,10 @@ const updateUser = async (req, res) => {
             resumeUrl,
             certificationUrl
         } = req.body || {};
-        const requestedAddress = addressText || location;
+        const requestedAddress =
+            typeof addressText === "string" && addressText.trim()
+                ? addressText.trim()
+                : (typeof location === "string" ? location.trim() : "");
 
         const data  = {
             firstName,
@@ -70,8 +97,13 @@ const updateUser = async (req, res) => {
     
         }
         if (requestedAddress) {
-            const { locationText } = await forwardGeocode(requestedAddress);
-            data.location = locationText;
+            try {
+                const { locationText } = await forwardGeocode(requestedAddress);
+                data.location = locationText;
+            } catch (geocodeError) {
+                // Keep profile updates working even if geocoding is unavailable.
+                data.location = requestedAddress;
+            }
         }
 
         if (latitude !=null  && longitude !=null) {
@@ -84,20 +116,9 @@ const updateUser = async (req, res) => {
         }
 
         const updatedUser = await prisma.user.update({
-            where: { id: userId },
+            where: { id: authUserId },
             data,
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                bio: true,
-                skills: true,
-                location: true,
-                imageUrl: true,
-                resumeUrl: true,
-                certificationUrl: true,
-              },
+            select: userProfileSelect,
         });
         res.status(200).json(updatedUser);
     } catch (error) {
