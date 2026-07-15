@@ -176,7 +176,7 @@ function App() {
                   path="/home"
                   element={
                     isAuthenticated ? (
-                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} />
+                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} userMode={userMode} />
                     ) : (
                       <Navigate to="/" replace />
                     )
@@ -290,22 +290,29 @@ function App() {
 }
 
 // Home Page Component
-function HomePage({ bookmarks, onBookmark }) {
+function HomePage({ bookmarks, onBookmark, userMode }) {
   const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);   // first page / new search
+  const [isLoadingMore, setIsLoadingMore] = useState(false); // extra pages
   const [error, setError] = useState(null);
 
   const search = searchParams.get('search') || '';
 
+  // When the search changes, start over: clear listings and load page 1.
   useEffect(() => {
     let ignore = false;
     setIsLoading(true);
     setError(null);
 
-    getListings({ search })
+    getListings({ search, page: 1 })
       .then((data) => {
-        if (!ignore) setListings(data);
+        if (ignore) return;
+        setListings(data.listings);
+        setHasMore(data.hasMore);
+        setPage(1);
       })
       .catch((err) => {
         console.error("Failed to load listings:", err);
@@ -318,6 +325,24 @@ function HomePage({ bookmarks, onBookmark }) {
     return () => { ignore = true; };
   }, [search]);
 
+  // Load the next page and append it to the list. Called when the user scrolls
+  // to the bottom. Guarded so we don't fire while a load is already happening
+  // or when there's nothing left to load.
+  const loadMore = () => {
+    if (isLoading || isLoadingMore || !hasMore) return;
+
+    const nextPage = page + 1;
+    setIsLoadingMore(true);
+    getListings({ search, page: nextPage })
+      .then((data) => {
+        setListings((prev) => [...prev, ...data.listings]);
+        setHasMore(data.hasMore);
+        setPage(nextPage);
+      })
+      .catch((err) => console.error("Failed to load more listings:", err))
+      .finally(() => setIsLoadingMore(false));
+  };
+
   return (
     <>
       {isLoading && <p className="feed-status">Loading listings…</p>}
@@ -326,6 +351,10 @@ function HomePage({ bookmarks, onBookmark }) {
         listings={listings}
         bookmarks={bookmarks}
         onBookmark={onBookmark}
+        userMode={userMode}
+        onLoadMore={loadMore}
+        hasMore={hasMore}
+        isLoadingMore={isLoadingMore}
       />
     </>
   );
@@ -403,6 +432,7 @@ function BookmarksPage({ bookmarks, onBookmark }) {
             bookmarked={true}
             onBookmark={() => onBookmark(listing.id)}
             onClick={() => navigate(`/listing/${listing.id}`)}
+            userMode="provider"
           />
         ))}
         {savedListings.length === 0 && (

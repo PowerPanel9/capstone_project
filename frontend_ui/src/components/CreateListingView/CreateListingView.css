@@ -147,3 +147,86 @@
 .submit-btn:hover {
   background: var(--primary-dark, #6678B8);
 }
+
+/* ----- Price suggestion feature ----- */
+
+/* Row holding the "Rate" label and the suggestion button side by side */
+.rate-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.price-suggest-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--primary, #7B8FC8);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.price-suggest-btn:hover:not(:disabled) {
+  background: #F3F4F6;
+  border-color: var(--primary, #7B8FC8);
+}
+
+.price-suggest-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Result / message boxes */
+.price-rec {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.price-rec-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.price-rec-range {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.price-rec-success {
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+  color: #15803D;
+}
+
+.price-rec-warning {
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  color: #92400E;
+}
+
+.price-rec-error {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+}
+
+/* Spinner for the loading state */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

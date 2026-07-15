@@ -17,11 +17,15 @@ const api = axios.create({
 // GET /api/listings  (optionally filtered by search/category/location)
 // Returns the listings exactly as the backend sends them. Components read the
 // real backend fields directly (price, skillsRequired, imageUrl, user, ...).
-export async function getListings({ search, category, location } = {}) {
+// Returns { listings, page, hasMore, total }. `page`/`limit` drive pagination
+// for the home feed's infinite scroll.
+export async function getListings({ search, category, location, page, limit } = {}) {
   const params = {};
   if (search) params.search = search;
   if (category) params.category = category;
   if (location) params.location = location;
+  if (page) params.page = page;
+  if (limit) params.limit = limit;
 
   const response = await api.get("/api/listings", { params });
   return response.data;

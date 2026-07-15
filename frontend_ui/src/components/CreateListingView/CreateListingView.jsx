@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, DollarSign, Loader } from 'lucide-react';
 // NOTE: when restoring the preserved image-upload UI below, add `Upload` back
 // to the lucide-react import above (it's used by the upload dropbox).
 import { createListing } from '../../api/listings';
+import { getPriceRecommendations } from '../../api/prices';
 import './CreateListingView.css';
 
 // The category options for the dropdown. `value` matches the backend
@@ -43,6 +44,44 @@ function CreateListingView({ onDone }) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Price-suggestion feature state.
+  const [priceRec, setPriceRec] = useState(null);
+  const [loadingPrice, setLoadingPrice] = useState(false);
+  const [priceError, setPriceError] = useState(null);
+
+  // Ask the backend for a suggested price based on similar listings
+  // (same category + nearby location). Auto-fills the price field on success.
+  const handleGetPriceSuggestion = async () => {
+    setPriceError(null);
+    if (!form.category) {
+      setPriceError("Please select a category first.");
+      return;
+    }
+    if (!form.location) {
+      setPriceError("Please enter a location first.");
+      return;
+    }
+
+    try {
+      setLoadingPrice(true);
+      const data = await getPriceRecommendations({
+        category: form.category,
+        location: form.location,
+        description: form.description,
+      });
+      setPriceRec(data);
+      // Pre-fill the price input with the suggestion (user can still edit it).
+      if (data.recommendedPrice) {
+        setForm((prev) => ({ ...prev, price: data.recommendedPrice.toString() }));
+      }
+    } catch (err) {
+      console.error("Price recommendation error:", err);
+      setPriceError("Could not fetch price suggestions. Please try again.");
+    } finally {
+      setLoadingPrice(false);
+    }
+  };
 
   // Build the payload (using the backend's snake_case field names) and POST it.
   const handleSubmit = async () => {
@@ -123,7 +162,27 @@ function CreateListingView({ onDone }) {
             </select>
           </div>
           <div>
-            <label className="form-label">Rate ($)</label>
+            <div className="rate-label-row">
+              <label className="form-label">Rate ($)</label>
+              <button
+                type="button"
+                className="price-suggest-btn"
+                onClick={handleGetPriceSuggestion}
+                disabled={loadingPrice}
+              >
+                {loadingPrice ? (
+                  <>
+                    <Loader size={13} className="spin" />
+                    Loading…
+                  </>
+                ) : (
+                  <>
+                    <DollarSign size={13} />
+                    Get Price Suggestion
+                  </>
+                )}
+              </button>
+            </div>
             <input
               className="form-input"
               type="number"
@@ -135,6 +194,32 @@ function CreateListingView({ onDone }) {
             />
           </div>
         </div>
+
+        {/* Price suggestion results (based on similar listings in the market) */}
+        {priceRec && priceRec.recommendedPrice && (
+          <div className="price-rec price-rec-success">
+            <div className="price-rec-title">
+              💡 Suggested Price: ${priceRec.recommendedPrice}
+            </div>
+            <div>{priceRec.reasoning}</div>
+            {priceRec.priceRange?.min != null && (
+              <div className="price-rec-range">
+                Range: ${priceRec.priceRange.min.toFixed(0)} – ${priceRec.priceRange.max.toFixed(0)}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Shown when there's no market data to base a suggestion on */}
+        {priceRec && !priceRec.recommendedPrice && (
+          <div className="price-rec price-rec-warning">
+            {priceRec.reasoning}
+          </div>
+        )}
+
+        {priceError && (
+          <div className="price-rec price-rec-error">{priceError}</div>
+        )}
 
         {/* Custom category text box — only shown when the user picks "Other" */}
         {form.category === "OTHER" && (
