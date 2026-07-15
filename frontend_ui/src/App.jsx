@@ -13,6 +13,7 @@ import LandingPage from './components/LandingPage/LandingPage';
 import AuthModal from './components/AuthModal/AuthModal';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById } from './api/listings';
+import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
 import { Bookmark } from 'lucide-react';
 import './App.css';
 
@@ -25,7 +26,11 @@ function App() {
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // `bookmarks` is a Set of LISTING ids (used by cards to show the filled icon).
   const [bookmarks, setBookmarks] = useState(new Set());
+  // The backend deletes by BOOKMARK id, but the UI works in listing ids, so we
+  // keep a map of listingId -> bookmarkId to know what to delete.
+  const [bookmarkIds, setBookmarkIds] = useState({});
   const [userMode, setUserMode] = useState("provider");
   const [authMode, setAuthMode] = useState(null);
 
@@ -59,6 +64,19 @@ function App() {
     }
   }, []);
 
+  // Load the logged-in user's bookmarks from the backend on mount.
+  // If nobody is logged in, getBookmarks() returns [] so this is a safe no-op.
+  useEffect(() => {
+    getBookmarks()
+      .then((data) => {
+        setBookmarks(new Set(data.map((b) => b.listingId)));
+        const map = {};
+        data.forEach((b) => { map[b.listingId] = b.id; });
+        setBookmarkIds(map);
+      })
+      .catch((err) => console.error("Failed to load bookmarks:", err));
+  }, []);
+
   // Toggle between client and provider mode
   const toggleUserMode = () => {
     const newMode = userMode === 'client' ? 'provider' : 'client';
@@ -66,16 +84,37 @@ function App() {
     localStorage.setItem('worklyUserMode', newMode);
   };
 
-  const toggleBookmark = (id) => {
-    setBookmarks((prev) => {
-      const newBookmarks = new Set(prev);
-      if (newBookmarks.has(id)) {
-        newBookmarks.delete(id);
+  // Add or remove a bookmark, calling the backend and keeping local state in sync.
+  const toggleBookmark = async (listingId) => {
+    const isBookmarked = bookmarks.has(listingId);
+    try {
+      if (isBookmarked) {
+        // Remove: look up the bookmark id, call DELETE, then update local state.
+        const bookmarkId = bookmarkIds[listingId];
+        if (bookmarkId !== undefined) {
+          await removeBookmark(bookmarkId);
+        }
+        setBookmarks((prev) => {
+          const next = new Set(prev);
+          next.delete(listingId);
+          return next;
+        });
+        setBookmarkIds((prev) => {
+          const next = { ...prev };
+          delete next[listingId];
+          return next;
+        });
       } else {
-        newBookmarks.add(id);
+        // Add: call POST, then store the returned bookmark id.
+        const created = await addBookmark(listingId);
+        setBookmarks((prev) => new Set(prev).add(listingId));
+        setBookmarkIds((prev) => ({ ...prev, [listingId]: created.id }));
       }
-      return newBookmarks;
-    });
+    } catch (err) {
+      // 401 here almost always means "not logged in" (no token).
+      console.error("Bookmark action failed:", err);
+      alert("Please log in to save bookmarks.");
+    }
   };
 
   // Handle successful login/signup
@@ -137,7 +176,7 @@ function App() {
                   path="/home"
                   element={
                     isAuthenticated ? (
-                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} />
+                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} userMode={userMode} />
                     ) : (
                       <Navigate to="/" replace />
                     )
@@ -251,22 +290,29 @@ function App() {
 }
 
 // Home Page Component
-function HomePage({ bookmarks, onBookmark }) {
+function HomePage({ bookmarks, onBookmark, userMode }) {
   const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);   // first page / new search
+  const [isLoadingMore, setIsLoadingMore] = useState(false); // extra pages
   const [error, setError] = useState(null);
 
   const search = searchParams.get('search') || '';
 
+  // When the search changes, start over: clear listings and load page 1.
   useEffect(() => {
     let ignore = false;
     setIsLoading(true);
     setError(null);
 
-    getListings({ search })
+    getListings({ search, page: 1 })
       .then((data) => {
-        if (!ignore) setListings(data);
+        if (ignore) return;
+        setListings(data.listings);
+        setHasMore(data.hasMore);
+        setPage(1);
       })
       .catch((err) => {
         console.error("Failed to load listings:", err);
@@ -279,6 +325,24 @@ function HomePage({ bookmarks, onBookmark }) {
     return () => { ignore = true; };
   }, [search]);
 
+  // Load the next page and append it to the list. Called when the user scrolls
+  // to the bottom. Guarded so we don't fire while a load is already happening
+  // or when there's nothing left to load.
+  const loadMore = () => {
+    if (isLoading || isLoadingMore || !hasMore) return;
+
+    const nextPage = page + 1;
+    setIsLoadingMore(true);
+    getListings({ search, page: nextPage })
+      .then((data) => {
+        setListings((prev) => [...prev, ...data.listings]);
+        setHasMore(data.hasMore);
+        setPage(nextPage);
+      })
+      .catch((err) => console.error("Failed to load more listings:", err))
+      .finally(() => setIsLoadingMore(false));
+  };
+
   return (
     <>
       {isLoading && <p className="feed-status">Loading listings…</p>}
@@ -287,6 +351,10 @@ function HomePage({ bookmarks, onBookmark }) {
         listings={listings}
         bookmarks={bookmarks}
         onBookmark={onBookmark}
+        userMode={userMode}
+        onLoadMore={loadMore}
+        hasMore={hasMore}
+        isLoadingMore={isLoadingMore}
       />
     </>
   );
@@ -331,33 +399,43 @@ function CreateListingPage() {
 }
 
 // Bookmarks Page Component
+// Fetches the user's saved bookmarks from the backend. Each bookmark comes with
+// its full listing (and the listing's owner), so we render those listings.
 function BookmarksPage({ bookmarks, onBookmark }) {
   const navigate = useNavigate();
-  const [listings, setListings] = useState([]);
+  const [savedListings, setSavedListings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Re-fetch whenever the set of bookmarks changes (e.g. user removes one here).
   useEffect(() => {
-    getListings({})
-      .then((data) => setListings(data))
-      .catch((err) => console.error("Failed to load listings:", err))
-      .finally(() => setIsLoading(false));
-  }, []);
+    let ignore = false;
+    setIsLoading(true);
+    getBookmarks()
+      .then((data) => {
+        // Each bookmark has a nested `listing`; pull those out to show as cards.
+        if (!ignore) setSavedListings(data.map((b) => b.listing));
+      })
+      .catch((err) => console.error("Failed to load bookmarks:", err))
+      .finally(() => { if (!ignore) setIsLoading(false); });
+    return () => { ignore = true; };
+  }, [bookmarks]);
 
   if (isLoading) return <p className="feed-status">Loading bookmarks…</p>;
 
   return (
     <div className="home-wrap">
       <div className="listing-feed">
-        {listings.filter((l) => bookmarks.has(l.id)).map((listing) => (
+        {savedListings.map((listing) => (
           <ListingCard
             key={listing.id}
             listing={listing}
             bookmarked={true}
             onBookmark={() => onBookmark(listing.id)}
             onClick={() => navigate(`/listing/${listing.id}`)}
+            userMode="provider"
           />
         ))}
-        {bookmarks.size === 0 && (
+        {savedListings.length === 0 && (
           <div className="empty-state">
             <Bookmark size={32} />
             <p>No bookmarks yet</p>

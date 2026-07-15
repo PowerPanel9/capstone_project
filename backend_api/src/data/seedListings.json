@@ -2,79 +2,391 @@
   {
     "title": "Weekend Lawn Mowing & Yard Cleanup",
     "category": "GARDENING",
-    "poster": {
-      "firstName": "Marcus",
-      "lastName": "Chen",
-      "location": "Lincoln, NE"
-    },
-    "price": 40,
+    "poster": { "firstName": "Marcus", "lastName": "Chen", "location": "Lincoln, NE" },
+    "price": 45,
     "description": "Need someone reliable to mow the front and back lawn, trim the edges, and bag the clippings every other weekend. Small yard, should take about an hour.",
     "skillsRequired": ["Lawn Care", "Landscaping"],
     "imageUrl": "https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?w=900&h=480&fit=crop&auto=format"
   },
   {
-    "title": "Deep Clean for 2-Bedroom Apartment",
-    "category": "CLEANING",
-    "poster": {
-      "firstName": "Sarah",
-      "lastName": "Mills",
-      "location": "Omaha, NE"
-    },
-    "price": 90,
-    "description": "Looking for a thorough deep clean before a move-out: kitchen, two bathrooms, floors, and windows. Supplies provided. Flexible on timing this week.",
-    "skillsRequired": ["Deep Cleaning", "Move-Out Cleaning"],
+    "title": "Flower Bed Weeding and Mulching",
+    "category": "GARDENING",
+    "poster": { "firstName": "Diane", "lastName": "Foster", "location": "Lincoln, NE" },
+    "price": 55,
+    "description": "Two flower beds along the front walkway need weeding and a fresh layer of mulch. I'll provide the mulch bags, you bring the tools. About 2 hours of work.",
+    "skillsRequired": ["Weeding", "Mulching", "Gardening"],
     "imageUrl": null
   },
   {
+    "title": "Hedge Trimming and Shrub Shaping",
+    "category": "GARDENING",
+    "poster": { "firstName": "Raymond", "lastName": "Ortiz", "location": "Omaha, NE" },
+    "price": 60,
+    "description": "Six overgrown boxwood shrubs and a long hedge need trimming and shaping. Must have your own hedge trimmer. Cleanup of clippings included.",
+    "skillsRequired": ["Hedge Trimming", "Landscaping"],
+    "imageUrl": null
+  },
+  {
+    "title": "Fall Leaf Raking (Large Corner Lot)",
+    "category": "GARDENING",
+    "poster": { "firstName": "Nancy", "lastName": "Whitfield", "location": "Bellevue, NE" },
+    "price": 50,
+    "description": "Big corner lot with several mature trees drops a ton of leaves. Need them raked, bagged, and set out for city pickup. Yard waste bags provided.",
+    "skillsRequired": ["Leaf Removal", "Yard Work"],
+    "imageUrl": null
+  },
+  {
+    "title": "Garden Bed Installation & Planting",
+    "category": "GARDENING",
+    "poster": { "firstName": "Grace", "lastName": "Kim", "location": "Omaha, NE" },
+    "price": 140,
+    "description": "Building two raised vegetable beds from a kit and planting starter vegetables. Looking for someone with gardening experience to assemble, fill with soil, and plant. Half-day job.",
+    "skillsRequired": ["Gardening", "Planting", "Landscaping"],
+    "imageUrl": null
+  },
+
+  {
+    "title": "Deep Clean for 2-Bedroom Apartment",
+    "category": "CLEANING",
+    "poster": { "firstName": "Sarah", "lastName": "Mills", "location": "Omaha, NE" },
+    "price": 120,
+    "description": "Thorough move-out deep clean: kitchen appliances inside and out, two bathrooms, baseboards, floors, and windows. Supplies provided. About 3-4 hours.",
+    "skillsRequired": ["Deep Cleaning", "Move-Out Cleaning"],
+    "imageUrl": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=900&h=480&fit=crop&auto=format"
+  },
+  {
+    "title": "Weekly House Cleaning (3 Bed / 2 Bath)",
+    "category": "CLEANING",
+    "poster": { "firstName": "Olivia", "lastName": "Bennett", "location": "Lincoln, NE" },
+    "price": 100,
+    "description": "Looking for a recurring weekly clean of a 3-bedroom home: dusting, vacuuming, mopping, kitchen, and bathrooms. Consistent day each week preferred.",
+    "skillsRequired": ["House Cleaning", "Vacuuming", "Dusting"],
+    "imageUrl": null
+  },
+  {
+    "title": "Post-Party Kitchen & Living Room Cleanup",
+    "category": "CLEANING",
+    "poster": { "firstName": "Derek", "lastName": "Allen", "location": "Omaha, NE" },
+    "price": 80,
+    "description": "Hosted a birthday party and need help the next morning cleaning the kitchen, wiping counters, taking out trash, and vacuuming the living room. Roughly 2 hours.",
+    "skillsRequired": ["Cleaning", "Kitchen Cleaning"],
+    "imageUrl": null
+  },
+  {
+    "title": "Office Cleaning for Small Business",
+    "category": "CLEANING",
+    "poster": { "firstName": "Helen", "lastName": "Nguyen", "location": "Lincoln, NE" },
+    "price": 110,
+    "description": "Small 5-room office needs an evening clean twice a week: trash, restrooms, break room, and floors. Looking for someone dependable and detail-oriented.",
+    "skillsRequired": ["Office Cleaning", "Commercial Cleaning"],
+    "imageUrl": null
+  },
+  {
+    "title": "Refrigerator and Oven Deep Clean",
+    "category": "CLEANING",
+    "poster": { "firstName": "Bianca", "lastName": "Rossi", "location": "Bellevue, NE" },
+    "price": 65,
+    "description": "Just need the fridge and oven scrubbed inside and out — they've been neglected. Bring your own cleaning supplies. Should take about 90 minutes.",
+    "skillsRequired": ["Deep Cleaning", "Appliance Cleaning"],
+    "imageUrl": null
+  },
+
+  {
     "title": "After-School Math Tutor (7th Grade)",
     "category": "TUTORING",
-    "poster": {
-      "firstName": "Jordan",
-      "lastName": "Lee",
-      "location": "Remote"
-    },
-    "price": 30,
+    "poster": { "firstName": "Jordan", "lastName": "Lee", "location": "Remote" },
+    "price": 35,
     "description": "Seeking a patient tutor to help my 7th grader with pre-algebra twice a week over video call. Goal is to build confidence before end-of-year exams.",
     "skillsRequired": ["Math", "Pre-Algebra", "Tutoring"],
     "imageUrl": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=900&h=480&fit=crop&auto=format"
   },
   {
+    "title": "High School Chemistry Help",
+    "category": "TUTORING",
+    "poster": { "firstName": "Andre", "lastName": "Washington", "location": "Omaha, NE" },
+    "price": 45,
+    "description": "My daughter needs help with 11th grade chemistry — balancing equations and stoichiometry. Prefer in-person at our home or the public library, one hour twice weekly.",
+    "skillsRequired": ["Chemistry", "Tutoring"],
+    "imageUrl": null
+  },
+  {
+    "title": "Beginner Spanish Conversation Practice",
+    "category": "TUTORING",
+    "poster": { "firstName": "Megan", "lastName": "Doyle", "location": "Remote" },
+    "price": 30,
+    "description": "Adult learner looking for a native or fluent Spanish speaker for casual conversation practice over video, one hour a week. Patience appreciated!",
+    "skillsRequired": ["Spanish", "Language Tutoring"],
+    "imageUrl": null
+  },
+  {
+    "title": "SAT Prep Tutoring (Math Section)",
+    "category": "TUTORING",
+    "poster": { "firstName": "Victor", "lastName": "Hale", "location": "Lincoln, NE" },
+    "price": 55,
+    "description": "Junior preparing for the SAT needs focused help on the math section. Looking for someone familiar with the current test format and practice strategies.",
+    "skillsRequired": ["SAT Prep", "Math", "Tutoring"],
+    "imageUrl": null
+  },
+  {
+    "title": "Elementary Reading Tutor",
+    "category": "TUTORING",
+    "poster": { "firstName": "Carla", "lastName": "Jimenez", "location": "Bellevue, NE" },
+    "price": 32,
+    "description": "My 2nd grader needs help building reading fluency and comprehension. Looking for a warm, encouraging tutor for 45-minute sessions after school.",
+    "skillsRequired": ["Reading", "Elementary Education", "Tutoring"],
+    "imageUrl": null
+  },
+
+  {
     "title": "Fix a Leaky Kitchen Sink",
     "category": "PLUMBING",
-    "poster": {
-      "firstName": "Emily",
-      "lastName": "Park",
-      "location": "Lincoln, NE"
-    },
-    "price": 75,
+    "poster": { "firstName": "Emily", "lastName": "Park", "location": "Lincoln, NE" },
+    "price": 95,
     "description": "The pipe under my kitchen sink has a slow leak and the faucet drips. Need someone with plumbing experience to diagnose and repair. Parts can be reimbursed.",
     "skillsRequired": ["Plumbing", "Pipe Repair"],
     "imageUrl": null
   },
   {
+    "title": "Replace a Running Toilet",
+    "category": "PLUMBING",
+    "poster": { "firstName": "Frank", "lastName": "Delgado", "location": "Omaha, NE" },
+    "price": 110,
+    "description": "Toilet runs constantly and the flapper/fill valve need replacing, or possibly a new toilet install. Looking for someone who can assess and fix same-day.",
+    "skillsRequired": ["Plumbing", "Toilet Repair"],
+    "imageUrl": null
+  },
+  {
+    "title": "Install a New Bathroom Faucet",
+    "category": "PLUMBING",
+    "poster": { "firstName": "Aisha", "lastName": "Rahman", "location": "Lincoln, NE" },
+    "price": 85,
+    "description": "Bought a new bathroom faucet and need it installed, with the old one removed. Should be a straightforward job for someone experienced. Faucet already on hand.",
+    "skillsRequired": ["Plumbing", "Faucet Installation"],
+    "imageUrl": null
+  },
+  {
+    "title": "Unclog Basement Floor Drain",
+    "category": "PLUMBING",
+    "poster": { "firstName": "Louis", "lastName": "Barrett", "location": "Bellevue, NE" },
+    "price": 120,
+    "description": "Basement floor drain is backing up. Need someone with a drain snake to clear the clog and check that it's draining properly. Water access available.",
+    "skillsRequired": ["Plumbing", "Drain Cleaning"],
+    "imageUrl": null
+  },
+
+  {
     "title": "Saturday Evening Babysitter for Two Kids",
     "category": "BABYSITTING",
-    "poster": {
-      "firstName": "Priya",
-      "lastName": "Nair",
-      "location": "Bellevue, NE"
-    },
-    "price": 60,
+    "poster": { "firstName": "Priya", "lastName": "Nair", "location": "Bellevue, NE" },
+    "price": 70,
     "description": "Need a trustworthy babysitter for our 4- and 6-year-old on Saturday evening (5-10pm). Dinner is prepped; mostly playtime and bedtime routine.",
     "skillsRequired": ["Childcare", "First Aid"],
     "imageUrl": "https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=900&h=480&fit=crop&auto=format"
   },
   {
+    "title": "Weekday After-School Sitter",
+    "category": "BABYSITTING",
+    "poster": { "firstName": "Rachel", "lastName": "Simmons", "location": "Lincoln, NE" },
+    "price": 60,
+    "description": "Looking for someone to pick up my 8-year-old from school, bring him home, help with a snack and homework until I get off work around 6pm. Mon-Wed.",
+    "skillsRequired": ["Childcare", "Homework Help"],
+    "imageUrl": null
+  },
+  {
+    "title": "Date-Night Babysitter for One Toddler",
+    "category": "BABYSITTING",
+    "poster": { "firstName": "Kevin", "lastName": "Foley", "location": "Omaha, NE" },
+    "price": 55,
+    "description": "My wife and I want a Friday night out. Need a sitter for our 2-year-old from 6-10pm. Experience with toddlers and bedtime routines a big plus.",
+    "skillsRequired": ["Childcare", "Toddler Care"],
+    "imageUrl": null
+  },
+  {
+    "title": "Full-Day Summer Babysitting",
+    "category": "BABYSITTING",
+    "poster": { "firstName": "Monica", "lastName": "Reyes", "location": "Bellevue, NE" },
+    "price": 130,
+    "description": "Need full-day care (8am-5pm) for two kids (5 and 7) a few days a week this summer. Activities, lunch, and outings to the park. References required.",
+    "skillsRequired": ["Childcare", "First Aid", "Activity Planning"],
+    "imageUrl": null
+  },
+
+  {
     "title": "Help Moving a Couch and Boxes",
     "category": "MOVING",
-    "poster": {
-      "firstName": "Tom",
-      "lastName": "Garcia",
-      "location": "Omaha, NE"
-    },
-    "price": 50,
+    "poster": { "firstName": "Tom", "lastName": "Garcia", "location": "Omaha, NE" },
+    "price": 60,
     "description": "Moving a few blocks away and need an extra set of hands for a couch, a mattress, and about 15 boxes. Truck is already rented — just need muscle for two hours.",
     "skillsRequired": ["Heavy Lifting", "Moving"],
+    "imageUrl": null
+  },
+  {
+    "title": "Two Movers for Studio Apartment",
+    "category": "MOVING",
+    "poster": { "firstName": "Isabel", "lastName": "Cortez", "location": "Lincoln, NE" },
+    "price": 150,
+    "description": "Moving out of a 3rd-floor studio (no elevator) into a nearby house. Need two strong movers for about 3 hours. Furniture is light but stairs are involved.",
+    "skillsRequired": ["Heavy Lifting", "Moving"],
+    "imageUrl": null
+  },
+  {
+    "title": "Load a Moving Truck",
+    "category": "MOVING",
+    "poster": { "firstName": "Nathan", "lastName": "Brooks", "location": "Omaha, NE" },
+    "price": 90,
+    "description": "Everything is boxed and ready — I just need help loading a 16-foot truck efficiently so nothing shifts. Should take about 2 hours with the right person.",
+    "skillsRequired": ["Heavy Lifting", "Moving", "Packing"],
+    "imageUrl": null
+  },
+  {
+    "title": "Move Furniture Between Rooms",
+    "category": "MOVING",
+    "poster": { "firstName": "Sofia", "lastName": "Marchetti", "location": "Bellevue, NE" },
+    "price": 45,
+    "description": "Rearranging my house and need help moving a heavy dresser, bookshelf, and bed frame between rooms and up a short staircase. About an hour of lifting.",
+    "skillsRequired": ["Heavy Lifting", "Moving"],
+    "imageUrl": null
+  },
+
+  {
+    "title": "Mount a TV on Drywall",
+    "category": "HANDYMAN",
+    "poster": { "firstName": "Greg", "lastName": "Sullivan", "location": "Lincoln, NE" },
+    "price": 70,
+    "description": "Need a 55-inch TV wall-mounted over the fireplace with the cables concealed. Mount and hardware already purchased. Must find the studs and level it properly.",
+    "skillsRequired": ["TV Mounting", "Drywall", "Handyman"],
+    "imageUrl": null
+  },
+  {
+    "title": "Assemble IKEA Furniture",
+    "category": "HANDYMAN",
+    "poster": { "firstName": "Hana", "lastName": "Okafor", "location": "Omaha, NE" },
+    "price": 65,
+    "description": "Two IKEA dressers and a bookshelf need assembling. All boxes and instructions are here; just need someone handy with tools and patience for the little pegs.",
+    "skillsRequired": ["Furniture Assembly", "Handyman"],
+    "imageUrl": null
+  },
+  {
+    "title": "Patch and Paint Drywall Holes",
+    "category": "HANDYMAN",
+    "poster": { "firstName": "Curtis", "lastName": "Boyd", "location": "Bellevue, NE" },
+    "price": 90,
+    "description": "A few nail holes and one fist-sized hole in the hallway drywall need patching, sanding, and painting to match. Paint provided. Small but detail-oriented job.",
+    "skillsRequired": ["Drywall Repair", "Painting", "Handyman"],
+    "imageUrl": null
+  },
+  {
+    "title": "Fix a Sticking Interior Door",
+    "category": "HANDYMAN",
+    "poster": { "firstName": "Yuki", "lastName": "Tanaka", "location": "Lincoln, NE" },
+    "price": 50,
+    "description": "Bedroom door sticks and won't latch properly — probably needs the hinges adjusted or the door planed a bit. Quick job for someone who knows what they're doing.",
+    "skillsRequired": ["Handyman", "Door Repair"],
+    "imageUrl": null
+  },
+
+  {
+    "title": "Bridal Hair and Makeup",
+    "category": "BEAUTY",
+    "poster": { "firstName": "Jasmine", "lastName": "Carter", "location": "Omaha, NE" },
+    "price": 200,
+    "description": "Getting married next month and need a stylist for bridal hair and makeup on the morning of, at our venue. Trial session beforehand preferred. Portfolio a must.",
+    "skillsRequired": ["Hair Styling", "Makeup", "Bridal"],
+    "imageUrl": null
+  },
+  {
+    "title": "Box Braids Appointment",
+    "category": "BEAUTY",
+    "poster": { "firstName": "Aaliyah", "lastName": "Johnson", "location": "Lincoln, NE" },
+    "price": 150,
+    "description": "Looking for an experienced braider for medium-sized box braids, mid-back length. I'll bring my own hair. Please share photos of past work when you reach out.",
+    "skillsRequired": ["Braiding", "Hair Styling"],
+    "imageUrl": null
+  },
+  {
+    "title": "At-Home Gel Manicure",
+    "category": "BEAUTY",
+    "poster": { "firstName": "Chloe", "lastName": "Adams", "location": "Bellevue, NE" },
+    "price": 45,
+    "description": "Want a gel manicure done at my home this weekend. I have a small setup but you'd need to bring your lamp and polishes. Simple, clean design.",
+    "skillsRequired": ["Manicure", "Nail Art"],
+    "imageUrl": null
+  },
+  {
+    "title": "Men's Haircut and Beard Trim",
+    "category": "BEAUTY",
+    "poster": { "firstName": "Elijah", "lastName": "Turner", "location": "Omaha, NE" },
+    "price": 40,
+    "description": "Looking for a mobile barber to come to my place for a clean fade and beard lineup. Would love to make this a recurring monthly thing if it goes well.",
+    "skillsRequired": ["Haircut", "Barbering", "Beard Trim"],
+    "imageUrl": null
+  },
+
+  {
+    "title": "Grocery Delivery (Weekly)",
+    "category": "DELIVERY",
+    "poster": { "firstName": "Margaret", "lastName": "Pierce", "location": "Lincoln, NE" },
+    "price": 30,
+    "description": "I'm elderly and need help picking up a weekly grocery order and bringing it inside. List and payment provided in advance. Reliability is the most important thing.",
+    "skillsRequired": ["Delivery", "Grocery Shopping"],
+    "imageUrl": null
+  },
+  {
+    "title": "Pick Up and Deliver Furniture",
+    "category": "DELIVERY",
+    "poster": { "firstName": "Steven", "lastName": "Lang", "location": "Omaha, NE" },
+    "price": 65,
+    "description": "Bought a dresser off Marketplace across town and need someone with a truck to pick it up and drop it at my apartment. One flight of stairs on delivery.",
+    "skillsRequired": ["Delivery", "Truck", "Heavy Lifting"],
+    "imageUrl": null
+  },
+  {
+    "title": "Same-Day Document Courier",
+    "category": "DELIVERY",
+    "poster": { "firstName": "Denise", "lastName": "Walsh", "location": "Lincoln, NE" },
+    "price": 25,
+    "description": "Need signed documents picked up from my office and dropped at a law firm across town today. Small envelope, must be handled carefully and delivered by 4pm.",
+    "skillsRequired": ["Delivery", "Courier"],
+    "imageUrl": null
+  },
+  {
+    "title": "Weekly Meal Prep Delivery Runs",
+    "category": "DELIVERY",
+    "poster": { "firstName": "Omar", "lastName": "Haddad", "location": "Bellevue, NE" },
+    "price": 40,
+    "description": "I run a small meal-prep side business and need help delivering 8-10 orders around town every Sunday afternoon. Insulated bags provided; you provide the car.",
+    "skillsRequired": ["Delivery", "Driving", "Time Management"],
+    "imageUrl": null
+  },
+
+  {
+    "title": "Dog Walking (Twice Daily)",
+    "category": "OTHER",
+    "customCategory": "Pet Care",
+    "poster": { "firstName": "Laura", "lastName": "Bishop", "location": "Lincoln, NE" },
+    "price": 35,
+    "description": "Need someone to walk my energetic Labrador twice a day (morning and early evening) while I'm at work this week. 20-30 minute walks around the neighborhood.",
+    "skillsRequired": ["Dog Walking", "Pet Care"],
+    "imageUrl": null
+  },
+  {
+    "title": "Cat Sitting While I'm Away",
+    "category": "OTHER",
+    "customCategory": "Pet Care",
+    "poster": { "firstName": "Peter", "lastName": "Novak", "location": "Omaha, NE" },
+    "price": 45,
+    "description": "Traveling for 5 days and need someone to stop by once daily to feed my two cats, refresh water, and scoop the litter box. A little playtime appreciated.",
+    "skillsRequired": ["Pet Care", "Cat Sitting"],
+    "imageUrl": null
+  },
+  {
+    "title": "Personal Grocery Shopper & Organizer",
+    "category": "OTHER",
+    "customCategory": "Personal Assistant",
+    "poster": { "firstName": "Ruth", "lastName": "Callahan", "location": "Bellevue, NE" },
+    "price": 50,
+    "description": "Looking for help with weekly errands: grocery shopping from my list and putting things away, plus tidying the pantry. About 2-3 hours, flexible day.",
+    "skillsRequired": ["Errands", "Organization", "Personal Assistant"],
     "imageUrl": null
   }
 ]
