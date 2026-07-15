@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import Sidebar from './components/Sidebar/Sidebar';
 import TopBar from './components/TopBar/TopBar';
 import HomeView from './components/HomeView/HomeView';
@@ -9,6 +9,8 @@ import UserProfileView from './components/UserProfileView/UserProfileView';
 import CreateListingView from './components/CreateListingView/CreateListingView';
 import ApplicationModal from './components/ApplicationModal/ApplicationModal';
 import AIAgentModal from './components/AIAgentModal/AIAgentModal';
+import LandingPage from './components/LandingPage/LandingPage';
+import AuthModal from './components/AuthModal/AuthModal';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById } from './api/listings';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
@@ -16,6 +18,11 @@ import { Bookmark } from 'lucide-react';
 import './App.css';
 
 function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -25,6 +32,29 @@ function App() {
   // keep a map of listingId -> bookmarkId to know what to delete.
   const [bookmarkIds, setBookmarkIds] = useState({});
   const [userMode, setUserMode] = useState("provider");
+  const [authMode, setAuthMode] = useState(null);
+
+  // Check if user is already logged in on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+
+    if (token && savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setIsAuthenticated(true);
+        setCurrentUser(parsedUser);
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        // Clear invalid data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+
+    // Mark auth check as complete
+    setAuthLoading(false);
+  }, []);
 
   // Load saved mode from localStorage on mount
   useEffect(() => {
@@ -87,88 +117,175 @@ function App() {
     }
   };
 
-  // Mock current user (since we're skipping auth for now)
-  const mockUser = {
-    firstName: "Test",
-    lastName: "User"
+  // Handle successful login/signup
+  const handleAuthSuccess = (userData) => {
+    // AuthModal already saves to localStorage, just update state
+    setIsAuthenticated(true);
+    setCurrentUser(userData);
+    setAuthMode(null);
+    navigate('/home');
   };
 
-  return (
-    <div className={`app ${userMode}-mode`}>
-      <aside className="sidebar" style={{ width: sidebarOpen ? 256 : 0 }}>
-        <Sidebar
-          currentUser={mockUser}
-          userMode={userMode}
-        />
-      </aside>
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    navigate('/');
+  };
 
-      <div className="main">
-        <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+  // Determine if we should show the main app layout (sidebar + topbar)
+  const showMainLayout = isAuthenticated && location.pathname !== '/';
 
-        <div className="content">
-          <Routes>
-            {/* Redirect root to /home */}
-            <Route path="/" element={<Navigate to="/home" replace />} />
-
-            {/* Home page - listing feed */}
-            <Route
-              path="/home"
-              element={
-                <HomePage
-                  bookmarks={bookmarks}
-                  onBookmark={toggleBookmark}
-                />
-              }
-            />
-
-            {/* Listing detail page */}
-            <Route
-              path="/listing/:id"
-              element={
-                <ListingDetailPage
-                  userMode={userMode}
-                  onApply={() => setShowApplyModal(true)}
-                />
-              }
-            />
-
-            {/* Create listing page */}
-            <Route path="/listing/create" element={<CreateListingPage />} />
-
-            {/* User profile page */}
-            <Route
-              path="/user/profile"
-              element={
-                <UserProfileView
-                  userMode={userMode}
-                  onToggleMode={toggleUserMode}
-                />
-              }
-            />
-
-            {/* Bookmarks page */}
-            <Route
-              path="/user/bookmarks"
-              element={
-                <BookmarksPage
-                  bookmarks={bookmarks}
-                  onBookmark={toggleBookmark}
-                />
-              }
-            />
-
-            {/* Messages page */}
-            <Route path="/messages" element={<MessagesView />} />
-          </Routes>
-        </div>
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '18px',
+        color: '#666'
+      }}>
+        Loading...
       </div>
+    );
+  }
 
-      {showApplyModal && (
-        <ApplicationModal listing={null} onClose={() => setShowApplyModal(false)} />
+  return (
+    <>
+      {showMainLayout ? (
+        // Main app layout with sidebar and topbar
+        <div className={`app ${userMode}-mode`}>
+          <aside className="sidebar" style={{ width: sidebarOpen ? 256 : 0 }}>
+            <Sidebar
+              currentUser={currentUser}
+              userMode={userMode}
+            />
+          </aside>
+
+          <div className="main">
+            <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+
+            <div className="content">
+              <Routes>
+                {/* Protected routes - redirect to landing if not authenticated */}
+                <Route
+                  path="/home"
+                  element={
+                    isAuthenticated ? (
+                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                <Route
+                  path="/listing/:id"
+                  element={
+                    isAuthenticated ? (
+                      <ListingDetailPage
+                        userMode={userMode}
+                        onApply={() => setShowApplyModal(true)}
+                      />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                <Route
+                  path="/listing/create"
+                  element={
+                    isAuthenticated ? (
+                      <CreateListingPage />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                <Route
+                  path="/user/profile"
+                  element={
+                    isAuthenticated ? (
+                      <UserProfileView
+                        userMode={userMode}
+                        onToggleMode={toggleUserMode}
+                      />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                <Route
+                  path="/user/bookmarks"
+                  element={
+                    isAuthenticated ? (
+                      <BookmarksPage bookmarks={bookmarks} onBookmark={toggleBookmark} />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                <Route
+                  path="/messages"
+                  element={
+                    isAuthenticated ? (
+                      <MessagesView />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                {/* Catch-all route - redirect to home if authenticated, landing if not */}
+                <Route
+                  path="*"
+                  element={<Navigate to={isAuthenticated ? "/home" : "/"} replace />}
+                />
+              </Routes>
+            </div>
+          </div>
+
+          {/* Modals */}
+          {showApplyModal && (
+            <ApplicationModal listing={null} onClose={() => setShowApplyModal(false)} />
+          )}
+
+          {showAIModal && <AIAgentModal onClose={() => setShowAIModal(false)} />}
+        </div>
+      ) : (
+        // Landing page - shown when not authenticated
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <LandingPage
+                onOpenLogin={() => setAuthMode('login')}
+                onOpenSignup={() => setAuthMode('signup')}
+              />
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       )}
 
-      {showAIModal && <AIAgentModal onClose={() => setShowAIModal(false)} />}
-    </div>
+      {/* Auth modal - shown outside main layout */}
+      {authMode && (
+        <AuthModal
+          mode={authMode}
+          onClose={() => setAuthMode(null)}
+          onSuccess={handleAuthSuccess}
+          onSwitchMode={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+        />
+      )}
+    </>
   );
 }
 
