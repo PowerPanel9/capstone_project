@@ -17,6 +17,9 @@
 .profile-banner {
   height: 128px;
   background: var(--primary-gradient, linear-gradient(to right, #AABAE8, #8B9FD4, #7B8FC8));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .profile-body {
@@ -32,6 +35,18 @@
 .profile-avatar-wrap {
   margin-top: -40px;
   margin-bottom: 16px;
+}
+
+.profile-avatar-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.profile-avatar-btn:hover .profile-avatar,
+.profile-avatar-btn:focus-visible .profile-avatar {
+  box-shadow: 0 0 0 3px rgba(123, 143, 200, 0.35), 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .profile-avatar {

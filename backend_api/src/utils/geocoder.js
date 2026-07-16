@@ -17,10 +17,18 @@ async function forwardGeocode(addressText) {
   }
 
   const first = results[0];
+  console.log("node-geocoder results", results);
+
   return {
     latitude: first.latitude,
     longitude: first.longitude,
     locationText: first.formattedAddress || first.formatted || addressText,
+    city: first.city || first.administrativeLevels?.level2long || "",
+    state:
+      first.stateCode ||
+      first.administrativeLevels?.level1short ||
+      first.state ||
+      "",
   };
 }
 

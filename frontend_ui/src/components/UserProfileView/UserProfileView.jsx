@@ -13,6 +13,89 @@ async function readJsonSafe(response) {
   return response.json();
 }
 
+function formatCityState(locationValue) {
+  if (!locationValue || typeof locationValue !== "string") return "Location";
+
+  const parts = locationValue
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const US_STATE_NAMES_TO_CODE = {
+    alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
+    colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
+    hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
+    kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
+    massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO",
+    montana: "MT", nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ",
+    "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND",
+    ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
+    "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
+    vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
+    wyoming: "WY",
+  };
+
+  const streetLikePattern =
+    /\b(street|st|avenue|ave|boulevard|blvd|road|rd|drive|dr|lane|ln|way|court|ct|place|pl)\b/i;
+  const nonCityPattern =
+    /\b(county|parish|region|district|state|country|usa|united states)\b/i;
+
+  const parseStateCode = (value) => {
+    const trimmed = value.trim();
+    const abbrMatch = trimmed.match(/\b([A-Z]{2})\b/);
+    if (abbrMatch) return abbrMatch[1];
+    return US_STATE_NAMES_TO_CODE[trimmed.toLowerCase()] || "";
+  };
+
+  // Prefer a deterministic "city, state" extraction:
+  // find state token and walk backward to the nearest valid city segment.
+  for (let i = 0; i < parts.length; i += 1) {
+    const state = parseStateCode(parts[i]);
+    if (!state) continue;
+
+    for (let j = i - 1; j >= 0; j -= 1) {
+      const candidate = parts[j].replace(/\d+/g, "").trim();
+      if (!candidate) continue;
+      if (streetLikePattern.test(candidate)) continue;
+      if (nonCityPattern.test(candidate)) continue;
+      return `${candidate}, ${state}`;
+    }
+  }
+
+  // Handle common format: "Street Address, City ST 12345"
+  if (parts.length === 2) {
+    const tail = parts[1];
+    const cityStateZipMatch = tail.match(/^(.+?)\s+([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/);
+    if (cityStateZipMatch) {
+      const city = cityStateZipMatch[1].trim();
+      const state = cityStateZipMatch[2].trim();
+      if (city && state) return `${city}, ${state}`;
+    }
+  }
+
+  if (parts.length >= 2) {
+    // Fallback: avoid returning a street line when possible.
+    if (/^\d+/.test(parts[0]) || streetLikePattern.test(parts[0])) {
+      for (let i = 1; i < parts.length; i += 1) {
+        if (!streetLikePattern.test(parts[i]) && !nonCityPattern.test(parts[i])) {
+          return parts[i];
+        }
+      }
+      return "Location";
+    }
+
+    // If second part has a "City ST [ZIP]" pattern, extract and return "City, ST".
+    const secondPartCityState = parts[1].match(/^(.+?)\s+([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/);
+    if (secondPartCityState) {
+      return `${secondPartCityState[1].trim()}, ${secondPartCityState[2].trim()}`;
+    }
+
+    return `${parts[0]}, ${parts[1]}`;
+  }
+
+  return parts[0] || "Location";
+}
+
 function UserProfileView({ userMode, onToggleMode }) {
   const [activeTab, setActiveTab] = useState("All");
   const tabs =
@@ -32,9 +115,12 @@ function UserProfileView({ userMode, onToggleMode }) {
     firstName: "User",
     lastName: "Name",
     email: "",
+    profilePicture: "",
     imageUrl: "",
     bio: "User bio will be loaded from the backend.",
     location: "Location",
+    city: "",
+    state: "",
     skills: [],
     resumeUrl: "",
     certificationUrl: "",
@@ -42,6 +128,7 @@ function UserProfileView({ userMode, onToggleMode }) {
 
   const [formData, setFormData] = useState({
     imageUrl: "",
+    profilePicture: "",
     bio: "",
     location: "",
     skills: [],
@@ -100,8 +187,11 @@ function UserProfileView({ userMode, onToggleMode }) {
           lastName: userProfile.lastName || "Name",
           email: userProfile.email || me.email || "",
           imageUrl: userProfile.imageUrl || "",
+          profilePicture: userProfile.profilePicture || "",
           bio: userProfile.bio || "",
           location: userProfile.location || "",
+          city: userProfile.city || "",
+          state: userProfile.state || "",
           skills: Array.isArray(userProfile.skills) ? userProfile.skills : [],
           resumeUrl: userProfile.resumeUrl || "",
           certificationUrl: userProfile.certificationUrl || "",
@@ -126,6 +216,7 @@ function UserProfileView({ userMode, onToggleMode }) {
   const openEditModal = () => {
     setFormData({
       imageUrl: profile.imageUrl || "",
+      profilePicture: profile.profilePicture || "",
       bio: profile.bio || "",
       location: profile.location || "",
       skills: Array.isArray(profile.skills) ? [...profile.skills] : [],
@@ -135,6 +226,7 @@ function UserProfileView({ userMode, onToggleMode }) {
     setNewSkill("");
     setSaveError("");
     setIsEditModalOpen(true);
+    
   };
 
   const closeEditModal = () => {
@@ -177,7 +269,10 @@ function UserProfileView({ userMode, onToggleMode }) {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          addressText: formData.location,
+        }),
       });
 
       if (!res.ok) {
@@ -192,6 +287,8 @@ function UserProfileView({ userMode, onToggleMode }) {
       setProfile((prev) => ({
         ...prev,
         ...updated,
+        city: updated.city || "",
+        state: updated.state || "",
         skills: Array.isArray(updated.skills) ? updated.skills : [],
       }));
       setIsEditModalOpen(false);
@@ -203,6 +300,18 @@ function UserProfileView({ userMode, onToggleMode }) {
   };
 
   const currentUser = profile;
+  const userProfilePicture =
+    typeof currentUser.profilePicture === "string" ? currentUser.profilePicture.trim() : "";
+  const bannerImageUrl =
+    typeof currentUser.imageUrl === "string" ? currentUser.imageUrl.trim() : "";
+  const bannerStyle = bannerImageUrl
+    ? { backgroundImage: `url("${bannerImageUrl}")` }
+    : undefined;
+  console.log(currentUser);
+  const displayLocation =
+    currentUser.city && currentUser.state
+      ? `${currentUser.city}, ${currentUser.state}`
+      : formatCityState(currentUser.location);
 
   // TODO: Fetch user's listings from backend API
   const userListings = [];
@@ -214,14 +323,26 @@ function UserProfileView({ userMode, onToggleMode }) {
   return (
     <div className="profile-wrap">
       <div className="profile-card">
-        <div className="profile-banner" />
+        <div className="profile-banner" style={bannerStyle} />
         <div className="profile-body">
           <div className="profile-top-row">
-            <div className="profile-avatar-wrap">
-              <div className="profile-avatar">
-                {currentUser.firstName[0]}{currentUser.lastName[0]}
+            <button
+              type="button"
+              className="profile-avatar-wrap profile-avatar-btn"
+              onClick={openEditModal}
+              title="Edit profile picture"
+            >
+              <div
+                className="profile-avatar"
+                style={
+                  userProfilePicture
+                    ? { backgroundImage: `url("${userProfilePicture}")`, backgroundSize: "cover", backgroundPosition: "center" }
+                    : undefined
+                }
+              >
+                {!userProfilePicture && `${currentUser.firstName[0]}${currentUser.lastName[0]}`}
               </div>
-            </div>
+            </button>
             <button className="edit-btn" onClick={onToggleMode}>
               Switch to {userMode === 'client' ? 'Provider' : 'Client'} Mode
             </button>
@@ -232,7 +353,7 @@ function UserProfileView({ userMode, onToggleMode }) {
           <h1 className="profile-name">{currentUser.firstName} {currentUser.lastName}</h1>
           <div className="profile-sub">
             <MapPin size={13} />
-            {currentUser.location} · {userMode === 'client' ? 'Client' : 'Provider'}
+            {displayLocation} · {userMode === 'client' ? 'Client' : 'Provider'}
           </div>
           {isLoadingProfile && (
             <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>Loading profile...</p>
@@ -448,7 +569,10 @@ function UserProfileView({ userMode, onToggleMode }) {
             <label className="modal-label" htmlFor="profile-bio">Bio</label>
             <textarea id="profile-bio" name="bio" value={formData.bio} onChange={handleFieldChange} rows={4} />
 
-            <label className="modal-label" htmlFor="profile-image">Image URL</label>
+            <label className="modal-label" htmlFor="profile-picture">Profile Picture URL</label>
+            <input id="profile-picture" name="profilePicture" value={formData.profilePicture} onChange={handleFieldChange} />
+
+            <label className="modal-label" htmlFor="profile-image">Banner Image URL</label>
             <input id="profile-image" name="imageUrl" value={formData.imageUrl} onChange={handleFieldChange} />
 
             <label className="modal-label" htmlFor="profile-resume">Resume URL</label>
