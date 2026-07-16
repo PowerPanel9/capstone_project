@@ -55,7 +55,7 @@ function App() {
 
   // Load saved mode from localStorage on mount
   useEffect(() => {
-    const savedMode = localStorage.getItem('worklyUserMode');
+    const savedMode = localStorage.getItem('sideHustleUserMode');
     if (savedMode) {
       setUserMode(savedMode);
     }
@@ -65,7 +65,7 @@ function App() {
   const toggleUserMode = () => {
     const newMode = userMode === 'client' ? 'provider' : 'client';
     setUserMode(newMode);
-    localStorage.setItem('worklyUserMode', newMode);
+    localStorage.setItem('sideHustleUserMode', newMode);
   };
 
   const toggleBookmark = (id) => {

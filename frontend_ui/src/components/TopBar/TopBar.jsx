@@ -18,7 +18,7 @@ function TopBar({ onToggleSidebar, onLogout }) {
     if (location.pathname === '/user/profile') return 'My Profile';
     if (location.pathname === '/user/bookmarks') return 'Bookmarks';
     if (location.pathname === '/messages') return 'Messages';
-    return 'Workly';
+    return 'SideHustle';
   };
 
   const handleSearchChange = (value) => {

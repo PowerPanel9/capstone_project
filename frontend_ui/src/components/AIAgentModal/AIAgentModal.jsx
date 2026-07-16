@@ -6,7 +6,7 @@ function AIAgentModal({ onClose }) {
   const [messages, setMessages] = useState([
     {
       from: "ai",
-      text: "Hi! I'm Workly AI. I can help you find the perfect freelancer, write a job listing, or match candidates to your needs. What can I help you with?"
+      text: "Hi! I'm SideHustle AI. I can help you find the perfect freelancer, write a job listing, or match candidates to your needs. What can I help you with?"
     }
   ]);
   const [input, setInput] = useState("");
@@ -40,7 +40,7 @@ function AIAgentModal({ onClose }) {
             <Sparkles size={17} />
           </div>
           <div>
-            <div className="ai-modal-name">Workly AI</div>
+            <div className="ai-modal-name">SideHustle AI</div>
             <div className="ai-modal-status">
               <span className="dot-teal" />
               Online · Ready to help
@@ -85,7 +85,7 @@ function AIAgentModal({ onClose }) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-              placeholder="Ask Workly AI anything..."
+              placeholder="Ask SideHustle AI anything..."
               autoFocus
             />
             <button className="ai-send-btn" onClick={() => sendMessage(input)}>
