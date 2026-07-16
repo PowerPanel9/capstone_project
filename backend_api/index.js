@@ -10,6 +10,7 @@ require("dotenv").config();
 const authRoutes = require("./src/routes/authRoutes");
 const listingsRoutes = require("./src/routes/listingsRoutes");
 const bookmarksRoutes = require("./src/routes/bookmarksRoutes");
+const agentRoutes = require("./src/routes/agentRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +24,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingsRoutes);
 app.use("/api/bookmarks", bookmarksRoutes);
+app.use("/api/agent", agentRoutes);
 
 // Basic test route
 app.get("/", (req, res) => {

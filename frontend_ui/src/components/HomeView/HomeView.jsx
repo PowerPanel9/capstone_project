@@ -4,14 +4,15 @@ import { Sparkles } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
 import './HomeView.css';
 
-function HomeView({ listings, bookmarks, onBookmark }) {
+function HomeView({ listings, bookmarks, onBookmark, onOpenAI }) {
   const [aiInput, setAiInput] = useState("");
   const navigate = useNavigate();
 
+  // Open the AI chat modal, passing the typed query so it prefills the chat.
   const handleAskAI = () => {
     if (aiInput.trim()) {
-      // TODO: Open AI modal
-      console.log('AI Query:', aiInput);
+      onOpenAI(aiInput);
+      setAiInput(""); // clear the banner box now that it's handed off to the modal
     }
   };
 

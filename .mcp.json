@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "sidehustle": {
+      "command": "node",
+      "args": ["/Users/zadeola/codepath/capstone_project/backend_api/mcp/server.mjs"],
+      "cwd": "/Users/zadeola/codepath/capstone_project/backend_api"
+    }
+  }
+}
