@@ -1,12 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
 import './HomeView.css';
 
-function HomeView({ listings, bookmarks, onBookmark }) {
+function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMore, isLoadingMore }) {
   const [aiInput, setAiInput] = useState("");
   const navigate = useNavigate();
+
+  // The "sentinel" is an empty div at the very bottom of the feed. An
+  // IntersectionObserver watches it: when it scrolls into view, we know the
+  // user reached the bottom, so we ask for the next page.
+  const sentinelRef = useRef(null);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) return; // nothing to watch if no more pages
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        onLoadMore();
+      }
+    });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect(); // clean up when deps change/unmount
+  }, [hasMore, onLoadMore, listings.length]);
 
   const handleAskAI = () => {
     if (aiInput.trim()) {
@@ -49,8 +68,7 @@ function HomeView({ listings, bookmarks, onBookmark }) {
       </div>
 
       <div className="feed-header">
-        <span className="feed-title">Latest Listings</span>
-        <button className="view-all">View all →</button>
+        <span className="feed-title">Listings</span>
       </div>
 
       <div className="listing-feed">
@@ -61,9 +79,21 @@ function HomeView({ listings, bookmarks, onBookmark }) {
             bookmarked={bookmarks.has(listing.id)}
             onBookmark={() => onBookmark(listing.id)}
             onClick={() => navigate(`/listing/${listing.id}`)}
+            userMode={userMode}
           />
         ))}
       </div>
+
+      {/* Invisible marker at the bottom; when it scrolls into view we load more. */}
+      <div ref={sentinelRef} />
+
+      {/* Feedback while a new page is loading */}
+      {isLoadingMore && <p className="feed-status">Loading more…</p>}
+
+      {/* End-of-list message once there's nothing left to load */}
+      {!hasMore && listings.length > 0 && (
+        <p className="feed-status feed-end">No more listings</p>
+      )}
     </div>
   );
 }

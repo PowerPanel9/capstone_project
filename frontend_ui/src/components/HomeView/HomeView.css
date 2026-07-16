@@ -129,3 +129,25 @@
   flex-direction: column;
   gap: 16px;
 }
+
+/* Status messages under the feed (loading more / end of list / error).
+   Centered with extra vertical padding so they don't look squished. */
+.feed-status {
+  text-align: center;
+  color: #9CA3AF;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 28px 0 40px;
+  margin: 0;
+}
+
+/* "No more listings" — a touch subtler than the primary text. */
+.feed-end {
+  color: #9CA3AF;
+  letter-spacing: 0.2px;
+}
+
+/* Error state stands out in the primary accent color. */
+.feed-error {
+  color: var(--primary, #7B8FC8);
+}

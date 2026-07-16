@@ -17,11 +17,15 @@ const api = axios.create({
 // GET /api/listings  (optionally filtered by search/category/location)
 // Returns the listings exactly as the backend sends them. Components read the
 // real backend fields directly (price, skillsRequired, imageUrl, user, ...).
-export async function getListings({ search, category, location } = {}) {
+// Returns { listings, page, hasMore, total }. `page`/`limit` drive pagination
+// for the home feed's infinite scroll.
+export async function getListings({ search, category, location, page, limit } = {}) {
   const params = {};
   if (search) params.search = search;
   if (category) params.category = category;
   if (location) params.location = location;
+  if (page) params.page = page;
+  if (limit) params.limit = limit;
 
   const response = await api.get("/api/listings", { params });
   if (Array.isArray(response.data)) {
@@ -35,5 +39,18 @@ export async function getListings({ search, category, location } = {}) {
 // GET /api/listings/:id  -> one listing, raw from the backend
 export async function getListingById(id) {
   const response = await api.get(`/api/listings/${id}`);
+  return response.data;
+}
+
+// POST /api/listings  -> create a new listing.
+// This route is protected, so we send the logged-in user's token (saved to
+// localStorage by the AuthModal). `listing` must already use the backend's
+// snake_case field names (title, category, custom_category, price,
+// skills_required, location, image_url).
+export async function createListing(listing) {
+  const token = localStorage.getItem("token");
+  const response = await api.post("/api/listings", listing, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   return response.data;
 }
