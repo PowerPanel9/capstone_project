@@ -11,6 +11,8 @@ import ApplicationModal from './components/ApplicationModal/ApplicationModal';
 import AIAgentModal from './components/AIAgentModal/AIAgentModal';
 import LandingPage from './components/LandingPage/LandingPage';
 import AuthModal from './components/AuthModal/AuthModal';
+import AuthSuccess from './components/AuthSuccess';
+import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById } from './api/listings';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
@@ -58,7 +60,7 @@ function App() {
 
   // Load saved mode from localStorage on mount
   useEffect(() => {
-    const savedMode = localStorage.getItem('worklyUserMode');
+    const savedMode = localStorage.getItem('sideHustleUserMode');
     if (savedMode) {
       setUserMode(savedMode);
     }
@@ -81,7 +83,7 @@ function App() {
   const toggleUserMode = () => {
     const newMode = userMode === 'client' ? 'provider' : 'client';
     setUserMode(newMode);
-    localStorage.setItem('worklyUserMode', newMode);
+    localStorage.setItem('sideHustleUserMode', newMode);
   };
 
   // Add or remove a bookmark, calling the backend and keeping local state in sync.
@@ -167,7 +169,7 @@ function App() {
           </aside>
 
           <div className="main">
-            <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} onLogout={handleLogout} />
 
             <div className="content">
               <Routes>
@@ -272,6 +274,8 @@ function App() {
               />
             }
           />
+          <Route path="/auth/success" element={<AuthSuccess />} />
+          <Route path="/auth/failure" element={<AuthFailure />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       )}

@@ -19,7 +19,7 @@ function Sidebar({ currentUser, userMode }) {
         <div className="logo-icon">
           <Sparkles size={16} />
         </div>
-        <span className="logo-name">Workly</span>
+        <span className="logo-name">SideHustle</span>
       </div>
 
       <nav>

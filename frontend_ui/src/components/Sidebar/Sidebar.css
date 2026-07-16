@@ -55,6 +55,7 @@ nav {
   background: transparent;
   width: 100%;
   font-family: inherit;
+  text-decoration: none;
 }
 
 .nav-btn.active {
@@ -96,6 +97,7 @@ nav {
   box-shadow: 0 1px 4px rgba(139, 159, 212, 0.3);
   width: 100%;
   font-family: inherit;
+  text-decoration: none;
 }
 
 .btn-primary:hover {
