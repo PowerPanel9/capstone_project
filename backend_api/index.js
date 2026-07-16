@@ -11,6 +11,7 @@ const authRoutes = require("./src/routes/authRoutes");
 const listingsRoutes = require("./src/routes/listingsRoutes");
 const bookmarksRoutes = require("./src/routes/bookmarksRoutes");
 const priceRoutes = require("./src/routes/priceRoutes");
+const reviewsRoutes = require("./src/routes/reviewsRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingsRoutes);
 app.use("/api/bookmarks", bookmarksRoutes);
 app.use("/api/prices", priceRoutes);
+app.use("/api/reviews", reviewsRoutes);
 
 // Basic test route
 app.get("/", (req, res) => {

@@ -179,6 +179,7 @@ The main purpose of our project is to create a centralized platform that connect
 | title | Text | Title/header of the review |
 | description | Text | Description of the review |
 | image_url | Text | Optional picture for the review |
+| created_at | Date | When the review was left |
 
 ### `message`
 
