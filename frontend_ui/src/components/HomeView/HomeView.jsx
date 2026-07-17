@@ -7,6 +7,7 @@ import './HomeView.css';
 function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMore, isLoadingMore }) {
   const [aiInput, setAiInput] = useState("");
   const navigate = useNavigate();
+  const safeListings = Array.isArray(listings) ? listings : [];
 
   // The "sentinel" is an empty div at the very bottom of the feed. An
   // IntersectionObserver watches it: when it scrolls into view, we know the
@@ -25,7 +26,7 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMo
 
     observer.observe(sentinel);
     return () => observer.disconnect(); // clean up when deps change/unmount
-  }, [hasMore, onLoadMore, listings.length]);
+  }, [hasMore, onLoadMore, safeListings.length]);
 
   const handleAskAI = () => {
     if (aiInput.trim()) {
@@ -33,8 +34,6 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMo
       console.log('AI Query:', aiInput);
     }
   };
-
-  const safeListings = Array.isArray(listings) ? listings : [];
 
   return (
     <div className="home-wrap">
@@ -91,7 +90,7 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMo
       {isLoadingMore && <p className="feed-status">Loading more…</p>}
 
       {/* End-of-list message once there's nothing left to load */}
-      {!hasMore && listings.length > 0 && (
+      {!hasMore && safeListings.length > 0 && (
         <p className="feed-status feed-end">No more listings</p>
       )}
     </div>

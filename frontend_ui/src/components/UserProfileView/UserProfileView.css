@@ -243,6 +243,111 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
+.experience-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.experience-card {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.experience-title {
+  text-align: left;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1E2340;
+  margin: 0 0 10px;
+}
+
+.experience-description {
+  font-size: 14px;
+  color: #4B5563;
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.experience-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #F3F4F6;
+}
+
+.experience-images img {
+  width: 100%;
+  height: 98px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #E5E7EB;
+}
+
+.experience-empty {
+  background: #fff;
+  border: 1px dashed #D1D5DB;
+  border-radius: 12px;
+  padding: 18px;
+  color: #6B7280;
+  font-size: 13px;
+}
+
+.experience-layout {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(250px, 360px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.experience-skills-column {
+  width: 100%;
+}
+
+.experience-content-column {
+  min-width: 0;
+}
+
+.experience-section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1E2340;
+  margin-bottom: 10px;
+}
+
+.experience-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.experience-add-btn {
+  background: #F3F4F6;
+  color: var(--primary-dark, #6678B8);
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.experience-add-btn:hover {
+  background: #E5E7EB;
+  border-color: #C7CED9;
+}
+
 .profile-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -437,6 +542,10 @@
 }
 
 @media (max-width: 640px) {
+  .experience-layout {
+    grid-template-columns: 1fr;
+  }
+
   .profile-modal {
     border-radius: 16px;
     padding: 18px;

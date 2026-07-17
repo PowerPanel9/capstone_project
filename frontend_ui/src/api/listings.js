@@ -28,12 +28,35 @@ export async function getListings({ search, category, location, page, limit } = 
   if (limit) params.limit = limit;
 
   const response = await api.get("/api/listings", { params });
-  if (Array.isArray(response.data)) {
-    return response.data;
+  const data = response.data;
+
+  // Backward compatibility: older backend returns raw array.
+  if (Array.isArray(data)) {
+    return {
+      listings: data,
+      page: Number(page) || 1,
+      hasMore: false,
+      total: data.length,
+    };
   }
 
-  // Defensive fallback: keep UI stable even if backend returns an error object.
-  return [];
+  // New paginated shape: { listings, page, hasMore, total }
+  if (data && Array.isArray(data.listings)) {
+    return {
+      listings: data.listings,
+      page: Number(data.page) || Number(page) || 1,
+      hasMore: Boolean(data.hasMore),
+      total: Number(data.total) || data.listings.length,
+    };
+  }
+
+  // Defensive fallback: keep UI stable even if backend returns unexpected data.
+  return {
+    listings: [],
+    page: Number(page) || 1,
+    hasMore: false,
+    total: 0,
+  };
 }
 
 // GET /api/listings/:id  -> one listing, raw from the backend

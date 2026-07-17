@@ -10,11 +10,37 @@ const userProfileSelect = {
     bio: true,
     skills: true,
     location: true,
+    contactEmail: true,
+    phoneNumber: true,
+    mailingAddress: true,
     profilePicture: true,
     imageUrl: true,
     resumeUrl: true,
     certificationUrl: true,
 };
+
+const legacyUserProfileSelect = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    email: true,
+    bio: true,
+    skills: true,
+    location: true,
+    profilePicture: true,
+    imageUrl: true,
+    resumeUrl: true,
+    certificationUrl: true,
+};
+
+function isUnknownPrismaFieldError(error) {
+    const message = typeof error?.message === "string" ? error.message : "";
+    return Boolean(
+        error &&
+        error.name === "PrismaClientValidationError" &&
+        (message.includes("Unknown field") || message.includes("Unknown argument"))
+    );
+}
 
 function extractCityStateFromLocation(locationValue) {
     if (!locationValue || typeof locationValue !== "string") {
@@ -108,15 +134,31 @@ const getUserById = async (req, res) => {
             return res.status(400).json({ message: "Invalid user id" });
         }
 
-        const user = await prisma.user.findUnique({
-            where: { id },
-            select: userProfileSelect,
-        });
+        let user;
+        try {
+            user = await prisma.user.findUnique({
+                where: { id },
+                select: userProfileSelect,
+            });
+        } catch (selectError) {
+            if (!isUnknownPrismaFieldError(selectError)) throw selectError;
+            user = await prisma.user.findUnique({
+                where: { id },
+                select: legacyUserProfileSelect,
+            });
+        }
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        res.status(200).json(withCityState(user));
+        res.status(200).json(
+            withCityState({
+                contactEmail: "",
+                phoneNumber: "",
+                mailingAddress: "",
+                ...user,
+            })
+        );
     } catch (error) {
         console.error("getUserById error:", error);
         res.status(500).json({ message: "Error fetching user" });
@@ -147,6 +189,9 @@ const updateUser = async (req, res) => {
             imageUrl,
             bio,
             skills,
+            contactEmail,
+            phoneNumber,
+            mailingAddress,
             addressText,
             location,
             latitude,
@@ -166,6 +211,9 @@ const updateUser = async (req, res) => {
             imageUrl,
             bio,
             skills,
+            contactEmail: typeof contactEmail === "string" && contactEmail.trim() ? contactEmail.trim() : null,
+            phoneNumber: typeof phoneNumber === "string" && phoneNumber.trim() ? phoneNumber.trim() : null,
+            mailingAddress: typeof mailingAddress === "string" && mailingAddress.trim() ? mailingAddress.trim() : null,
             location: undefined,
             resumeUrl,
             certificationUrl
@@ -194,12 +242,39 @@ const updateUser = async (req, res) => {
           data.location = await reverseGeocode(lat, lon);
         }
 
-        const updatedUser = await prisma.user.update({
-            where: { id: authUserId },
-            data,
-            select: userProfileSelect,
-        });
-        res.status(200).json(withCityState(updatedUser, derivedCity, derivedState));
+        let updatedUser;
+        try {
+            updatedUser = await prisma.user.update({
+                where: { id: authUserId },
+                data,
+                select: userProfileSelect,
+            });
+        } catch (updateError) {
+            if (!isUnknownPrismaFieldError(updateError)) throw updateError;
+            const {
+                contactEmail: _contactEmail,
+                phoneNumber: _phoneNumber,
+                mailingAddress: _mailingAddress,
+                ...legacyData
+            } = data;
+            updatedUser = await prisma.user.update({
+                where: { id: authUserId },
+                data: legacyData,
+                select: legacyUserProfileSelect,
+            });
+        }
+        res.status(200).json(
+            withCityState(
+                {
+                    contactEmail: "",
+                    phoneNumber: "",
+                    mailingAddress: "",
+                    ...updatedUser,
+                },
+                derivedCity,
+                derivedState
+            )
+        );
     } catch (error) {
         console.error("Update user error:", error);
         res.status(500).json({ message: "Error updating user" });

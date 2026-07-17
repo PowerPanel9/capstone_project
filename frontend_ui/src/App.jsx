@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import Sidebar from './components/Sidebar/Sidebar';
 import TopBar from './components/TopBar/TopBar';
@@ -16,6 +16,7 @@ import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById } from './api/listings';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
+import { getUsers as getMessageUsers } from './api/messages';
 import { Bookmark } from 'lucide-react';
 import './App.css';
 
@@ -28,6 +29,10 @@ function App() {
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [messagesComposerOpen, setMessagesComposerOpen] = useState(false);
+  const [messagesPeopleSearch, setMessagesPeopleSearch] = useState("");
+  const [messagesDirectoryUsers, setMessagesDirectoryUsers] = useState([]);
+  const [messagesStartUser, setMessagesStartUser] = useState(null);
   // `bookmarks` is a Set of LISTING ids (used by cards to show the filled icon).
   const [bookmarks, setBookmarks] = useState(new Set());
   // The backend deletes by BOOKMARK id, but the UI works in listing ids, so we
@@ -71,9 +76,10 @@ function App() {
   useEffect(() => {
     getBookmarks()
       .then((data) => {
-        setBookmarks(new Set(data.map((b) => b.listingId)));
+        const safeBookmarks = Array.isArray(data) ? data : [];
+        setBookmarks(new Set(safeBookmarks.map((b) => b.listingId)));
         const map = {};
-        data.forEach((b) => { map[b.listingId] = b.id; });
+        safeBookmarks.forEach((b) => { map[b.listingId] = b.id; });
         setBookmarkIds(map);
       })
       .catch((err) => console.error("Failed to load bookmarks:", err));
@@ -139,6 +145,33 @@ function App() {
 
   // Determine if we should show the main app layout (sidebar + topbar)
   const showMainLayout = isAuthenticated && location.pathname !== '/';
+  const isMessagesRoute = location.pathname === "/messages";
+  const currentUserId = Number(currentUser?.id) || null;
+
+  useEffect(() => {
+    if (!isMessagesRoute || !messagesComposerOpen) return;
+    let ignore = false;
+    getMessageUsers()
+      .then((users) => {
+        if (!ignore) setMessagesDirectoryUsers(Array.isArray(users) ? users : []);
+      })
+      .catch(() => {
+        if (!ignore) setMessagesDirectoryUsers([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [isMessagesRoute, messagesComposerOpen]);
+
+  const messagesPeopleResults = useMemo(() => {
+    const q = String(messagesPeopleSearch || "").trim().toLowerCase();
+    if (!q || !messagesComposerOpen || !isMessagesRoute) return [];
+    return messagesDirectoryUsers.filter((user) => {
+      if (!user || user.id === currentUserId) return false;
+      const full = `${String(user.firstName || "").toLowerCase()} ${String(user.lastName || "").toLowerCase()}`.trim();
+      return full.includes(q);
+    });
+  }, [messagesPeopleSearch, messagesComposerOpen, isMessagesRoute, messagesDirectoryUsers, currentUserId]);
 
   // Show loading while checking authentication
   if (authLoading) {
@@ -169,7 +202,26 @@ function App() {
           </aside>
 
           <div className="main">
-            <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} onLogout={handleLogout} />
+            <TopBar
+              onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+              onLogout={handleLogout}
+              messagesComposerOpen={messagesComposerOpen}
+              onToggleMessagesComposer={() => {
+                setMessagesComposerOpen((prev) => {
+                  const next = !prev;
+                  if (!next) setMessagesPeopleSearch("");
+                  return next;
+                });
+              }}
+              messagesPeopleSearch={messagesPeopleSearch}
+              onMessagesPeopleSearchChange={setMessagesPeopleSearch}
+              messagesPeopleResults={messagesPeopleResults}
+              onSelectMessagesPerson={(user) => {
+                setMessagesStartUser(user);
+                setMessagesComposerOpen(false);
+                setMessagesPeopleSearch("");
+              }}
+            />
 
             <div className="content">
               <Routes>
@@ -239,7 +291,17 @@ function App() {
                   path="/messages"
                   element={
                     isAuthenticated ? (
-                      <MessagesView />
+                      <MessagesView
+                        composerOpen={messagesComposerOpen}
+                        peopleSearch={messagesPeopleSearch}
+                        onPeopleSearchChange={setMessagesPeopleSearch}
+                        startConversationUser={messagesStartUser}
+                        onStartConversationHandled={() => setMessagesStartUser(null)}
+                        onCloseComposer={() => {
+                          setMessagesComposerOpen(false);
+                          setMessagesPeopleSearch("");
+                        }}
+                      />
                     ) : (
                       <Navigate to="/" replace />
                     )
@@ -416,8 +478,9 @@ function BookmarksPage({ bookmarks, onBookmark }) {
     setIsLoading(true);
     getBookmarks()
       .then((data) => {
+        const safeBookmarks = Array.isArray(data) ? data : [];
         // Each bookmark has a nested `listing`; pull those out to show as cards.
-        if (!ignore) setSavedListings(data.map((b) => b.listing));
+        if (!ignore) setSavedListings(safeBookmarks.map((b) => b.listing).filter(Boolean));
       })
       .catch((err) => console.error("Failed to load bookmarks:", err))
       .finally(() => { if (!ignore) setIsLoading(false); });
