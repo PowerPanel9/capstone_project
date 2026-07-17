@@ -4,7 +4,7 @@ import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import './Sidebar.css';
 
-function Sidebar({ currentUser, userMode }) {
+function Sidebar({ currentUser, userMode, onOpenAI }) {
 
   const navItems = [
     { icon: Home, label: "Home", path: "/home" },
@@ -42,7 +42,7 @@ function Sidebar({ currentUser, userMode }) {
             Post a Listing
           </NavLink>
         )}
-        <button className="btn-secondary">
+        <button className="btn-secondary" onClick={() => onOpenAI()}>
           <Sparkles size={15} />
           AI Assistant
         </button>
