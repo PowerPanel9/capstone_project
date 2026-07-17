@@ -6,12 +6,24 @@
 // The route file (listings_routes.js) decides WHICH function runs for each URL.
 // This file decides WHAT that function actually does.
 
-const { PrismaClient, ListingCategory } = require("@prisma/client");
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// The list of valid category values, taken straight from the Prisma enum so
-// this never drifts out of sync with the schema. Example: ["CLEANING", ...].
-const VALID_CATEGORIES = Object.values(ListingCategory);
+// Valid listing categories from prisma/schema.prisma (ListingCategory enum).
+// Keeping this as plain strings avoids runtime crashes when enum exports differ
+// across Prisma/Node setups.
+const VALID_CATEGORIES = [
+  "CLEANING",
+  "TUTORING",
+  "PLUMBING",
+  "GARDENING",
+  "BEAUTY",
+  "BABYSITTING",
+  "MOVING",
+  "HANDYMAN",
+  "DELIVERY",
+  "OTHER",
+];
 
 // Small helper: is this value one of the allowed categories?
 function isValidCategory(value) {
@@ -78,12 +90,30 @@ async function getAllListings(req, res) {
       where.location = { contains: location, mode: "insensitive" };
     }
 
-    const listings = await prisma.listing.findMany({
-      where,
-      include: { user: true }, // attach the creator so the frontend can show poster info
-      orderBy: { createdAt: "desc" }, // newest listings first for the feed
-    });
-    return res.status(200).json(listings);
+    // ----- Pagination (for infinite scroll on the home feed) -----
+    // page defaults to 1, limit to 10. `skip` jumps past earlier pages.
+    // Example: page 3 with limit 10 -> skip the first 20 listings.
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Number(req.query.limit) || 10);
+    const skip = (page - 1) * limit;
+
+    // Fetch one page of listings AND the total count (that match the filters),
+    // so we can tell the frontend whether more pages exist.
+    const [listings, total] = await Promise.all([
+      prisma.listing.findMany({
+        where,
+        include: { user: true }, // attach the creator so the frontend can show poster info
+        orderBy: { createdAt: "desc" }, // newest listings first for the feed
+        skip,
+        take: limit,
+      }),
+      prisma.listing.count({ where }),
+    ]);
+
+    // hasMore is true when there are still listings beyond this page.
+    const hasMore = skip + listings.length < total;
+
+    return res.status(200).json({ listings, page, hasMore, total });
   } catch (error) {
     console.error("getAllListings error:", error.message);
     return res.status(500).json({ error: "Something went wrong" });

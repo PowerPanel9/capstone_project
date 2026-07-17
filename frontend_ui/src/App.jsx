@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import Sidebar from './components/Sidebar/Sidebar';
 import TopBar from './components/TopBar/TopBar';
@@ -15,6 +15,8 @@ import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById } from './api/listings';
+import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
+import { getUsers as getMessageUsers } from './api/messages';
 import { Bookmark } from 'lucide-react';
 import './App.css';
 
@@ -30,7 +32,15 @@ function App() {
   // typed query). Empty string means open the modal with a blank box.
   const [aiInitialMessage, setAiInitialMessage] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [messagesComposerOpen, setMessagesComposerOpen] = useState(false);
+  const [messagesPeopleSearch, setMessagesPeopleSearch] = useState("");
+  const [messagesDirectoryUsers, setMessagesDirectoryUsers] = useState([]);
+  const [messagesStartUser, setMessagesStartUser] = useState(null);
+  // `bookmarks` is a Set of LISTING ids (used by cards to show the filled icon).
   const [bookmarks, setBookmarks] = useState(new Set());
+  // The backend deletes by BOOKMARK id, but the UI works in listing ids, so we
+  // keep a map of listingId -> bookmarkId to know what to delete.
+  const [bookmarkIds, setBookmarkIds] = useState({});
   const [userMode, setUserMode] = useState("provider");
   const [authMode, setAuthMode] = useState(null);
 
@@ -64,6 +74,20 @@ function App() {
     }
   }, []);
 
+  // Load the logged-in user's bookmarks from the backend on mount.
+  // If nobody is logged in, getBookmarks() returns [] so this is a safe no-op.
+  useEffect(() => {
+    getBookmarks()
+      .then((data) => {
+        const safeBookmarks = Array.isArray(data) ? data : [];
+        setBookmarks(new Set(safeBookmarks.map((b) => b.listingId)));
+        const map = {};
+        safeBookmarks.forEach((b) => { map[b.listingId] = b.id; });
+        setBookmarkIds(map);
+      })
+      .catch((err) => console.error("Failed to load bookmarks:", err));
+  }, []);
+
   // Toggle between client and provider mode
   const toggleUserMode = () => {
     const newMode = userMode === 'client' ? 'provider' : 'client';
@@ -78,16 +102,37 @@ function App() {
     setShowAIModal(true);
   };
 
-  const toggleBookmark = (id) => {
-    setBookmarks((prev) => {
-      const newBookmarks = new Set(prev);
-      if (newBookmarks.has(id)) {
-        newBookmarks.delete(id);
+  // Add or remove a bookmark, calling the backend and keeping local state in sync.
+  const toggleBookmark = async (listingId) => {
+    const isBookmarked = bookmarks.has(listingId);
+    try {
+      if (isBookmarked) {
+        // Remove: look up the bookmark id, call DELETE, then update local state.
+        const bookmarkId = bookmarkIds[listingId];
+        if (bookmarkId !== undefined) {
+          await removeBookmark(bookmarkId);
+        }
+        setBookmarks((prev) => {
+          const next = new Set(prev);
+          next.delete(listingId);
+          return next;
+        });
+        setBookmarkIds((prev) => {
+          const next = { ...prev };
+          delete next[listingId];
+          return next;
+        });
       } else {
-        newBookmarks.add(id);
+        // Add: call POST, then store the returned bookmark id.
+        const created = await addBookmark(listingId);
+        setBookmarks((prev) => new Set(prev).add(listingId));
+        setBookmarkIds((prev) => ({ ...prev, [listingId]: created.id }));
       }
-      return newBookmarks;
-    });
+    } catch (err) {
+      // 401 here almost always means "not logged in" (no token).
+      console.error("Bookmark action failed:", err);
+      alert("Please log in to save bookmarks.");
+    }
   };
 
   // Handle successful login/signup
@@ -111,6 +156,33 @@ function App() {
 
   // Determine if we should show the main app layout (sidebar + topbar)
   const showMainLayout = isAuthenticated && location.pathname !== '/';
+  const isMessagesRoute = location.pathname === "/messages";
+  const currentUserId = Number(currentUser?.id) || null;
+
+  useEffect(() => {
+    if (!isMessagesRoute || !messagesComposerOpen) return;
+    let ignore = false;
+    getMessageUsers()
+      .then((users) => {
+        if (!ignore) setMessagesDirectoryUsers(Array.isArray(users) ? users : []);
+      })
+      .catch(() => {
+        if (!ignore) setMessagesDirectoryUsers([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [isMessagesRoute, messagesComposerOpen]);
+
+  const messagesPeopleResults = useMemo(() => {
+    const q = String(messagesPeopleSearch || "").trim().toLowerCase();
+    if (!q || !messagesComposerOpen || !isMessagesRoute) return [];
+    return messagesDirectoryUsers.filter((user) => {
+      if (!user || user.id === currentUserId) return false;
+      const full = `${String(user.firstName || "").toLowerCase()} ${String(user.lastName || "").toLowerCase()}`.trim();
+      return full.includes(q);
+    });
+  }, [messagesPeopleSearch, messagesComposerOpen, isMessagesRoute, messagesDirectoryUsers, currentUserId]);
 
   // Show loading while checking authentication
   if (authLoading) {
@@ -142,7 +214,26 @@ function App() {
           </aside>
 
           <div className="main">
-            <TopBar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} onLogout={handleLogout} />
+            <TopBar
+              onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+              onLogout={handleLogout}
+              messagesComposerOpen={messagesComposerOpen}
+              onToggleMessagesComposer={() => {
+                setMessagesComposerOpen((prev) => {
+                  const next = !prev;
+                  if (!next) setMessagesPeopleSearch("");
+                  return next;
+                });
+              }}
+              messagesPeopleSearch={messagesPeopleSearch}
+              onMessagesPeopleSearchChange={setMessagesPeopleSearch}
+              messagesPeopleResults={messagesPeopleResults}
+              onSelectMessagesPerson={(user) => {
+                setMessagesStartUser(user);
+                setMessagesComposerOpen(false);
+                setMessagesPeopleSearch("");
+              }}
+            />
 
             <div className="content">
               <Routes>
@@ -151,7 +242,7 @@ function App() {
                   path="/home"
                   element={
                     isAuthenticated ? (
-                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} onOpenAI={openAI} />
+                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} userMode={userMode} onOpenAI={openAI} />
                     ) : (
                       <Navigate to="/" replace />
                     )
@@ -212,7 +303,17 @@ function App() {
                   path="/messages"
                   element={
                     isAuthenticated ? (
-                      <MessagesView />
+                      <MessagesView
+                        composerOpen={messagesComposerOpen}
+                        peopleSearch={messagesPeopleSearch}
+                        onPeopleSearchChange={setMessagesPeopleSearch}
+                        startConversationUser={messagesStartUser}
+                        onStartConversationHandled={() => setMessagesStartUser(null)}
+                        onCloseComposer={() => {
+                          setMessagesComposerOpen(false);
+                          setMessagesPeopleSearch("");
+                        }}
+                      />
                     ) : (
                       <Navigate to="/" replace />
                     )
@@ -272,22 +373,29 @@ function App() {
 }
 
 // Home Page Component
-function HomePage({ bookmarks, onBookmark, onOpenAI }) {
+function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
   const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);   // first page / new search
+  const [isLoadingMore, setIsLoadingMore] = useState(false); // extra pages
   const [error, setError] = useState(null);
 
   const search = searchParams.get('search') || '';
 
+  // When the search changes, start over: clear listings and load page 1.
   useEffect(() => {
     let ignore = false;
     setIsLoading(true);
     setError(null);
 
-    getListings({ search })
+    getListings({ search, page: 1 })
       .then((data) => {
-        if (!ignore) setListings(data);
+        if (ignore) return;
+        setListings(data.listings);
+        setHasMore(data.hasMore);
+        setPage(1);
       })
       .catch((err) => {
         console.error("Failed to load listings:", err);
@@ -300,6 +408,24 @@ function HomePage({ bookmarks, onBookmark, onOpenAI }) {
     return () => { ignore = true; };
   }, [search]);
 
+  // Load the next page and append it to the list. Called when the user scrolls
+  // to the bottom. Guarded so we don't fire while a load is already happening
+  // or when there's nothing left to load.
+  const loadMore = () => {
+    if (isLoading || isLoadingMore || !hasMore) return;
+
+    const nextPage = page + 1;
+    setIsLoadingMore(true);
+    getListings({ search, page: nextPage })
+      .then((data) => {
+        setListings((prev) => [...prev, ...data.listings]);
+        setHasMore(data.hasMore);
+        setPage(nextPage);
+      })
+      .catch((err) => console.error("Failed to load more listings:", err))
+      .finally(() => setIsLoadingMore(false));
+  };
+
   return (
     <>
       {isLoading && <p className="feed-status">Loading listings…</p>}
@@ -308,7 +434,11 @@ function HomePage({ bookmarks, onBookmark, onOpenAI }) {
         listings={listings}
         bookmarks={bookmarks}
         onBookmark={onBookmark}
+        userMode={userMode}
         onOpenAI={onOpenAI}
+        onLoadMore={loadMore}
+        hasMore={hasMore}
+        isLoadingMore={isLoadingMore}
       />
     </>
   );
@@ -353,33 +483,44 @@ function CreateListingPage() {
 }
 
 // Bookmarks Page Component
+// Fetches the user's saved bookmarks from the backend. Each bookmark comes with
+// its full listing (and the listing's owner), so we render those listings.
 function BookmarksPage({ bookmarks, onBookmark }) {
   const navigate = useNavigate();
-  const [listings, setListings] = useState([]);
+  const [savedListings, setSavedListings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Re-fetch whenever the set of bookmarks changes (e.g. user removes one here).
   useEffect(() => {
-    getListings({})
-      .then((data) => setListings(data))
-      .catch((err) => console.error("Failed to load listings:", err))
-      .finally(() => setIsLoading(false));
-  }, []);
+    let ignore = false;
+    setIsLoading(true);
+    getBookmarks()
+      .then((data) => {
+        const safeBookmarks = Array.isArray(data) ? data : [];
+        // Each bookmark has a nested `listing`; pull those out to show as cards.
+        if (!ignore) setSavedListings(safeBookmarks.map((b) => b.listing).filter(Boolean));
+      })
+      .catch((err) => console.error("Failed to load bookmarks:", err))
+      .finally(() => { if (!ignore) setIsLoading(false); });
+    return () => { ignore = true; };
+  }, [bookmarks]);
 
   if (isLoading) return <p className="feed-status">Loading bookmarks…</p>;
 
   return (
     <div className="home-wrap">
       <div className="listing-feed">
-        {listings.filter((l) => bookmarks.has(l.id)).map((listing) => (
+        {savedListings.map((listing) => (
           <ListingCard
             key={listing.id}
             listing={listing}
             bookmarked={true}
             onBookmark={() => onBookmark(listing.id)}
             onClick={() => navigate(`/listing/${listing.id}`)}
+            userMode="provider"
           />
         ))}
-        {bookmarks.size === 0 && (
+        {savedListings.length === 0 && (
           <div className="empty-state">
             <Bookmark size={32} />
             <p>No bookmarks yet</p>
@@ -401,3 +542,4 @@ function AppWithRouter() {
 }
 
 export default AppWithRouter;
+  

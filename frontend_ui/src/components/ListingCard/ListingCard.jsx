@@ -3,11 +3,16 @@ import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import './ListingCard.css';
 
-function ListingCard({ listing, bookmarked, onBookmark, onClick }) {
+function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
   // Show the user's typed-in category text when the category is OTHER,
   // otherwise show the fixed category value.
   const categoryLabel =
     listing.category === "OTHER" ? listing.customCategory : listing.category;
+
+  // Only providers can bookmark listings, so the icon is hidden in client mode.
+  // When it's hidden, the flex layout lets the category badge slide into its
+  // place at the right edge of the header automatically.
+  const showBookmark = userMode === "provider";
 
   return (
     <div className="card" onClick={onClick}>
@@ -27,15 +32,18 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick }) {
             </div>
           </div>
           <span className="badge">{categoryLabel}</span>
-          <button
-            className={`bookmark-btn ${bookmarked ? "active" : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onBookmark();
-            }}
-          >
-            <Bookmark size={15} />
-          </button>
+          {showBookmark && (
+            <button
+              className={`bookmark-btn ${bookmarked ? "active" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onBookmark();
+              }}
+            >
+              {/* fill the icon when bookmarked so the user can see its saved state */}
+              <Bookmark size={15} fill={bookmarked ? "currentColor" : "none"} />
+            </button>
+          )}
         </div>
         <h3 className="card-title">{listing.title}</h3>
         <p className="card-desc">{listing.description}</p>
