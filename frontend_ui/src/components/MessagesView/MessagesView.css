@@ -17,6 +17,36 @@
   border-bottom: 1px solid #F3F4F6;
 }
 
+.conv-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.conv-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E2340;
+}
+
+.compose-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 10px;
+  background: #F3F4F6;
+  color: #4B5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.compose-btn:hover {
+  background: #E5E7EB;
+}
+
 .conv-search-inner {
   position: relative;
 }
@@ -39,6 +69,45 @@
   font-size: 14px;
   font-family: inherit;
   outline: none;
+}
+
+.new-conv-box {
+  margin-top: 10px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 8px;
+  background: #fff;
+}
+
+.new-conv-results {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.new-conv-item {
+  border: none;
+  background: transparent;
+  text-align: left;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1E2340;
+}
+
+.new-conv-item:hover {
+  background: #F9FAFB;
+}
+
+.new-conv-empty {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin: 0;
+  padding: 8px 10px;
 }
 
 .conv-items {
@@ -128,6 +197,22 @@
   background: #fff;
 }
 
+.chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #9CA3AF;
+  text-align: center;
+}
+
+.chat-live {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .chat-header {
   display: flex;
   align-items: center;
@@ -166,6 +251,35 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.chat-start-state {
+  margin: auto;
+  text-align: center;
+  color: #6B7280;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 18px 22px;
+  max-width: 320px;
+}
+
+.chat-start-state svg {
+  color: #9CA3AF;
+  margin-bottom: 8px;
+}
+
+.chat-start-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.chat-start-subtitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .chat-msg {

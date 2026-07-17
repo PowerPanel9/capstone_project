@@ -7,7 +7,7 @@ import axios from "axios";
 
 // The backend base URL comes from the .env file (VITE_API_URL).
 // Example: http://localhost:3000
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // A shared axios instance pointed at our backend.
 const api = axios.create({
@@ -28,7 +28,35 @@ export async function getListings({ search, category, location, page, limit } = 
   if (limit) params.limit = limit;
 
   const response = await api.get("/api/listings", { params });
-  return response.data;
+  const data = response.data;
+
+  // Backward compatibility: older backend returns raw array.
+  if (Array.isArray(data)) {
+    return {
+      listings: data,
+      page: Number(page) || 1,
+      hasMore: false,
+      total: data.length,
+    };
+  }
+
+  // New paginated shape: { listings, page, hasMore, total }
+  if (data && Array.isArray(data.listings)) {
+    return {
+      listings: data.listings,
+      page: Number(data.page) || Number(page) || 1,
+      hasMore: Boolean(data.hasMore),
+      total: Number(data.total) || data.listings.length,
+    };
+  }
+
+  // Defensive fallback: keep UI stable even if backend returns unexpected data.
+  return {
+    listings: [],
+    page: Number(page) || 1,
+    hasMore: false,
+    total: 0,
+  };
 }
 
 // GET /api/listings/:id  -> one listing, raw from the backend
