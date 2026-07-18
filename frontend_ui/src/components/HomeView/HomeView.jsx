@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowLeft } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
+import CategoryGrid from '../CategoryGrid/CategoryGrid';
 import './HomeView.css';
 
-function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore }) {
+// Turn a category enum value (e.g. "BABYSITTING") into a nice label ("Babysitting").
+function prettyCategory(value) {
+  if (!value) return '';
+  return value.charAt(0) + value.slice(1).toLowerCase();
+}
+
+function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore, personalized, category, showCategories }) {
   const [aiInput, setAiInput] = useState("");
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
@@ -67,8 +74,30 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadM
         </div>
       </div>
 
+      {/* On the landing page, category tiles sit just below the AI banner. */}
+      {showCategories && <CategoryGrid userMode={userMode} />}
+
+      {/* When viewing a category, offer a way back to the category tiles. */}
+      {category && (
+        <button className="category-back" onClick={() => navigate('/home')}>
+          <ArrowLeft size={15} />
+          All categories
+        </button>
+      )}
+
       <div className="feed-header">
-        <span className="feed-title">Listings</span>
+        {category ? (
+          // Browsing a specific category.
+          <span className="feed-title">{prettyCategory(category)} listings</span>
+        ) : personalized ? (
+          // AI-ranked landing feed.
+          <span className="feed-title feed-title-ai">
+            <Sparkles size={15} />
+            Recommended for you
+          </span>
+        ) : (
+          <span className="feed-title">Listings</span>
+        )}
       </div>
 
       <div className="listing-feed">
@@ -83,6 +112,11 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadM
           />
         ))}
       </div>
+
+      {/* Nothing in this category yet. */}
+      {safeListings.length === 0 && !isLoadingMore && (
+        <p className="feed-status">No listings here yet.</p>
+      )}
 
       {/* Invisible marker at the bottom; when it scrolls into view we load more. */}
       <div ref={sentinelRef} />

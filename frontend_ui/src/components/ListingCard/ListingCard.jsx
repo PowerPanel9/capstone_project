@@ -1,4 +1,4 @@
-import { MapPin, Clock, Bookmark } from 'lucide-react';
+import { MapPin, Clock, Bookmark, Sparkles } from 'lucide-react';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import './ListingCard.css';
@@ -46,6 +46,13 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
           )}
         </div>
         <h3 className="card-title">{listing.title}</h3>
+        {/* Only recommended cards carry a `reason` from the AI. */}
+        {listing.reason && (
+          <div className="card-reason">
+            <Sparkles size={11} />
+            {listing.reason}
+          </div>
+        )}
         <p className="card-desc">{listing.description}</p>
         <div className="tag-list">
           {listing.skillsRequired.map((skill) => (

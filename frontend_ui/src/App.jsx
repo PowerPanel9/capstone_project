@@ -15,6 +15,7 @@ import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById } from './api/listings';
+import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
 import { getUsers as getMessageUsers } from './api/messages';
 import { Bookmark } from 'lucide-react';
@@ -381,16 +382,64 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
   const [isLoading, setIsLoading] = useState(false);   // first page / new search
   const [isLoadingMore, setIsLoadingMore] = useState(false); // extra pages
   const [error, setError] = useState(null);
+  // True when the backend actually AI-ranked the feed (vs. the normal feed).
+  const [personalized, setPersonalized] = useState(false);
 
   const search = searchParams.get('search') || '';
+  const category = searchParams.get('category') || '';
 
-  // When the search changes, start over: clear listings and load page 1.
+  // The landing page (no category chosen, no search) shows category tiles plus
+  // a "Recommended for you" strip. Once a category is picked, we switch to the
+  // normal feed filtered by that category.
+  const isLanding = !category && !search;
+
+  // Providers get a personalized, AI-ranked feed — but only on the landing page.
+  // When browsing a category or searching, we show the plain (filtered) feed.
+  const usePersonalized = userMode === 'provider' && isLanding;
+
+  // When the search or role changes, start over: clear listings and load page 1.
   useEffect(() => {
     let ignore = false;
     setIsLoading(true);
     setError(null);
 
-    getListings({ search, page: 1 })
+    // Try the personalized feed first for providers. If it fails (or isn't
+    // personalized), we fall back to the normal newest-first feed so the home
+    // page always shows something.
+    if (usePersonalized) {
+      getRecommendedListings()
+        .then((data) => {
+          if (ignore) return;
+          setListings(data.listings);
+          setHasMore(false); // recommendations come as one ranked batch
+          setPage(1);
+          // The backend tells us whether it actually AI-ranked the feed.
+          setPersonalized(Boolean(data.personalized));
+        })
+        .catch((err) => {
+          console.error("Personalized feed failed, using normal feed:", err);
+          setPersonalized(false);
+          // Fall back to the normal feed.
+          return getListings({ search, category, page: 1 }).then((data) => {
+            if (ignore) return;
+            setListings(data.listings);
+            setHasMore(data.hasMore);
+            setPage(1);
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to load listings:", err);
+          if (!ignore) setError("Could not load listings. Is the backend running?");
+        })
+        .finally(() => {
+          if (!ignore) setIsLoading(false);
+        });
+
+      return () => { ignore = true; };
+    }
+
+    setPersonalized(false); // normal feed is not AI-ranked
+    getListings({ search, category, page: 1 })
       .then((data) => {
         if (ignore) return;
         setListings(data.listings);
@@ -406,7 +455,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
       });
 
     return () => { ignore = true; };
-  }, [search]);
+  }, [search, category, usePersonalized]);
 
   // Load the next page and append it to the list. Called when the user scrolls
   // to the bottom. Guarded so we don't fire while a load is already happening
@@ -416,7 +465,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
 
     const nextPage = page + 1;
     setIsLoadingMore(true);
-    getListings({ search, page: nextPage })
+    getListings({ search, category, page: nextPage })
       .then((data) => {
         setListings((prev) => [...prev, ...data.listings]);
         setHasMore(data.hasMore);
@@ -439,6 +488,9 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
         onLoadMore={loadMore}
         hasMore={hasMore}
         isLoadingMore={isLoadingMore}
+        personalized={personalized}
+        category={category}
+        showCategories={isLanding}
       />
     </>
   );
