@@ -137,6 +137,19 @@ async function main() {
     let owner = createdProviders[posterEmail];
 
     if (!owner) {
+      // Give each poster a simple bio + skills so their public profile has
+      // something to show. Prefer values from the listing data (poster.bio /
+      // poster.skills), otherwise derive them from the listing's category and
+      // required skills.
+      const derivedBio =
+        item.poster.bio ||
+        `${item.poster.firstName} offers ${item.category.toLowerCase()} services in ${item.poster.location}. Reliable, friendly, and happy to help with your next task.`;
+      const derivedSkills =
+        item.poster.skills ||
+        (Array.isArray(item.skillsRequired) && item.skillsRequired.length > 0
+          ? item.skillsRequired
+          : [item.category]);
+
       owner = await prisma.user.create({
         data: {
           firstName: item.poster.firstName,
@@ -145,6 +158,8 @@ async function main() {
           email: posterEmail,
           password: "seed-password",
           authProvider: "local",
+          bio: derivedBio,
+          skills: derivedSkills,
         },
       });
       createdProviders[posterEmail] = owner;

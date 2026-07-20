@@ -65,6 +65,12 @@ export async function getListingById(id) {
   return response.data;
 }
 
+// GET /api/listings/user/:userId  -> all listings created by one user
+export async function getListingsByUser(userId) {
+  const response = await api.get(`/api/listings/user/${userId}`);
+  return response.data;
+}
+
 // POST /api/listings  -> create a new listing.
 // This route is protected, so we send the logged-in user's token (saved to
 // localStorage by the AuthModal). `listing` must already use the backend's
