@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, Clock, MapPin, Star, Briefcase, Check, Trash2, Mail } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import { formatCityState } from '../../utils/location';
@@ -14,6 +15,7 @@ function ListingDetailView({ listing, userMode, isOwner, onDelete, onMessage, on
   // false = hidden, true = visible. The trashcan opens it; the modal's own
   // buttons close it (Cancel) or run the real delete (Delete).
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const navigate = useNavigate();
 
   // Show the user's typed-in category text when the category is OTHER,
   // otherwise show the fixed category value.
@@ -26,6 +28,10 @@ function ListingDetailView({ listing, userMode, isOwner, onDelete, onMessage, on
     listing.user?.city && listing.user?.state
       ? `${listing.user.city}, ${listing.user.state}`
       : formatCityState(listing.user?.location ?? listing.location);
+  // Go to the poster's public profile (where their rating + reviews live).
+  const goToPosterProfile = () => {
+    if (listing.user?.id) navigate(`/users/${listing.user.id}`);
+  };
 
   return (
     <div className="detail-wrap">
@@ -120,7 +126,10 @@ function ListingDetailView({ listing, userMode, isOwner, onDelete, onMessage, on
 
             <div className="client-card">
               <div className="client-title">About the Client</div>
-              <div className="client-row">
+              <div
+                className="client-row client-row-clickable"
+                onClick={goToPosterProfile}
+              >
                 <ProfilePicture initials={initials(listing.user)} size="xs" />
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 14, color: "#1E2340" }}>

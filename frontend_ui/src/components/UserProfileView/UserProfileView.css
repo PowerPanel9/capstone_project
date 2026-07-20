@@ -28,7 +28,7 @@
 
 .profile-top-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
 }
 
@@ -64,22 +64,82 @@
   font-weight: 800;
 }
 
-.edit-btn {
+.profile-actions-menu {
+  position: relative;
   margin-top: 16px;
+  margin-left: auto;
+  margin-right: -10px;
+}
+
+.actions-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--primary, #7B8FC8);
   color: #fff;
   border: none;
-  padding: 10px 20px;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
-  font-size: 14px;
-  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
   font-family: inherit;
 }
 
-.edit-btn:hover {
+.actions-menu-trigger:hover {
   background: var(--primary-dark, #6678B8);
+}
+
+.menu-arrow {
+  transition: transform 0.15s ease;
+}
+
+.menu-arrow.open {
+  transform: rotate(180deg);
+}
+
+.actions-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  display: inline-block;
+  width: max-content;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  padding: 6px;
+  z-index: 10;
+}
+
+.actions-menu-item {
+  display: block;
+  width: auto;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: #1E2340;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.actions-menu-item:hover {
+  background: #F3F4F6;
+}
+
+/* Logout is a "leave" action, so it's red. */
+.actions-menu-item.logout {
+  color: #DC2626;
+}
+
+.actions-menu-item.logout:hover {
+  background: #FEF2F2;
 }
 
 .profile-name {
@@ -562,4 +622,12 @@
   .modal-btn {
     width: 100%;
   }
+}
+/* Rating stat is clickable to open the reviews modal */
+.stat-clickable {
+  cursor: pointer;
+}
+
+.stat-clickable:hover .stat-n {
+  color: var(--primary, #7B8FC8);
 }

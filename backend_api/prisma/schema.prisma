@@ -119,6 +119,7 @@ model Review {
   title       String // Title/header of the review
   description String // Description of the review
   imageUrl    String? @map("image_url") // Optional picture for the review
+  createdAt   DateTime @default(now()) @map("created_at") // When the review was left
 
   // Relations
   reviewee User @relation("ReviewsReceived", fields: [revieweeId], references: [id])

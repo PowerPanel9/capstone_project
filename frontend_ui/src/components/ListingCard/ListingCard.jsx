@@ -1,10 +1,13 @@
 import { MapPin, Clock, Bookmark, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import { formatCityState } from '../../utils/location';
 import './ListingCard.css';
 
 function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
+  const navigate = useNavigate();
+
   // Show the user's typed-in category text when the category is OTHER,
   // otherwise show the fixed category value.
   const categoryLabel =
@@ -21,6 +24,12 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
     listing.user?.city && listing.user?.state
       ? `${listing.user.city}, ${listing.user.state}`
       : formatCityState(listing.user?.location ?? listing.location);
+  // Clicking the poster goes to their profile (not the listing). stopPropagation
+  // prevents the card's own onClick (which opens the listing) from also firing.
+  const goToPosterProfile = (e) => {
+    e.stopPropagation();
+    if (listing.user?.id) navigate(`/users/${listing.user.id}`);
+  };
 
   return (
     <div className="card" onClick={onClick}>
@@ -31,12 +40,14 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
       )}
       <div className="card-body">
         <div className="card-header">
-          <ProfilePicture initials={initials(listing.user)} size="xs" />
-          <div className="card-meta">
-            <div className="card-name">{fullName(listing.user)}</div>
-            <div className="card-loc">
-              <MapPin size={9} />
-              {listingLocation}
+          <div className="card-poster" onClick={goToPosterProfile}>
+            <ProfilePicture initials={initials(listing.user)} size="xs" />
+            <div className="card-meta">
+              <div className="card-name">{fullName(listing.user)}</div>
+              <div className="card-loc">
+                <MapPin size={9} />
+                {listingLocation}
+              </div>
             </div>
           </div>
           <span className="badge">{categoryLabel}</span>

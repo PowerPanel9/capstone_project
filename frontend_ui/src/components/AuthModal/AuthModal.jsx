@@ -3,6 +3,12 @@ import { X } from 'lucide-react';
 import './AuthModal.css';
 
 function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
+  const API_BASE_URL =
+    import.meta.env.VITE_API_URL ||
+    (import.meta.env.PROD
+      ? 'https://capstone-project-os7l.onrender.com'
+      : 'http://localhost:3000');
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -25,7 +31,7 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
         ? { email: formData.email, password: formData.password }
         : formData;
 
-      const response = await fetch(`http://localhost:3000${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +145,7 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
         </div>
 
         <a
-          href="http://localhost:3000/api/auth/google"
+          href={`${API_BASE_URL}/api/auth/google`}
           className="auth-google-btn"
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
         >

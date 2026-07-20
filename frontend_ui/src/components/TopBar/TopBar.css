@@ -105,20 +105,6 @@
   box-shadow: 0 0 0 2px #D1D5DB;
 }
 
-.logout-btn {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: #6B7280;
-  margin-left: auto;
-  font-size: 14px;
-  padding: 8px 12px;
-}
-
-.logout-btn:hover {
-  color: #DC2626;
-}
-
 .message-compose-btn.active {
   background: #E5E7EB;
   color: #1E2340;

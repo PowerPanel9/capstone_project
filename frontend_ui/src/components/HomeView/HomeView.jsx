@@ -51,7 +51,7 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadM
         <div style={{ position: "relative" }}>
           <div className="ai-label">
             <Sparkles size={14} />
-            AI-Powered Matching
+            AI Assistant
           </div>
           <div className="ai-title">Find your perfect match</div>
           <div className="ai-input-row">

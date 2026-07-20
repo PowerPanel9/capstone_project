@@ -126,14 +126,71 @@ nav {
   opacity: 0.85;
 }
 
-.user-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* Wrapper positions the popup relative to the user row. */
+.user-menu-wrap {
+  position: relative;
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid #F3F4F6;
   flex-shrink: 0;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.user-row:hover {
+  background: #F3F4F6;
+}
+
+/* Popup that floats above the user row when it's clicked. */
+.user-menu-popup {
+  position: absolute;
+  bottom: calc(100% - 8px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  z-index: 50;
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+/* Logout is a "leave" action, so it's red. */
+.user-menu-item.logout {
+  color: #DC2626;
+}
+
+.user-menu-item.logout:hover {
+  background: #FEF2F2;
 }
 
 .user-name {

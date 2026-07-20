@@ -164,3 +164,17 @@
   align-items: center;
   gap: 4px;
 }
+
+/* Clickable poster area (avatar + name/location) -> opens their profile */
+.card-poster {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.card-poster:hover .card-name {
+  color: var(--primary, #7B8FC8);
+}
