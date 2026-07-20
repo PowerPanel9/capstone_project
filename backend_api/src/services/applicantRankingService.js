@@ -14,10 +14,9 @@ const OpenAI = require("openai");
 const prisma = new PrismaClient();
 
 // Same Salesforce LLM gateway settings the chatbot uses (see mcp/agentClient.mjs).
-// The AI_KEY comes from backend_api/.env, which index.js already loads.
+// AI_KEY and AI_BASE_URL both come from backend_api/.env, which index.js loads.
 const MODEL = "claude-sonnet-4-5-20250929";
-const BASE_URL =
-  "https://eng-ai-model-gateway.sfproxy.devx-preprod.aws-esvc1-useast2.aws.sfdc.cl";
+const BASE_URL = process.env.AI_BASE_URL;
 
 /**
  * Rank the applicants for a listing using AI.

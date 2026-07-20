@@ -14,7 +14,7 @@ import AuthModal from './components/AuthModal/AuthModal';
 import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
-import { getListings, getListingById } from './api/listings';
+import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
 import { getUsers as getMessageUsers } from './api/messages';
@@ -37,6 +37,8 @@ function App() {
   const [messagesPeopleSearch, setMessagesPeopleSearch] = useState("");
   const [messagesDirectoryUsers, setMessagesDirectoryUsers] = useState([]);
   const [messagesStartUser, setMessagesStartUser] = useState(null);
+  // The listing a provider is messaging about (carried from the listing page).
+  const [messagesStartListing, setMessagesStartListing] = useState(null);
   // `bookmarks` is a Set of LISTING ids (used by cards to show the filled icon).
   const [bookmarks, setBookmarks] = useState(new Set());
   // The backend deletes by BOOKMARK id, but the UI works in listing ids, so we
@@ -257,6 +259,8 @@ function App() {
                       <ListingDetailPage
                         userMode={userMode}
                         onApply={() => setShowApplyModal(true)}
+                        onMessageUser={(user) => setMessagesStartUser(user)}
+                        onMessageListing={(listing) => setMessagesStartListing(listing)}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -309,7 +313,11 @@ function App() {
                         peopleSearch={messagesPeopleSearch}
                         onPeopleSearchChange={setMessagesPeopleSearch}
                         startConversationUser={messagesStartUser}
-                        onStartConversationHandled={() => setMessagesStartUser(null)}
+                        startListing={messagesStartListing}
+                        onStartConversationHandled={() => {
+                          setMessagesStartUser(null);
+                          setMessagesStartListing(null);
+                        }}
                         onCloseComposer={() => {
                           setMessagesComposerOpen(false);
                           setMessagesPeopleSearch("");
@@ -497,9 +505,13 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
 }
 
 // Listing Detail Page Component
-function ListingDetailPage({ userMode, onApply }) {
+function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  // If we arrived here from the profile, the navigation carried this marker.
+  // Use it to decide where "back" goes and what the button says.
+  const cameFromProfile = location.state?.from === "profile";
   const [listing, setListing] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -514,6 +526,42 @@ function ListingDetailPage({ userMode, onApply }) {
       .finally(() => setIsLoading(false));
   }, [id]);
 
+  // Work out if the logged-in user owns this listing. The user object was
+  // saved to localStorage at login, and each listing carries its owner's id.
+  let currentUserId = null;
+  try {
+    const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
+    currentUserId = savedUser?.id ?? null;
+  } catch (err) {
+    currentUserId = null;
+  }
+  const isOwner =
+    listing != null && currentUserId != null && Number(listing.userId) === Number(currentUserId);
+
+  // Delete this listing (owner only), then go back to the home feed since
+  // the listing no longer exists. The "are you sure?" step is handled by an
+  // in-app modal inside ListingDetailView, so we no longer use window.confirm.
+  const handleDelete = async () => {
+    try {
+      await deleteListing(id);
+      navigate('/home');
+    } catch (err) {
+      console.error("Failed to delete listing:", err);
+      setError("Could not delete this listing. Please try again.");
+    }
+  };
+
+  // Open a conversation with the client who posted this listing. We hand the
+  // listing's owner up to App (which stores it as messagesStartUser) and then
+  // navigate to Messages, where that conversation opens automatically.
+  const handleMessage = () => {
+    if (!listing?.user?.id) return;
+    onMessageUser?.(listing.user);
+    // Also carry the listing itself so Messages can attach it to the first message.
+    onMessageListing?.({ id: listing.id, title: listing.title });
+    navigate('/messages');
+  };
+
   if (isLoading) return <p className="feed-status">Loading listing details…</p>;
   if (error) return <p className="feed-status feed-error">{error}</p>;
   if (!listing) return <p className="feed-status feed-error">Listing not found</p>;
@@ -522,7 +570,11 @@ function ListingDetailPage({ userMode, onApply }) {
     <ListingDetailView
       listing={listing}
       userMode={userMode}
-      onBack={() => navigate('/home')}
+      isOwner={isOwner}
+      onDelete={handleDelete}
+      onMessage={handleMessage}
+      onBack={() => navigate(cameFromProfile ? '/user/profile' : '/home')}
+      backLabel={cameFromProfile ? 'Back to profile' : 'Back to listings'}
       onApply={onApply}
     />
   );

@@ -1,6 +1,7 @@
 import { MapPin, Clock, Bookmark, Sparkles } from 'lucide-react';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
+import { formatCityState } from '../../utils/location';
 import './ListingCard.css';
 
 function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
@@ -13,6 +14,13 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
   // When it's hidden, the flex layout lets the category badge slide into its
   // place at the right edge of the header automatically.
   const showBookmark = userMode === "provider";
+
+  // Show only "City, State" for the listing's location. Prefer the structured
+  // city/state fields if the backend gives them, otherwise parse the raw address.
+  const listingLocation =
+    listing.user?.city && listing.user?.state
+      ? `${listing.user.city}, ${listing.user.state}`
+      : formatCityState(listing.user?.location ?? listing.location);
 
   return (
     <div className="card" onClick={onClick}>
@@ -28,7 +36,7 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
             <div className="card-name">{fullName(listing.user)}</div>
             <div className="card-loc">
               <MapPin size={9} />
-              {listing.user?.location ?? listing.location}
+              {listingLocation}
             </div>
           </div>
           <span className="badge">{categoryLabel}</span>
