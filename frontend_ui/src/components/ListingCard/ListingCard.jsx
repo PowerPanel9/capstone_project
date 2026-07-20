@@ -1,9 +1,12 @@
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Bookmark } from 'lucide-react';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import './ListingCard.css';
 
 function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
+  const navigate = useNavigate();
+
   // Show the user's typed-in category text when the category is OTHER,
   // otherwise show the fixed category value.
   const categoryLabel =
@@ -14,6 +17,13 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
   // place at the right edge of the header automatically.
   const showBookmark = userMode === "provider";
 
+  // Clicking the poster goes to their profile (not the listing). stopPropagation
+  // prevents the card's own onClick (which opens the listing) from also firing.
+  const goToPosterProfile = (e) => {
+    e.stopPropagation();
+    if (listing.user?.id) navigate(`/users/${listing.user.id}`);
+  };
+
   return (
     <div className="card" onClick={onClick}>
       {listing.imageUrl && (
@@ -23,12 +33,14 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
       )}
       <div className="card-body">
         <div className="card-header">
-          <ProfilePicture initials={initials(listing.user)} size="xs" />
-          <div className="card-meta">
-            <div className="card-name">{fullName(listing.user)}</div>
-            <div className="card-loc">
-              <MapPin size={9} />
-              {listing.user?.location ?? listing.location}
+          <div className="card-poster" onClick={goToPosterProfile}>
+            <ProfilePicture initials={initials(listing.user)} size="xs" />
+            <div className="card-meta">
+              <div className="card-name">{fullName(listing.user)}</div>
+              <div className="card-loc">
+                <MapPin size={9} />
+                {listing.user?.location ?? listing.location}
+              </div>
             </div>
           </div>
           <span className="badge">{categoryLabel}</span>

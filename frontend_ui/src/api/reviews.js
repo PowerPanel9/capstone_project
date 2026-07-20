@@ -4,7 +4,9 @@
 
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+// Fall back to localhost if VITE_API_URL isn't set (e.g. the dev server was
+// started before .env existed) so requests still reach the backend.
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const api = axios.create({
   baseURL: API_URL,

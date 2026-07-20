@@ -1,13 +1,21 @@
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Clock, MapPin, Star, Briefcase, Check } from 'lucide-react';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import './ListingDetailView.css';
 
 function ListingDetailView({ listing, userMode, onBack, onApply }) {
+  const navigate = useNavigate();
+
   // Show the user's typed-in category text when the category is OTHER,
   // otherwise show the fixed category value.
   const categoryLabel =
     listing.category === "OTHER" ? listing.customCategory : listing.category;
+
+  // Go to the poster's public profile (where their rating + reviews live).
+  const goToPosterProfile = () => {
+    if (listing.user?.id) navigate(`/users/${listing.user.id}`);
+  };
 
   return (
     <div className="detail-wrap">
@@ -80,7 +88,10 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
 
             <div className="client-card">
               <div className="client-title">About the Client</div>
-              <div className="client-row">
+              <div
+                className="client-row client-row-clickable"
+                onClick={goToPosterProfile}
+              >
                 <ProfilePicture initials={initials(listing.user)} size="xs" />
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 14, color: "#1E2340" }}>

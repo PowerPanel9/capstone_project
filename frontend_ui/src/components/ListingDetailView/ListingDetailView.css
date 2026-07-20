@@ -167,3 +167,8 @@
   align-items: center;
   gap: 8px;
 }
+
+/* Clickable "About the Client" row -> opens poster's profile */
+.client-row-clickable {
+  cursor: pointer;
+}

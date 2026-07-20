@@ -248,9 +248,20 @@ async function main() {
 
   // ----- Create reviews -----
   console.log("\nCreating reviews...");
+
+  // Some reviews may point at a REAL account that the seed didn't create
+  // (e.g. a developer's own account). If an email isn't in createdProviders,
+  // fall back to looking the user up in the database by email.
+  async function resolveUser(email) {
+    if (createdProviders[email]) return createdProviders[email];
+    const found = await prisma.user.findUnique({ where: { email } });
+    if (found) createdProviders[email] = found; // cache for reuse
+    return found || null;
+  }
+
   for (const rev of seedReviews) {
-    const reviewer = createdProviders[rev.reviewerEmail];
-    const reviewee = createdProviders[rev.revieweeEmail];
+    const reviewer = await resolveUser(rev.reviewerEmail);
+    const reviewee = await resolveUser(rev.revieweeEmail);
 
     if (!reviewer) {
       console.warn(`  ! Reviewer not found: ${rev.reviewerEmail}`);

@@ -26,11 +26,20 @@ function ReviewsPanel({ revieweeId, currentUser, onClose }) {
   // Load this user's reviews from the backend when the panel opens.
   useEffect(() => {
     let ignore = false;
+
+    // Guard against a missing/invalid id (would 500 the backend). If we don't
+    // have a valid id yet, treat it as "no reviews" rather than an error.
+    if (revieweeId === undefined || revieweeId === null || Number.isNaN(Number(revieweeId))) {
+      setReviews([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     getReviewsForUser(revieweeId)
       .then((data) => { if (!ignore) setReviews(data); })
       .catch((err) => {
-        console.error("Failed to load reviews:", err);
+        console.error("Failed to load reviews:", err?.response?.status, err?.message);
         if (!ignore) setError("Could not load reviews.");
       })
       .finally(() => { if (!ignore) setIsLoading(false); });
@@ -40,7 +49,7 @@ function ReviewsPanel({ revieweeId, currentUser, onClose }) {
   // Average rating, computed from the real reviews (0 if there are none).
   const avgRating = reviews.length
     ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1)
-    : "—";
+    : "0";
 
   // Can't review yourself, and must be logged in.
   const canReview = currentUser && currentUser.id !== revieweeId;
@@ -99,7 +108,9 @@ function ReviewsPanel({ revieweeId, currentUser, onClose }) {
           {isLoading && <p className="reviews-status">Loading reviews…</p>}
           {error && <p className="reviews-status reviews-error">{error}</p>}
           {!isLoading && !error && reviews.length === 0 && (
-            <p className="reviews-status">No reviews yet.</p>
+            <div className="reviews-empty">
+              <p className="reviews-empty-text">No reviews on this user</p>
+            </div>
           )}
 
           {reviews.map((r) => (

@@ -6,6 +6,7 @@ import HomeView from './components/HomeView/HomeView';
 import ListingDetailView from './components/ListingDetailView/ListingDetailView';
 import MessagesView from './components/MessagesView/MessagesView';
 import UserProfileView from './components/UserProfileView/UserProfileView';
+import PublicProfileView from './components/PublicProfileView/PublicProfileView';
 import CreateListingView from './components/CreateListingView/CreateListingView';
 import ApplicationModal from './components/ApplicationModal/ApplicationModal';
 import AIAgentModal from './components/AIAgentModal/AIAgentModal';
@@ -282,6 +283,17 @@ function App() {
                         userMode={userMode}
                         onToggleMode={toggleUserMode}
                       />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                <Route
+                  path="/users/:userId"
+                  element={
+                    isAuthenticated ? (
+                      <PublicProfileView currentUser={currentUser} />
                     ) : (
                       <Navigate to="/" replace />
                     )
