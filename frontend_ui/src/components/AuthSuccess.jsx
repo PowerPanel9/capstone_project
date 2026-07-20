@@ -2,6 +2,12 @@ import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 function AuthSuccess() {
+  const API_BASE_URL =
+    import.meta.env.VITE_API_URL ||
+    (import.meta.env.PROD
+      ? 'https://capstone-project-os7l.onrender.com'
+      : 'http://localhost:3000');
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -17,7 +23,7 @@ function AuthSuccess() {
       localStorage.setItem('token', token);
 
       // Fetch user data with the token
-      fetch('http://localhost:3000/api/auth/me', {
+      fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
