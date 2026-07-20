@@ -6,6 +6,7 @@ import HomeView from './components/HomeView/HomeView';
 import ListingDetailView from './components/ListingDetailView/ListingDetailView';
 import MessagesView from './components/MessagesView/MessagesView';
 import UserProfileView from './components/UserProfileView/UserProfileView';
+import PublicProfileView from './components/PublicProfileView/PublicProfileView';
 import CreateListingView from './components/CreateListingView/CreateListingView';
 import ApplicationModal from './components/ApplicationModal/ApplicationModal';
 import AIAgentModal from './components/AIAgentModal/AIAgentModal';
@@ -28,6 +29,9 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
+  // Text to prefill the AI chat box with (used when "Ask AI" is clicked with a
+  // typed query). Empty string means open the modal with a blank box.
+  const [aiInitialMessage, setAiInitialMessage] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [messagesComposerOpen, setMessagesComposerOpen] = useState(false);
   const [messagesPeopleSearch, setMessagesPeopleSearch] = useState("");
@@ -92,6 +96,13 @@ function App() {
     localStorage.setItem('sideHustleUserMode', newMode);
   };
 
+  // Open the AI chat modal. An optional message prefills the input box (used by
+  // the "Ask AI" bar so the user's typed query carries into the chat).
+  const openAI = (message = "") => {
+    setAiInitialMessage(message);
+    setShowAIModal(true);
+  };
+
   // Add or remove a bookmark, calling the backend and keeping local state in sync.
   const toggleBookmark = async (listingId) => {
     const isBookmarked = bookmarks.has(listingId);
@@ -138,6 +149,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    sessionStorage.removeItem('sidehustle_chat_session'); // Clear chat history on logout
     setIsAuthenticated(false);
     setCurrentUser(null);
     navigate('/');
@@ -198,6 +210,7 @@ function App() {
             <Sidebar
               currentUser={currentUser}
               userMode={userMode}
+              onOpenAI={openAI}
             />
           </aside>
 
@@ -230,7 +243,7 @@ function App() {
                   path="/home"
                   element={
                     isAuthenticated ? (
-                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} userMode={userMode} />
+                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} userMode={userMode} onOpenAI={openAI} />
                     ) : (
                       <Navigate to="/" replace />
                     )
@@ -270,6 +283,17 @@ function App() {
                         userMode={userMode}
                         onToggleMode={toggleUserMode}
                       />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                <Route
+                  path="/users/:userId"
+                  element={
+                    isAuthenticated ? (
+                      <PublicProfileView currentUser={currentUser} />
                     ) : (
                       <Navigate to="/" replace />
                     )
@@ -322,7 +346,12 @@ function App() {
             <ApplicationModal listing={null} onClose={() => setShowApplyModal(false)} />
           )}
 
-          {showAIModal && <AIAgentModal onClose={() => setShowAIModal(false)} />}
+          {showAIModal && (
+            <AIAgentModal
+              initialMessage={aiInitialMessage}
+              onClose={() => setShowAIModal(false)}
+            />
+          )}
         </div>
       ) : (
         // Landing page - shown when not authenticated
@@ -356,7 +385,7 @@ function App() {
 }
 
 // Home Page Component
-function HomePage({ bookmarks, onBookmark, userMode }) {
+function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
   const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
   const [page, setPage] = useState(1);
@@ -418,6 +447,7 @@ function HomePage({ bookmarks, onBookmark, userMode }) {
         bookmarks={bookmarks}
         onBookmark={onBookmark}
         userMode={userMode}
+        onOpenAI={onOpenAI}
         onLoadMore={loadMore}
         hasMore={hasMore}
         isLoadingMore={isLoadingMore}

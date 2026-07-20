@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
 import './HomeView.css';
 
-function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMore, isLoadingMore }) {
+function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore }) {
   const [aiInput, setAiInput] = useState("");
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
@@ -28,10 +28,11 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMo
     return () => observer.disconnect(); // clean up when deps change/unmount
   }, [hasMore, onLoadMore, safeListings.length]);
 
+  // Open the AI chat modal, passing the typed query so it prefills the chat.
   const handleAskAI = () => {
     if (aiInput.trim()) {
-      // TODO: Open AI modal
-      console.log('AI Query:', aiInput);
+      onOpenAI(aiInput);
+      setAiInput(""); // clear the banner box now that it's handed off to the modal
     }
   };
 

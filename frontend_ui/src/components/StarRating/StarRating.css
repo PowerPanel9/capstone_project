@@ -1,0 +1,13 @@
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star {
+  cursor: default;
+}
+
+.star-interactive {
+  cursor: pointer;
+}
