@@ -1,3 +1,4 @@
+
 .profile-wrap {
   padding: 24px;
   max-width: 900px;
@@ -16,6 +17,9 @@
 .profile-banner {
   height: 128px;
   background: var(--primary-gradient, linear-gradient(to right, #AABAE8, #8B9FD4, #7B8FC8));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .profile-body {
@@ -31,6 +35,18 @@
 .profile-avatar-wrap {
   margin-top: -40px;
   margin-bottom: 16px;
+}
+
+.profile-avatar-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.profile-avatar-btn:hover .profile-avatar,
+.profile-avatar-btn:focus-visible .profile-avatar {
+  box-shadow: 0 0 0 3px rgba(123, 143, 200, 0.35), 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .profile-avatar {
@@ -226,4 +242,324 @@
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.experience-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.experience-card {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.experience-title {
+  text-align: left;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1E2340;
+  margin: 0 0 10px;
+}
+
+.experience-description {
+  font-size: 14px;
+  color: #4B5563;
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.experience-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #F3F4F6;
+}
+
+.experience-images img {
+  width: 100%;
+  height: 98px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #E5E7EB;
+}
+
+.experience-empty {
+  background: #fff;
+  border: 1px dashed #D1D5DB;
+  border-radius: 12px;
+  padding: 18px;
+  color: #6B7280;
+  font-size: 13px;
+}
+
+.experience-layout {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(250px, 360px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.experience-skills-column {
+  width: 100%;
+}
+
+.experience-content-column {
+  min-width: 0;
+}
+
+.experience-section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1E2340;
+  margin-bottom: 10px;
+}
+
+.experience-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.experience-add-btn {
+  background: #F3F4F6;
+  color: var(--primary-dark, #6678B8);
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.experience-add-btn:hover {
+  background: #E5E7EB;
+  border-color: #C7CED9;
+}
+
+.profile-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 999;
+}
+
+.profile-modal {
+  width: min(700px, 96vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 20px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
+  padding: 24px;
+}
+
+.profile-modal-header {
+  margin-bottom: 18px;
+}
+
+.profile-modal-header h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1E2340;
+  letter-spacing: -0.3px;
+}
+
+.profile-modal-header p {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.profile-modal-static {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.profile-modal-static > div {
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  background: #F8FAFC;
+  padding: 12px;
+}
+
+.modal-static-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.profile-modal-static p {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E2340;
+}
+
+.modal-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4B5563;
+  margin-top: 10px;
+}
+
+.profile-modal input,
+.profile-modal textarea {
+  width: 100%;
+  margin: 6px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1E2340;
+  background: #fff;
+}
+
+.profile-modal input:focus,
+.profile-modal textarea:focus {
+  outline: none;
+  border-color: var(--primary, #7B8FC8);
+  box-shadow: 0 0 0 3px rgba(123, 143, 200, 0.14);
+}
+
+.profile-modal textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+.skills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.modal-skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F3F4F6;
+  color: var(--primary, #7B8FC8);
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.skill-remove-btn {
+  border: none;
+  background: transparent;
+  color: #6B7280;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.skill-remove-btn:hover {
+  color: #111827;
+}
+
+.skill-add-row,
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.skill-add-row input {
+  margin: 0;
+}
+
+.modal-actions {
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.modal-btn-primary {
+  background: var(--primary, #7B8FC8);
+  color: #fff;
+}
+
+.modal-btn-primary:hover {
+  background: var(--primary-dark, #6678B8);
+}
+
+.modal-btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.modal-btn-secondary {
+  background: #F3F4F6;
+  color: #374151;
+}
+
+.modal-btn-secondary:hover {
+  background: #E5E7EB;
+}
+
+.error-text {
+  color: #b91c1c;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .experience-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-modal {
+    border-radius: 16px;
+    padding: 18px;
+  }
+
+  .profile-modal-static {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-btn {
+    width: 100%;
+  }
 }

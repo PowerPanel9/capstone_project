@@ -1,8 +1,17 @@
-import { Menu, Search } from 'lucide-react';
+import { Menu, PenSquare, Search } from 'lucide-react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import './TopBar.css';
 
-function TopBar({ onToggleSidebar, onLogout }) {
+function TopBar({
+  onToggleSidebar,
+  onLogout,
+  messagesComposerOpen,
+  onToggleMessagesComposer,
+  messagesPeopleSearch,
+  onMessagesPeopleSearchChange,
+  messagesPeopleResults = [],
+  onSelectMessagesPerson,
+}) {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -31,6 +40,7 @@ function TopBar({ onToggleSidebar, onLogout }) {
 
   // Only show search on home page
   const showSearch = location.pathname === '/home';
+  const showMessagesSearch = location.pathname === "/messages";
 
   return (
     <div className="topbar">
@@ -48,6 +58,40 @@ function TopBar({ onToggleSidebar, onLogout }) {
             placeholder="Search listings..."
           />
         </div>
+      )}
+      {showMessagesSearch && messagesComposerOpen && (
+        <div className="search-wrap topbar-messages-search">
+          <Search size={14} />
+          <input
+            className="search-input"
+            value={messagesPeopleSearch}
+            onChange={(e) => onMessagesPeopleSearchChange(e.target.value)}
+            placeholder="Search people by name..."
+          />
+          {messagesPeopleResults.length > 0 && (
+            <div className="topbar-people-dropdown">
+              {messagesPeopleResults.slice(0, 8).map((user) => (
+                <button
+                  key={user.id}
+                  type="button"
+                  className="topbar-people-option"
+                  onClick={() => onSelectMessagesPerson(user)}
+                >
+                  {`${user.firstName || ""} ${user.lastName || ""}`.trim() || "Unknown"}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {showMessagesSearch && (
+        <button
+          className={`topbar-btn message-compose-btn ${messagesComposerOpen ? "active" : ""}`}
+          onClick={onToggleMessagesComposer}
+          aria-label="Start new conversation"
+        >
+          <PenSquare size={16} />
+        </button>
       )}
       <button className="logout-btn" onClick={onLogout}>
         Logout

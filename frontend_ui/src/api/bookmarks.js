@@ -7,7 +7,7 @@
 
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -30,7 +30,10 @@ export async function getBookmarks() {
   if (!token) return [];
 
   const response = await api.get("/api/bookmarks", { headers: authHeader() });
-  return response.data;
+  const data = response.data;
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.bookmarks)) return data.bookmarks;
+  return [];
 }
 
 // POST /api/bookmarks  -> save a listing. Body: { listing_id }

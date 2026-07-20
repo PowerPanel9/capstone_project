@@ -4,9 +4,10 @@ import { Sparkles } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
 import './HomeView.css';
 
-function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMore, isLoadingMore }) {
+function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore }) {
   const [aiInput, setAiInput] = useState("");
   const navigate = useNavigate();
+  const safeListings = Array.isArray(listings) ? listings : [];
 
   // The "sentinel" is an empty div at the very bottom of the feed. An
   // IntersectionObserver watches it: when it scrolls into view, we know the
@@ -25,12 +26,13 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMo
 
     observer.observe(sentinel);
     return () => observer.disconnect(); // clean up when deps change/unmount
-  }, [hasMore, onLoadMore, listings.length]);
+  }, [hasMore, onLoadMore, safeListings.length]);
 
+  // Open the AI chat modal, passing the typed query so it prefills the chat.
   const handleAskAI = () => {
     if (aiInput.trim()) {
-      // TODO: Open AI modal
-      console.log('AI Query:', aiInput);
+      onOpenAI(aiInput);
+      setAiInput(""); // clear the banner box now that it's handed off to the modal
     }
   };
 
@@ -70,7 +72,7 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMo
       </div>
 
       <div className="listing-feed">
-        {listings.map((listing) => (
+        {safeListings.map((listing) => (
           <ListingCard
             key={listing.id}
             listing={listing}
@@ -89,7 +91,7 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMo
       {isLoadingMore && <p className="feed-status">Loading more…</p>}
 
       {/* End-of-list message once there's nothing left to load */}
-      {!hasMore && listings.length > 0 && (
+      {!hasMore && safeListings.length > 0 && (
         <p className="feed-status feed-end">No more listings</p>
       )}
     </div>

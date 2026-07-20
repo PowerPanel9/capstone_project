@@ -6,12 +6,24 @@
 // The route file (listings_routes.js) decides WHICH function runs for each URL.
 // This file decides WHAT that function actually does.
 
-const { PrismaClient, ListingCategory } = require("@prisma/client");
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// The list of valid category values, taken straight from the Prisma enum so
-// this never drifts out of sync with the schema. Example: ["CLEANING", ...].
-const VALID_CATEGORIES = Object.values(ListingCategory);
+// Valid listing categories from prisma/schema.prisma (ListingCategory enum).
+// Keeping this as plain strings avoids runtime crashes when enum exports differ
+// across Prisma/Node setups.
+const VALID_CATEGORIES = [
+  "CLEANING",
+  "TUTORING",
+  "PLUMBING",
+  "GARDENING",
+  "BEAUTY",
+  "BABYSITTING",
+  "MOVING",
+  "HANDYMAN",
+  "DELIVERY",
+  "OTHER",
+];
 
 // Small helper: is this value one of the allowed categories?
 function isValidCategory(value) {

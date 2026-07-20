@@ -10,6 +10,7 @@ require("dotenv").config();
 const authRoutes = require("./src/routes/authRoutes");
 const listingsRoutes = require("./src/routes/listingsRoutes");
 const bookmarksRoutes = require("./src/routes/bookmarksRoutes");
+const agentRoutes = require("./src/routes/agentRoutes");
 const priceRoutes = require("./src/routes/priceRoutes");
 const reviewsRoutes = require("./src/routes/reviewsRoutes");
 
@@ -25,6 +26,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingsRoutes);
 app.use("/api/bookmarks", bookmarksRoutes);
+app.use("/api/agent", agentRoutes);
 app.use("/api/prices", priceRoutes);
 app.use("/api/reviews", reviewsRoutes);
 

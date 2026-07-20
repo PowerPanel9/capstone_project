@@ -45,6 +45,42 @@
   margin-left: auto;
 }
 
+.topbar-messages-search {
+  margin-left: 0;
+}
+
+.topbar-people-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 40;
+  padding: 6px;
+}
+
+.topbar-people-option {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1E2340;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.topbar-people-option:hover {
+  background: #F3F4F6;
+}
+
 .search-wrap svg {
   position: absolute;
   left: 14px;
@@ -81,4 +117,9 @@
 
 .logout-btn:hover {
   color: #DC2626;
+}
+
+.message-compose-btn.active {
+  background: #E5E7EB;
+  color: #1E2340;
 }

@@ -5,7 +5,17 @@
 // "Marcus" + "Chen" -> "Marcus Chen"
 export function fullName(user) {
   if (!user) return "Unknown";
-  return `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
+  const formatPart = (value) =>
+    String(value || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+
+  const first = formatPart(user.firstName);
+  const last = formatPart(user.lastName);
+  return `${first} ${last}`.trim();
 }
 
 // "Marcus" + "Chen" -> "MC" (used for the avatar circle)
