@@ -111,6 +111,17 @@
   line-height: 1.6;
 }
 
+/* Small "why we recommended this" line, shown only on AI-recommended cards. */
+.card-reason {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--primary, #7B8FC8);
+  margin-bottom: 8px;
+}
+
 .tag-list {
   display: flex;
   flex-wrap: wrap;

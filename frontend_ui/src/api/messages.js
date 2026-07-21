@@ -29,10 +29,11 @@ export async function getConversation(otherUserId) {
   };
 }
 
-export async function sendMessage({ recipientId, content }) {
+export async function sendMessage({ recipientId, content, listingId }) {
   const response = await api.post(
     "/api/messages",
-    { recipientId, content },
+    // listingId is optional; only some messages are about a listing.
+    { recipientId, content, listingId },
     { headers: authHeaders() }
   );
   return response.data;

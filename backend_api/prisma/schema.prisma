@@ -48,7 +48,7 @@ model User {
   id               Int      @id @default(autoincrement())
   firstName  String         @map("first_name") // First name of the user
   lastName   String         @map("last_name") // Last name of the user
-  profilePicture   String?  @map("profile_picture") // Profile picture of the user
+  profilePicture   String? // Profile picture of the user
   imageUrl         String?  @map("image_url") // Banner picture of the user
   email            String   @unique // Email of the user for sign in
   password         String? // Password (encrypted) - NULL for OAuth users
@@ -92,6 +92,7 @@ model Listing {
   user         User          @relation(fields: [userId], references: [id])
   bookmarks    Bookmark[]
   applications Application[]
+  messages     Message[]
 
   @@map("listing")
 }
@@ -133,11 +134,13 @@ model Message {
   userIdTo   Int      @map("user_id_to") // Recipient (FK -> user)
   content    String // Message being sent/received
   imageUrl   String?  @map("image_url") // Optional attached picture
+  listingId  Int?     @map("listing_id") // Optional listing this message is about (FK -> listing)
   createdAt  DateTime @default(now()) @map("created_at")
 
   // Relations
-  sender    User @relation("MessagesSent", fields: [userIdFrom], references: [id])
-  recipient User @relation("MessagesReceived", fields: [userIdTo], references: [id])
+  sender    User     @relation("MessagesSent", fields: [userIdFrom], references: [id])
+  recipient User     @relation("MessagesReceived", fields: [userIdTo], references: [id])
+  listing   Listing? @relation(fields: [listingId], references: [id])
 
   @@map("message")
 }

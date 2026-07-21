@@ -55,6 +55,103 @@
   margin-bottom: 28px;
 }
 
+/* Teal trashcan, shown at the top right for the owner in client mode.
+   No background — just the icon, darkening slightly on hover. */
+.delete-listing-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  color: #14B8A6;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.delete-listing-btn:hover {
+  color: #0D9488;
+}
+
+/* ----- In-app delete confirmation modal ----- */
+
+/* Full-screen dimmed overlay that covers the page behind the modal. */
+.confirm-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* The white card that holds the message and buttons. */
+.confirm-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.confirm-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1E2340;
+  margin: 0 0 8px;
+}
+
+.confirm-text {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0 0 20px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.confirm-cancel-btn,
+.confirm-delete-btn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+/* Neutral cancel button. */
+.confirm-cancel-btn {
+  background: #F3F4F6;
+  color: #374151;
+}
+
+.confirm-cancel-btn:hover {
+  background: #E5E7EB;
+}
+
+/* Teal delete button, matching the site's client-mode color. */
+.confirm-delete-btn {
+  background: #14B8A6;
+  color: #fff;
+}
+
+.confirm-delete-btn:hover {
+  background: #0D9488;
+}
+
 .apply-btn {
   background: var(--primary, #7B8FC8);
   color: #fff;
@@ -71,6 +168,34 @@
 
 .apply-btn:hover {
   background: var(--primary-dark, #6678B8);
+}
+
+/* Apply + Message sit side by side, Message to the right of Apply. */
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Envelope button for messaging the client. Uses the theme accent as an
+   outlined button so it sits next to (but reads as secondary to) Apply Now. */
+.message-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--primary, #7B8FC8);
+  border: 1px solid var(--primary, #7B8FC8);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.message-btn:hover {
+  background: var(--primary, #7B8FC8);
+  color: #fff;
 }
 
 .stats-grid {

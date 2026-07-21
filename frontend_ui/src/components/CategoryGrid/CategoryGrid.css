@@ -1,0 +1,76 @@
+.category-section {
+  margin-bottom: 28px;
+}
+
+.category-heading {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1E2340;
+  letter-spacing: -0.3px;
+  margin-bottom: 16px;
+}
+
+/* Wide cards, about four per row. They wrap to fewer columns on narrow screens. */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.category-tile {
+  /* Wide, short card: title + emoji on top, "SHOW MORE" link at the bottom. */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 130px;
+  padding: 20px 22px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+}
+
+.category-tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary, #7B8FC8);
+  box-shadow: 0 4px 16px rgba(139, 159, 212, 0.2);
+}
+
+/* Top row: category name on the left, emoji illustration on the right. */
+.category-tile-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.category-tile-label {
+  font-size: 17px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--primary, #7B8FC8);
+  line-height: 1.2;
+}
+
+.category-tile-icon {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+/* Bottom "SHOW MORE ↗" link. */
+.category-tile-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #1E2340;
+}

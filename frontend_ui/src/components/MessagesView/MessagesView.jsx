@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageSquare, Search, Send } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { MessageSquare, Search, Send, X } from "lucide-react";
 import { getConversation, getInbox, sendMessage } from "../../api/messages";
 import './MessagesView.css';
 
-function MessagesView({ startConversationUser, onStartConversationHandled }) {
+function MessagesView({ startConversationUser, startListing, onStartConversationHandled }) {
   const [inbox, setInbox] = useState([]);
   const [conversationSearch, setConversationSearch] = useState("");
   const [selectedPartner, setSelectedPartner] = useState(null);
@@ -11,6 +12,10 @@ function MessagesView({ startConversationUser, onStartConversationHandled }) {
   const [draft, setDraft] = useState("");
   const [isLoadingInbox, setIsLoadingInbox] = useState(true);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  // The listing this conversation is about, shown as a chip above the input.
+  // It attaches to the next message the user sends, then clears.
+  const [attachedListing, setAttachedListing] = useState(null);
+  const navigate = useNavigate();
 
   const currentUserId = useMemo(() => {
     try {
@@ -72,6 +77,8 @@ function MessagesView({ startConversationUser, onStartConversationHandled }) {
   useEffect(() => {
     if (!startConversationUser?.id) return;
     loadConversation(startConversationUser);
+    // If we arrived from a listing, remember it so it attaches to the next message.
+    if (startListing?.id) setAttachedListing(startListing);
     onStartConversationHandled?.();
   }, [startConversationUser]);
 
@@ -79,10 +86,15 @@ function MessagesView({ startConversationUser, onStartConversationHandled }) {
     const text = draft.trim();
     if (!text || !selectedPartner?.id) return;
     setDraft("");
+    // Attach the listing (if any) to THIS message, then clear it so later
+    // messages in the conversation are just normal text.
+    const listingId = attachedListing?.id || undefined;
+    setAttachedListing(null);
     try {
       const created = await sendMessage({
         recipientId: selectedPartner.id,
         content: text,
+        listingId,
       });
       setMessages((prev) => [...prev, created]);
       setInbox((prev) => {
@@ -98,6 +110,8 @@ function MessagesView({ startConversationUser, onStartConversationHandled }) {
     } catch (error) {
       console.error("Failed to send message:", error);
       setDraft(text);
+      // Sending failed, so put the listing chip back for the retry.
+      if (listingId) setAttachedListing(attachedListing);
     }
   };
 
@@ -187,6 +201,18 @@ function MessagesView({ startConversationUser, onStartConversationHandled }) {
                   const mine = message.userIdFrom === currentUserId;
                   return (
                     <div key={message.id} className={`chat-msg ${mine ? "me" : ""}`}>
+                      {/* If this message is about a listing, show a small card
+                          above the bubble that links back to the listing. */}
+                      {message.listing && (
+                        <button
+                          type="button"
+                          className="chat-listing-card"
+                          onClick={() => navigate(`/listing/${message.listing.id}`)}
+                        >
+                          <span className="chat-listing-title">{message.listing.title}</span>
+                          <span className="chat-listing-subtitle">View listing</span>
+                        </button>
+                      )}
                       <div className={`chat-bubble ${mine ? "me" : "them"}`}>
                         {message.content}
                       </div>
@@ -196,6 +222,24 @@ function MessagesView({ startConversationUser, onStartConversationHandled }) {
               )}
             </div>
             <div className="chat-input-bar">
+              {/* Chip showing the listing that will attach to the next message.
+                  The user can remove it with the X if they don't want it. */}
+              {attachedListing && (
+                <div className="chat-attached-listing">
+                  <div className="chat-attached-text">
+                    <span className="chat-attached-title">{attachedListing.title}</span>
+                    <span className="chat-attached-subtitle">Attached listing</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="chat-attached-remove"
+                    aria-label="Remove listing"
+                    onClick={() => setAttachedListing(null)}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
               <div className="chat-input-inner">
                 <input
                   className="chat-input"

@@ -1,10 +1,20 @@
+import { useState } from 'react';
+import { ChevronLeft, Clock, MapPin, Star, Briefcase, Check, Trash2, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Clock, MapPin, Star, Briefcase, Check } from 'lucide-react';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
+import { formatCityState } from '../../utils/location';
 import './ListingDetailView.css';
 
-function ListingDetailView({ listing, userMode, onBack, onApply }) {
+function ListingDetailView({ listing, userMode, isOwner, onDelete, onMessage, onBack, onApply, backLabel = "Back to listings" }) {
+  // The owner can delete their own listing, but only while in client mode
+  // (deleting is a client action).
+  const canDelete = isOwner && userMode === "client";
+
+  // On/off switch for our in-app delete confirmation modal.
+  // false = hidden, true = visible. The trashcan opens it; the modal's own
+  // buttons close it (Cancel) or run the real delete (Delete).
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const navigate = useNavigate();
 
   // Show the user's typed-in category text when the category is OTHER,
@@ -12,6 +22,12 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
   const categoryLabel =
     listing.category === "OTHER" ? listing.customCategory : listing.category;
 
+  // Show only "City, State" for the location. Prefer the structured city/state
+  // fields if the backend gives them, otherwise parse the raw address.
+  const listingLocation =
+    listing.user?.city && listing.user?.state
+      ? `${listing.user.city}, ${listing.user.state}`
+      : formatCityState(listing.user?.location ?? listing.location);
   // Go to the poster's public profile (where their rating + reviews live).
   const goToPosterProfile = () => {
     if (listing.user?.id) navigate(`/users/${listing.user.id}`);
@@ -46,12 +62,34 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
               </h1>
               <p style={{ fontSize: 14, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 6 }}>
                 <MapPin size={13} />
-                {listing.user?.location ?? listing.location}
+                {listingLocation}
               </p>
             </div>
             {userMode === 'provider' && (
-              <button className="apply-btn" onClick={onApply}>
-                Apply Now
+              <div className="detail-actions">
+                <button className="apply-btn" onClick={onApply}>
+                  Apply Now
+                </button>
+                <button
+                  type="button"
+                  className="message-btn"
+                  title="Message the client"
+                  aria-label="Message the client"
+                  onClick={onMessage}
+                >
+                  <Mail size={18} />
+                </button>
+              </div>
+            )}
+            {canDelete && (
+              <button
+                type="button"
+                className="delete-listing-btn"
+                title="Delete listing"
+                aria-label="Delete listing"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 size={20} />
               </button>
             )}
           </div>
@@ -104,7 +142,7 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
                 </div>
               </div>
               <div className="client-details">
-                <p><MapPin size={12} />{listing.user?.location ?? listing.location}</p>
+                <p><MapPin size={12} />{listingLocation}</p>
                 <p><Briefcase size={12} />8 jobs posted</p>
                 <p><Check size={12} />Payment verified</p>
               </div>
@@ -112,6 +150,35 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
           </div>
         </div>
       </div>
+
+      {/* In-app delete confirmation. Only rendered when the switch is on, so it
+          isn't in the page until the user clicks the trashcan. */}
+      {showDeleteConfirm && (
+        <div className="confirm-backdrop">
+          <div className="confirm-box">
+            <h3 className="confirm-title">Delete this listing?</h3>
+            <p className="confirm-text">
+              This cannot be undone. The listing will be permanently removed.
+            </p>
+            <div className="confirm-actions">
+              <button
+                type="button"
+                className="confirm-cancel-btn"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="confirm-delete-btn"
+                onClick={onDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
