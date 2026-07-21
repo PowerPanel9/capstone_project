@@ -83,3 +83,13 @@ export async function createListing(listing) {
   });
   return response.data;
 }
+
+// PUT /api/listings/:id -> update a listing (owner only). Used here to change
+// the status (e.g. mark an in-progress listing as COMPLETED).
+export async function updateListing(id, updates) {
+  const token = localStorage.getItem("token");
+  const response = await api.put(`/api/listings/${id}`, updates, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return response.data;
+}

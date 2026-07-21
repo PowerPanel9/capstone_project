@@ -7,6 +7,7 @@ import { getUserById } from "../../api/users";
 import { getReviewsForUser } from "../../api/reviews";
 import { getListingsByUser } from "../../api/listings";
 import { fullName, initials } from "../../utils/user";
+import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 // Reuse the profile page's styles so this looks like the user's own profile.
 import "../UserProfileView/UserProfileView.css";
 import "./PublicProfileView.css";
@@ -104,6 +105,39 @@ function PublicProfileView({ currentUser }) {
 
   const openListingDetails = (id) => navigate(`/listing/${id}`);
 
+  // Renders one listing card with its status badge. This is the PUBLIC view, so
+  // grayed rules: IN_PROGRESS and COMPLETED are grayed out.
+  const renderListingCard = (listing) => {
+    const grayed = isListingGrayed(listing.status, { isOwnerView: false });
+    return (
+      <div
+        key={listing.id}
+        className={`mini-card ${grayed ? "listing-grayed" : ""}`}
+        role="button"
+        tabIndex={0}
+        onClick={() => openListingDetails(listing.id)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openListingDetails(listing.id);
+          }
+        }}
+        style={{ cursor: "pointer" }}
+      >
+        <ProfilePicture initials="LS" size="xs" />
+        <div className="mini-info">
+          <div className="mini-title">{listing.title}</div>
+          <div className="mini-desc">{listing.description}</div>
+        </div>
+        <div className="listing-status-row">
+          <span className={`listing-status listing-status-${(listing.status || "OPEN").toLowerCase()}`}>
+            {listingStatusLabel(listing.status)}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="profile-wrap">
       <button className="public-back-btn" onClick={() => navigate(-1)}>
@@ -197,28 +231,7 @@ function PublicProfileView({ currentUser }) {
 
           <div style={{ fontWeight: 700, color: "#4B5563", fontSize: 14 }}>Listings</div>
           {listings.length > 0 ? (
-            listings.slice(0, 2).map((listing) => (
-              <div
-                key={listing.id}
-                className="mini-card"
-                role="button"
-                tabIndex={0}
-                onClick={() => openListingDetails(listing.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openListingDetails(listing.id);
-                  }
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ProfilePicture initials="LS" size="xs" />
-                <div className="mini-info">
-                  <div className="mini-title">{listing.title}</div>
-                  <div className="mini-desc">{listing.description}</div>
-                </div>
-              </div>
-            ))
+            listings.slice(0, 2).map((listing) => renderListingCard(listing))
           ) : (
             <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
               No listings yet
@@ -230,28 +243,7 @@ function PublicProfileView({ currentUser }) {
       {activeTab === "Listings" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {listings.length > 0 ? (
-            listings.map((listing) => (
-              <div
-                key={listing.id}
-                className="mini-card"
-                role="button"
-                tabIndex={0}
-                onClick={() => openListingDetails(listing.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openListingDetails(listing.id);
-                  }
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ProfilePicture initials="LS" size="xs" />
-                <div className="mini-info">
-                  <div className="mini-title">{listing.title}</div>
-                  <div className="mini-desc">{listing.description}</div>
-                </div>
-              </div>
-            ))
+            listings.map((listing) => renderListingCard(listing))
           ) : (
             <div style={{
               display: "flex",

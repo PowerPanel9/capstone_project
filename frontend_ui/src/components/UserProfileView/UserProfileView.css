@@ -571,3 +571,65 @@
 .stat-clickable:hover .stat-n {
   color: var(--primary, #7B8FC8);
 }
+
+/* ----- Listing status (badges + grayed-out completed/in-progress) ----- */
+.listing-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.listing-status-open {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+.listing-status-in_progress {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.listing-status-completed {
+  background: #E5E7EB;
+  color: #4B5563;
+}
+
+/* A grayed-out (done / in-progress) listing card */
+.mini-card.listing-grayed {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+}
+
+/* Row holding the status badge + Mark-as-completed button */
+.listing-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.mark-done-btn {
+  background: var(--primary, #7B8FC8);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mark-done-btn:hover:not(:disabled) {
+  background: var(--primary-dark, #6678B8);
+}
+
+.mark-done-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

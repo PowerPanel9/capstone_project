@@ -21,7 +21,7 @@ function ListingDetailView({ listing, userMode, onBack, onApply }) {
     <div className="detail-wrap">
       <button className="back-btn" onClick={onBack}>
         <ChevronLeft size={16} />
-        Back to listings
+        Back
       </button>
 
       <div className="detail-card">

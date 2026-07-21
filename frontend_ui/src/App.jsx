@@ -28,6 +28,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applyListing, setApplyListing] = useState(null); // the listing being applied to
   const [showAIModal, setShowAIModal] = useState(false);
   // Text to prefill the AI chat box with (used when "Ask AI" is clicked with a
   // typed query). Empty string means open the modal with a blank box.
@@ -256,7 +257,10 @@ function App() {
                     isAuthenticated ? (
                       <ListingDetailPage
                         userMode={userMode}
-                        onApply={() => setShowApplyModal(true)}
+                        onApply={(listing) => {
+                          setApplyListing(listing);
+                          setShowApplyModal(true);
+                        }}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -343,7 +347,11 @@ function App() {
 
           {/* Modals */}
           {showApplyModal && (
-            <ApplicationModal listing={null} onClose={() => setShowApplyModal(false)} />
+            <ApplicationModal
+              listing={applyListing}
+              currentUser={currentUser}
+              onClose={() => setShowApplyModal(false)}
+            />
           )}
 
           {showAIModal && (
@@ -482,8 +490,8 @@ function ListingDetailPage({ userMode, onApply }) {
     <ListingDetailView
       listing={listing}
       userMode={userMode}
-      onBack={() => navigate('/home')}
-      onApply={onApply}
+      onBack={() => navigate(-1)}
+      onApply={() => onApply(listing)}
     />
   );
 }
