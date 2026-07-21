@@ -1,6 +1,25 @@
 .home-wrap {
   padding: 24px;
   width: 100%;
+  /* Two columns: the feed on the left, the AI Assistant panel on the right. */
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+/* Left column grows to fill the space next to the AI panel. */
+.home-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Right column holds the floating AI Assistant. `sticky` keeps it pinned near
+   the top as the feed scrolls, so it stays visible like a side rail. */
+.home-side {
+  width: 300px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
 }
 
 .ai-banner {
@@ -10,6 +29,16 @@
   position: relative;
   overflow: hidden;
   background: var(--primary-gradient-ai, linear-gradient(135deg, #8B9FD4, #7B8FC8, #9BAEE0));
+}
+
+/* The docked AI chat fills the side column. Fixed to the visible screen
+   height, not the page, so it never runs off-screen. We subtract:
+     56px  the top bar above the content area
+     24px  the sticky top offset (.home-side top: 24px)
+     24px  breathing room at the bottom of the screen
+   position: sticky on .home-side keeps it from scrolling away with the feed. */
+.home-side .ai-modal-docked {
+  height: calc(100vh - 104px);
 }
 
 .ai-banner-blob1 {

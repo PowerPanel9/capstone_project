@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowLeft } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
 import CategoryGrid from '../CategoryGrid/CategoryGrid';
+import AIAgentModal from '../AIAgentModal/AIAgentModal';
 import './HomeView.css';
 
 // Turn a category enum value (e.g. "BABYSITTING") into a nice label ("Babysitting").
@@ -11,8 +12,7 @@ function prettyCategory(value) {
   return value.charAt(0) + value.slice(1).toLowerCase();
 }
 
-function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore, personalized, category, showCategories }) {
-  const [aiInput, setAiInput] = useState("");
+function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMore, isLoading, isLoadingMore, usePersonalized, category, showCategories }) {
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
 
@@ -35,46 +35,11 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadM
     return () => observer.disconnect(); // clean up when deps change/unmount
   }, [hasMore, onLoadMore, safeListings.length]);
 
-  // Open the AI chat modal, passing the typed query so it prefills the chat.
-  const handleAskAI = () => {
-    if (aiInput.trim()) {
-      onOpenAI(aiInput);
-      setAiInput(""); // clear the banner box now that it's handed off to the modal
-    }
-  };
-
   return (
     <div className="home-wrap">
-      <div className="ai-banner">
-        <div className="ai-banner-blob1" />
-        <div className="ai-banner-blob2" />
-        <div style={{ position: "relative" }}>
-          <div className="ai-label">
-            <Sparkles size={14} />
-            AI Assistant
-          </div>
-          <div className="ai-title">Find your perfect match</div>
-          <div className="ai-input-row">
-            <Sparkles size={14} />
-            <input
-              className="ai-input"
-              value={aiInput}
-              onChange={(e) => setAiInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAskAI()}
-              placeholder='e.g. "React developer, 3 yrs exp, remote under $100/hr"'
-            />
-            <button
-              className="ai-ask-btn"
-              onClick={handleAskAI}
-              disabled={!aiInput.trim()}
-            >
-              Ask AI
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* On the landing page, category tiles sit just below the AI banner. */}
+      {/* Left column: categories + the listings feed. */}
+      <div className="home-main">
+      {/* On the landing page, category tiles sit at the top of the feed. */}
       {showCategories && <CategoryGrid userMode={userMode} />}
 
       {/* When viewing a category, offer a way back to the category tiles. */}
@@ -89,8 +54,10 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadM
         {category ? (
           // Browsing a specific category.
           <span className="feed-title">{prettyCategory(category)} listings</span>
-        ) : personalized ? (
-          // AI-ranked landing feed.
+        ) : usePersonalized ? (
+          // AI-ranked landing feed. Use `usePersonalized` (our intent) so the
+          // header reads "Recommended for you" even while listings are loading,
+          // before the backend confirms it actually AI-ranked the feed.
           <span className="feed-title feed-title-ai">
             <Sparkles size={15} />
             Recommended for you
@@ -99,6 +66,10 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadM
           <span className="feed-title">Listings</span>
         )}
       </div>
+
+      {/* Feedback while the first batch of listings loads, shown here in the
+          feed area (under the header) rather than at the top of the page. */}
+      {isLoading && <p className="feed-status">Loading listings…</p>}
 
       <div className="listing-feed">
         {safeListings.map((listing) => (
@@ -113,8 +84,9 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadM
         ))}
       </div>
 
-      {/* Nothing in this category yet. */}
-      {safeListings.length === 0 && !isLoadingMore && (
+      {/* Nothing in this category yet. Wait until loading finishes so this
+          doesn't flash while the first batch is still on its way. */}
+      {safeListings.length === 0 && !isLoading && !isLoadingMore && (
         <p className="feed-status">No listings here yet.</p>
       )}
 
@@ -128,6 +100,12 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadM
       {!hasMore && safeListings.length > 0 && (
         <p className="feed-status feed-end">No more listings</p>
       )}
+      </div>
+
+      {/* Right column: the live AI chat, docked in place (no popup). */}
+      <aside className="home-side">
+        <AIAgentModal docked />
+      </aside>
     </div>
   );
 }

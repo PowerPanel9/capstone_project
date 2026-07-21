@@ -498,7 +498,6 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
 
   return (
     <>
-      {isLoading && <p className="feed-status">Loading listings…</p>}
       {error && <p className="feed-status feed-error">{error}</p>}
       <HomeView
         listings={listings}
@@ -508,8 +507,10 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
         onOpenAI={onOpenAI}
         onLoadMore={loadMore}
         hasMore={hasMore}
+        isLoading={isLoading}
         isLoadingMore={isLoadingMore}
         personalized={personalized}
+        usePersonalized={usePersonalized}
         category={category}
         showCategories={isLanding}
       />

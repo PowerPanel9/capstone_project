@@ -43,6 +43,10 @@
 .search-wrap {
   position: relative;
   margin-left: auto;
+  /* Grow to fill the free space in the nav bar, but stop at a sensible max
+     so the search box doesn't get absurdly wide on large screens. */
+  flex: 1;
+  max-width: 560px;
 }
 
 .topbar-messages-search {
@@ -97,7 +101,8 @@
   border-radius: 12px;
   font-size: 14px;
   font-family: inherit;
-  width: 224px;
+  width: 100%;
+  box-sizing: border-box;
   outline: none;
 }
 

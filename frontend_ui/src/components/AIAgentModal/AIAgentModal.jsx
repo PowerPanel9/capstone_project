@@ -6,7 +6,10 @@ import './AIAgentModal.css';
 // Session storage key for persisting conversation
 const CHAT_STORAGE_KEY = 'sidehustle_chat_session';
 
-function AIAgentModal({ onClose, initialMessage = "" }) {
+// `docked` renders the chat in place (e.g. in the home page side panel) instead
+// of as a centered popup: no dark overlay and no close button, since it lives
+// on the page rather than floating on top of it.
+function AIAgentModal({ onClose, initialMessage = "", docked = false }) {
   // Load messages from sessionStorage on mount, or use default welcome message
   const loadMessages = () => {
     const stored = sessionStorage.getItem(CHAT_STORAGE_KEY);
@@ -82,9 +85,10 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
     }
   };
 
-  return (
-    <div className="modal-bg">
-      <div className="ai-modal">
+  // The chat panel itself. The same markup is used whether it's docked in the
+  // page or floating in a popup; only the wrapper around it changes below.
+  const chatPanel = (
+      <div className={`ai-modal ${docked ? "ai-modal-docked" : ""}`}>
         <div className="ai-modal-header">
           <div className="ai-modal-icon">
             <Sparkles size={17} />
@@ -98,15 +102,18 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
           </div>
           <button
             className="close-btn"
-            style={{ marginLeft: "auto", marginRight: "8px" }}
+            style={{ marginLeft: "auto", marginRight: docked ? "0" : "8px" }}
             onClick={clearConversation}
             title="Clear conversation"
           >
             <RotateCcw size={15} />
           </button>
-          <button className="close-btn" onClick={onClose}>
-            <X size={15} />
-          </button>
+          {/* No close button when docked — the panel lives on the page. */}
+          {!docked && (
+            <button className="close-btn" onClick={onClose}>
+              <X size={15} />
+            </button>
+          )}
         </div>
 
         <div className="ai-messages">
@@ -155,7 +162,7 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
               onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
               placeholder="Ask SideHustle AI anything..."
               disabled={loading}
-              autoFocus
+              autoFocus={!docked}
             />
             <button
               className="ai-send-btn"
@@ -167,8 +174,15 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
           </div>
         </div>
       </div>
-    </div>
   );
+
+  // Docked: render the panel on its own; the side column positions it.
+  // Popup: wrap it in the dark full-screen overlay as before.
+  if (docked) {
+    return chatPanel;
+  }
+
+  return <div className="modal-bg">{chatPanel}</div>;
 }
 
 export default AIAgentModal;
