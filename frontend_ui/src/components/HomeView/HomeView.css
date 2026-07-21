@@ -114,6 +114,33 @@
   letter-spacing: -0.3px;
 }
 
+/* "All categories" back link shown when browsing a single category. */
+.category-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary, #7B8FC8);
+  cursor: pointer;
+}
+
+.category-back:hover {
+  text-decoration: underline;
+}
+
+/* AI-ranked feed header: use the app's purple accent + sparkle icon. */
+.feed-title-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary, #7B8FC8);
+}
+
 .view-all {
   font-size: 14px;
   color: var(--primary, #7B8FC8);
