@@ -37,7 +37,7 @@ function ListingDetailView({ listing, userMode, isOwner, onDelete, onMessage, on
     <div className="detail-wrap">
       <button className="back-btn" onClick={onBack}>
         <ChevronLeft size={16} />
-        {backLabel}
+        Back
       </button>
 
       <div className="detail-card">

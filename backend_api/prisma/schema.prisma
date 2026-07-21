@@ -150,6 +150,8 @@ model Application {
   providerId Int               @map("provider_id") // Provider who applied (FK -> user)
   listingId  Int               @map("listing_id") // Listing applied to (FK -> listing)
   status     ApplicationStatus @default(PENDING)
+  phone      String? // Contact phone the applicant provided
+  message    String? // Short note from the applicant (why they're a fit)
   createdAt  DateTime          @default(now()) @map("created_at")
 
   // Relations

@@ -1,10 +1,7 @@
-.public-profile-wrap {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 20px;
-}
+/* Most styles are reused from UserProfileView.css. This file only adds the
+   back button specific to the public (read-only) profile view. */
 
-.public-profile-wrap .back-btn {
+.public-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -19,67 +16,6 @@
   font-family: inherit;
 }
 
-.public-profile-card {
-  background: #fff;
-  border: 1px solid #D8DCF5;
-  border-radius: 20px;
-  padding: 28px;
-}
-
-.public-profile-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.public-profile-name {
-  font-size: 22px;
-  font-weight: 800;
-  color: #1E2340;
-  margin: 0;
-}
-
-.public-profile-loc {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: #9CA3AF;
-  margin-top: 4px;
-}
-
-.public-profile-bio {
-  font-size: 14px;
-  color: #4B5563;
-  line-height: 1.6;
-  margin: 20px 0 0;
-}
-
-.public-stats-row {
-  display: flex;
-  gap: 40px;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #ECEDF8;
-}
-
-.public-stats-row .stat-n {
-  font-size: 20px;
-  font-weight: 800;
-  color: #1E2340;
-}
-
-.public-stats-row .stat-l {
-  font-size: 12px;
-  color: #9CA3AF;
-  font-weight: 600;
-}
-
-/* Rating stat is clickable to open the reviews modal */
-.public-stats-row .stat-clickable {
-  cursor: pointer;
-}
-
-.public-stats-row .stat-clickable:hover .stat-n {
+.public-back-btn:hover {
   color: var(--primary, #7B8FC8);
 }

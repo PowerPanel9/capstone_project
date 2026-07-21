@@ -90,6 +90,10 @@ async function getAllListings(req, res) {
       where.location = { contains: location, mode: "insensitive" };
     }
 
+    // The home feed only shows OPEN listings. Once a listing is IN_PROGRESS
+    // (an applicant was accepted) or COMPLETED, it no longer needs applicants.
+    where.status = "OPEN";
+
     // ----- Pagination (for infinite scroll on the home feed) -----
     // page defaults to 1, limit to 10. `skip` jumps past earlier pages.
     // Example: page 3 with limit 10 -> skip the first 20 listings.
