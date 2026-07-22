@@ -15,6 +15,8 @@ const sendMessage = async (req, res) => {
     const recipientId = toPositiveInt(req.body?.recipientId);
     const content = typeof req.body?.content === "string" ? req.body.content.trim() : "";
     const imageUrl = typeof req.body?.imageUrl === "string" ? req.body.imageUrl.trim() : null;
+    // Optional: the listing this message is about. Only some messages have one.
+    const listingId = req.body?.listingId != null ? toPositiveInt(req.body.listingId) : null;
 
     if (!Number.isInteger(senderId) || senderId <= 0) {
       return res.status(401).json({ error: "Unauthorized user" });
@@ -45,12 +47,25 @@ const sendMessage = async (req, res) => {
       return res.status(404).json({ error: "Recipient not found" });
     }
 
+    // If a listingId was sent, make sure it points to a real listing before we
+    // attach it. If it doesn't exist, reject with a clear 404.
+    if (listingId) {
+      const listing = await prisma.listing.findUnique({
+        where: { id: listingId },
+        select: { id: true },
+      });
+      if (!listing) {
+        return res.status(404).json({ error: "Listing not found" });
+      }
+    }
+
     const message = await prisma.message.create({
       data: {
         userIdFrom: senderId,
         userIdTo: recipientId,
         content,
         imageUrl: imageUrl || null,
+        listingId: listingId || null,
       },
       select: {
         id: true,
@@ -59,6 +74,9 @@ const sendMessage = async (req, res) => {
         content: true,
         imageUrl: true,
         createdAt: true,
+        listing: {
+          select: { id: true, title: true },
+        },
       },
     });
 
@@ -106,6 +124,9 @@ const getConversationWithUser = async (req, res) => {
         content: true,
         imageUrl: true,
         createdAt: true,
+        listing: {
+          select: { id: true, title: true },
+        },
       },
     });
 

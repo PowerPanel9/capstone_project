@@ -20,6 +20,9 @@ function PublicProfileView({ currentUser }) {
   const { userId } = useParams();
   const navigate = useNavigate();
 
+  const [activeTab, setActiveTab] = useState("All");
+  const tabs = ["All", "Listings", "Experience"];
+
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -148,8 +151,46 @@ function PublicProfileView({ currentUser }) {
   if (error) return <p className="feed-status feed-error">{error}</p>;
   if (!user) return <p className="feed-status feed-error">User not found</p>;
 
-  // The id from the URL is a string; the reviews API/component expect a number.
   const revieweeId = Number(userId);
+  const skills = Array.isArray(user.skills) ? user.skills : [];
+  const profilePicture = typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";
+  const bannerImageUrl = typeof user.imageUrl === "string" ? user.imageUrl.trim() : "";
+  const bannerStyle = bannerImageUrl ? { backgroundImage: `url("${bannerImageUrl}")` } : undefined;
+
+  const openListingDetails = (id) => navigate(`/listing/${id}`);
+
+  // Renders one listing card with its status badge. This is the PUBLIC view, so
+  // grayed rules: IN_PROGRESS and COMPLETED are grayed out.
+  const renderListingCard = (listing) => {
+    const grayed = isListingGrayed(listing.status, { isOwnerView: false });
+    return (
+      <div
+        key={listing.id}
+        className={`mini-card ${grayed ? "listing-grayed" : ""}`}
+        role="button"
+        tabIndex={0}
+        onClick={() => openListingDetails(listing.id)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openListingDetails(listing.id);
+          }
+        }}
+        style={{ cursor: "pointer" }}
+      >
+        <ProfilePicture initials="LS" size="xs" />
+        <div className="mini-info">
+          <div className="mini-title">{listing.title}</div>
+          <div className="mini-desc">{listing.description}</div>
+        </div>
+        <div className="listing-status-row">
+          <span className={`listing-status listing-status-${(listing.status || "OPEN").toLowerCase()}`}>
+            {listingStatusLabel(listing.status)}
+          </span>
+        </div>
+      </div>
+    );
+  };
 
   const profilePicture =
     typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";

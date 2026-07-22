@@ -74,9 +74,6 @@ function TopBar({
           <PenSquare size={16} />
         </button>
       )}
-      <button className="logout-btn" onClick={onLogout}>
-        Logout
-      </button>
     </div>
   );
 }

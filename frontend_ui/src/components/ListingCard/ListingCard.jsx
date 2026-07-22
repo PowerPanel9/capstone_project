@@ -1,7 +1,8 @@
+import { MapPin, Clock, Bookmark, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Clock, Bookmark } from 'lucide-react';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
+import { formatCityState } from '../../utils/location';
 import './ListingCard.css';
 
 function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
@@ -17,6 +18,12 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
   // place at the right edge of the header automatically.
   const showBookmark = userMode === "provider";
 
+  // Show only "City, State" for the listing's location. Prefer the structured
+  // city/state fields if the backend gives them, otherwise parse the raw address.
+  const listingLocation =
+    listing.user?.city && listing.user?.state
+      ? `${listing.user.city}, ${listing.user.state}`
+      : formatCityState(listing.user?.location ?? listing.location);
   // Clicking the poster goes to their profile (not the listing). stopPropagation
   // prevents the card's own onClick (which opens the listing) from also firing.
   const goToPosterProfile = (e) => {
@@ -33,13 +40,19 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
       )}
       <div className="card-body">
         <div className="card-header">
-          <div className="card-poster" onClick={goToPosterProfile}>
-            <ProfilePicture initials={initials(listing.user)} size="xs" />
+          <div className="card-poster">
+            {/* Only the avatar and the name navigate to the poster's profile.
+                The location (and the rest of the card) opens the listing. */}
+            <span className="card-poster-link" onClick={goToPosterProfile}>
+              <ProfilePicture initials={initials(listing.user)} size="xs" />
+            </span>
             <div className="card-meta">
-              <div className="card-name">{fullName(listing.user)}</div>
+              <div className="card-name card-poster-link" onClick={goToPosterProfile}>
+                {fullName(listing.user)}
+              </div>
               <div className="card-loc">
                 <MapPin size={9} />
-                {listing.user?.location ?? listing.location}
+                {listingLocation}
               </div>
             </div>
           </div>
@@ -58,6 +71,13 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
           )}
         </div>
         <h3 className="card-title">{listing.title}</h3>
+        {/* Only recommended cards carry a `reason` from the AI. */}
+        {listing.reason && (
+          <div className="card-reason">
+            <Sparkles size={11} />
+            {listing.reason}
+          </div>
+        )}
         <p className="card-desc">{listing.description}</p>
         <div className="tag-list">
           {listing.skillsRequired.map((skill) => (

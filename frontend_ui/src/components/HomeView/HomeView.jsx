@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowLeft } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
+import CategoryGrid from '../CategoryGrid/CategoryGrid';
 import './HomeView.css';
 
 function HomeView({ listings, providers = [], showProviders = false, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore }) {
@@ -45,7 +46,7 @@ function HomeView({ listings, providers = [], showProviders = false, bookmarks, 
         <div style={{ position: "relative" }}>
           <div className="ai-label">
             <Sparkles size={14} />
-            AI-Powered Matching
+            AI Assistant
           </div>
           <div className="ai-title">Find your perfect match</div>
           <div className="ai-input-row">
@@ -67,6 +68,17 @@ function HomeView({ listings, providers = [], showProviders = false, bookmarks, 
           </div>
         </div>
       </div>
+
+      {/* On the landing page, category tiles sit just below the AI banner. */}
+      {showCategories && <CategoryGrid userMode={userMode} />}
+
+      {/* When viewing a category, offer a way back to the category tiles. */}
+      {category && (
+        <button className="category-back" onClick={() => navigate('/home')}>
+          <ArrowLeft size={15} />
+          All categories
+        </button>
+      )}
 
       <div className="feed-header">
         <span className="feed-title">{showProviders ? "Providers" : "Listings"}</span>

@@ -17,6 +17,8 @@ import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById } from './api/listings';
 import { getUsersByName, getProviders } from './api/users';
+import { getListings, getListingById, deleteListing } from './api/listings';
+import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
 import { getUsers as getMessageUsers } from './api/messages';
 import { Bookmark } from 'lucide-react';
@@ -29,6 +31,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applyListing, setApplyListing] = useState(null); // the listing being applied to
   const [showAIModal, setShowAIModal] = useState(false);
   // Text to prefill the AI chat box with (used when "Ask AI" is clicked with a
   // typed query). Empty string means open the modal with a blank box.
@@ -38,6 +41,8 @@ function App() {
   const [messagesPeopleSearch, setMessagesPeopleSearch] = useState("");
   const [messagesDirectoryUsers, setMessagesDirectoryUsers] = useState([]);
   const [messagesStartUser, setMessagesStartUser] = useState(null);
+  // The listing a provider is messaging about (carried from the listing page).
+  const [messagesStartListing, setMessagesStartListing] = useState(null);
   // `bookmarks` is a Set of LISTING ids (used by cards to show the filled icon).
   const [bookmarks, setBookmarks] = useState(new Set());
   // The backend deletes by BOOKMARK id, but the UI works in listing ids, so we
@@ -212,6 +217,7 @@ function App() {
               currentUser={currentUser}
               userMode={userMode}
               onOpenAI={openAI}
+              onLogout={handleLogout}
             />
           </aside>
 
@@ -258,7 +264,10 @@ function App() {
                     isAuthenticated ? (
                       <ListingDetailPage
                         userMode={userMode}
-                        onApply={() => setShowApplyModal(true)}
+                        onApply={(listing) => {
+                          setApplyListing(listing);
+                          setShowApplyModal(true);
+                        }}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -284,6 +293,7 @@ function App() {
                       <UserProfileView
                         userMode={userMode}
                         onToggleMode={toggleUserMode}
+                        onLogout={handleLogout}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -322,7 +332,11 @@ function App() {
                         peopleSearch={messagesPeopleSearch}
                         onPeopleSearchChange={setMessagesPeopleSearch}
                         startConversationUser={messagesStartUser}
-                        onStartConversationHandled={() => setMessagesStartUser(null)}
+                        startListing={messagesStartListing}
+                        onStartConversationHandled={() => {
+                          setMessagesStartUser(null);
+                          setMessagesStartListing(null);
+                        }}
                         onCloseComposer={() => {
                           setMessagesComposerOpen(false);
                           setMessagesPeopleSearch("");
@@ -345,7 +359,11 @@ function App() {
 
           {/* Modals */}
           {showApplyModal && (
-            <ApplicationModal listing={null} onClose={() => setShowApplyModal(false)} />
+            <ApplicationModal
+              listing={applyListing}
+              currentUser={currentUser}
+              onClose={() => setShowApplyModal(false)}
+            />
           )}
 
           {showAIModal && (
@@ -396,8 +414,11 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
   const [isLoading, setIsLoading] = useState(false);   // first page / new search
   const [isLoadingMore, setIsLoadingMore] = useState(false); // extra pages
   const [error, setError] = useState(null);
+  // True when the backend actually AI-ranked the feed (vs. the normal feed).
+  const [personalized, setPersonalized] = useState(false);
 
   const search = searchParams.get('search') || '';
+  const category = searchParams.get('category') || '';
 
   // In client mode the home feed shows PROVIDERS instead of listings:
   //   - empty search box  -> browse a random list of providers
@@ -407,6 +428,16 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
   const isSearching = showProviders && search.trim() !== '';
 
   // When the mode or search changes, load fresh results.
+  // The landing page (no category chosen, no search) shows category tiles plus
+  // a "Recommended for you" strip. Once a category is picked, we switch to the
+  // normal feed filtered by that category.
+  const isLanding = !category && !search;
+
+  // Providers get a personalized, AI-ranked feed — but only on the landing page.
+  // When browsing a category or searching, we show the plain (filtered) feed.
+  const usePersonalized = userMode === 'provider' && isLanding;
+
+  // When the search or role changes, start over: clear listings and load page 1.
   useEffect(() => {
     let ignore = false;
     setIsLoading(true);
@@ -439,6 +470,29 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
           setListings(data.listings);
           setHasMore(data.hasMore);
           setPage(1);
+    // Try the personalized feed first for providers. If it fails (or isn't
+    // personalized), we fall back to the normal newest-first feed so the home
+    // page always shows something.
+    if (usePersonalized) {
+      getRecommendedListings()
+        .then((data) => {
+          if (ignore) return;
+          setListings(data.listings);
+          setHasMore(false); // recommendations come as one ranked batch
+          setPage(1);
+          // The backend tells us whether it actually AI-ranked the feed.
+          setPersonalized(Boolean(data.personalized));
+        })
+        .catch((err) => {
+          console.error("Personalized feed failed, using normal feed:", err);
+          setPersonalized(false);
+          // Fall back to the normal feed.
+          return getListings({ search, category, page: 1 }).then((data) => {
+            if (ignore) return;
+            setListings(data.listings);
+            setHasMore(data.hasMore);
+            setPage(1);
+          });
         })
         .catch((err) => {
           console.error("Failed to load listings:", err);
@@ -461,7 +515,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
 
     const nextPage = page + 1;
     setIsLoadingMore(true);
-    getListings({ search, page: nextPage })
+    getListings({ search, category, page: nextPage })
       .then((data) => {
         setListings((prev) => [...prev, ...data.listings]);
         setHasMore(data.hasMore);
@@ -490,15 +544,22 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
         onLoadMore={loadMore}
         hasMore={hasMore}
         isLoadingMore={isLoadingMore}
+        personalized={personalized}
+        category={category}
+        showCategories={isLanding}
       />
     </>
   );
 }
 
 // Listing Detail Page Component
-function ListingDetailPage({ userMode, onApply }) {
+function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  // If we arrived here from the profile, the navigation carried this marker.
+  // Use it to decide where "back" goes and what the button says.
+  const cameFromProfile = location.state?.from === "profile";
   const [listing, setListing] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -513,6 +574,42 @@ function ListingDetailPage({ userMode, onApply }) {
       .finally(() => setIsLoading(false));
   }, [id]);
 
+  // Work out if the logged-in user owns this listing. The user object was
+  // saved to localStorage at login, and each listing carries its owner's id.
+  let currentUserId = null;
+  try {
+    const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
+    currentUserId = savedUser?.id ?? null;
+  } catch (err) {
+    currentUserId = null;
+  }
+  const isOwner =
+    listing != null && currentUserId != null && Number(listing.userId) === Number(currentUserId);
+
+  // Delete this listing (owner only), then go back to the home feed since
+  // the listing no longer exists. The "are you sure?" step is handled by an
+  // in-app modal inside ListingDetailView, so we no longer use window.confirm.
+  const handleDelete = async () => {
+    try {
+      await deleteListing(id);
+      navigate('/home');
+    } catch (err) {
+      console.error("Failed to delete listing:", err);
+      setError("Could not delete this listing. Please try again.");
+    }
+  };
+
+  // Open a conversation with the client who posted this listing. We hand the
+  // listing's owner up to App (which stores it as messagesStartUser) and then
+  // navigate to Messages, where that conversation opens automatically.
+  const handleMessage = () => {
+    if (!listing?.user?.id) return;
+    onMessageUser?.(listing.user);
+    // Also carry the listing itself so Messages can attach it to the first message.
+    onMessageListing?.({ id: listing.id, title: listing.title });
+    navigate('/messages');
+  };
+
   if (isLoading) return <p className="feed-status">Loading listing details…</p>;
   if (error) return <p className="feed-status feed-error">{error}</p>;
   if (!listing) return <p className="feed-status feed-error">Listing not found</p>;
@@ -521,8 +618,8 @@ function ListingDetailPage({ userMode, onApply }) {
     <ListingDetailView
       listing={listing}
       userMode={userMode}
-      onBack={() => navigate('/home')}
-      onApply={onApply}
+      onBack={() => navigate(-1)}
+      onApply={() => onApply(listing)}
     />
   );
 }

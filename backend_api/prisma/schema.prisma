@@ -92,6 +92,7 @@ model Listing {
   user         User          @relation(fields: [userId], references: [id])
   bookmarks    Bookmark[]
   applications Application[]
+  messages     Message[]
 
   @@map("listing")
 }
@@ -133,11 +134,13 @@ model Message {
   userIdTo   Int      @map("user_id_to") // Recipient (FK -> user)
   content    String // Message being sent/received
   imageUrl   String?  @map("image_url") // Optional attached picture
+  listingId  Int?     @map("listing_id") // Optional listing this message is about (FK -> listing)
   createdAt  DateTime @default(now()) @map("created_at")
 
   // Relations
-  sender    User @relation("MessagesSent", fields: [userIdFrom], references: [id])
-  recipient User @relation("MessagesReceived", fields: [userIdTo], references: [id])
+  sender    User     @relation("MessagesSent", fields: [userIdFrom], references: [id])
+  recipient User     @relation("MessagesReceived", fields: [userIdTo], references: [id])
+  listing   Listing? @relation(fields: [listingId], references: [id])
 
   @@map("message")
 }
@@ -147,6 +150,8 @@ model Application {
   providerId Int               @map("provider_id") // Provider who applied (FK -> user)
   listingId  Int               @map("listing_id") // Listing applied to (FK -> listing)
   status     ApplicationStatus @default(PENDING)
+  phone      String? // Contact phone the applicant provided
+  message    String? // Short note from the applicant (why they're a fit)
   createdAt  DateTime          @default(now()) @map("created_at")
 
   // Relations

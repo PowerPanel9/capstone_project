@@ -7,9 +7,11 @@ const userRoutes = require("./routes/userRoute");
 const messageRoutes = require("./routes/messageRoutes");
 const listingsRoutes = require("./routes/listingsRoutes");
 const bookmarksRoutes = require("./routes/bookmarksRoutes");
-const agentRoutes = require("./routes/agentRoutes");
 const priceRoutes = require("./routes/priceRoutes");
+const agentRoutes = require("./routes/agentRoutes");
+const recommendationRoutes = require("./routes/recommendationRoutes");
 const reviewsRoutes = require("./routes/reviewsRoutes");
+const applicationsRoutes = require("./routes/applicationsRoutes");
 const app = express();
 const PORT = process.env.PORT || 3000;
 // Middleware
@@ -33,9 +35,11 @@ app.use("/messages", messageRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/listings", listingsRoutes);
 app.use("/api/bookmarks", bookmarksRoutes);
-app.use("/api/agent", agentRoutes);
 app.use("/api/prices", priceRoutes);
+app.use("/api/agent", agentRoutes);
+app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/reviews", reviewsRoutes);
+app.use("/api/applications", applicationsRoutes);
 
 // Start the server
 app.listen(PORT, () => {

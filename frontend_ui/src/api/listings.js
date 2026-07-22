@@ -65,6 +65,12 @@ export async function getListingById(id) {
   return response.data;
 }
 
+// GET /api/listings/user/:userId  -> all listings created by one user
+export async function getListingsByUser(userId) {
+  const response = await api.get(`/api/listings/user/${userId}`);
+  return response.data;
+}
+
 // POST /api/listings  -> create a new listing.
 // This route is protected, so we send the logged-in user's token (saved to
 // localStorage by the AuthModal). `listing` must already use the backend's
@@ -73,6 +79,16 @@ export async function getListingById(id) {
 export async function createListing(listing) {
   const token = localStorage.getItem("token");
   const response = await api.post("/api/listings", listing, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return response.data;
+}
+
+// PUT /api/listings/:id -> update a listing (owner only). Used here to change
+// the status (e.g. mark an in-progress listing as COMPLETED).
+export async function updateListing(id, updates) {
+  const token = localStorage.getItem("token");
+  const response = await api.put(`/api/listings/${id}`, updates, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   return response.data;
