@@ -114,3 +114,24 @@
   background: #E5E7EB;
   color: #1E2340;
 }
+
+/* ===================================================================
+   Responsive: mobile (≤640px)
+   =================================================================== */
+
+/* On phones, drop the search bar's large max-width so it shares the row nicely
+   with the hamburger and title, and shrink the title a touch. */
+@media (max-width: 640px) {
+  .search-wrap {
+    max-width: 200px;
+  }
+
+  .topbar {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .topbar-title {
+    font-size: 14px;
+  }
+}

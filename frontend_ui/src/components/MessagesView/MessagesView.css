@@ -458,3 +458,59 @@
 .send-btn:hover {
   background: var(--primary-dark, #6678B8);
 }
+
+/* Back button in the chat header. Hidden on desktop (both panes show); the
+   mobile media query below reveals it. */
+.chat-back-btn {
+  display: none;
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 10px;
+  background: #F3F4F6;
+  color: #4B5563;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chat-back-btn:hover {
+  background: #E5E7EB;
+}
+
+/* ===================================================================
+   Responsive: tablet/mobile (≤768px) — show one pane at a time
+   =================================================================== */
+@media (max-width: 768px) {
+  /* Both panes take the full width; we toggle which one is visible below. */
+  .conv-list {
+    width: 100%;
+    border-right: none;
+  }
+
+  .chat-panel {
+    width: 100%;
+  }
+
+  /* Default (no conversation selected): show the list, hide the chat. */
+  .chat-panel {
+    display: none;
+  }
+
+  /* Once a conversation is picked (has-selection), swap: hide the list,
+     show the chat full-width. */
+  .messages-wrap.has-selection .conv-list {
+    display: none;
+  }
+
+  .messages-wrap.has-selection .chat-panel {
+    display: flex;
+  }
+
+  /* Reveal the back button so the user can return to the list. */
+  .messages-wrap.has-selection .chat-back-btn {
+    display: flex;
+  }
+}

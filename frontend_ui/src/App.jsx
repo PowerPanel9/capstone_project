@@ -33,7 +33,9 @@ function App() {
   // Text to prefill the AI chat box with (used when "Ask AI" is clicked with a
   // typed query). Empty string means open the modal with a blank box.
   const [aiInitialMessage, setAiInitialMessage] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Sidebar starts open on desktop, but closed on tablet/mobile (≤1024px) so it
+  // doesn't cover the page on load. On small screens it opens as an overlay.
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
   const [messagesComposerOpen, setMessagesComposerOpen] = useState(false);
   const [messagesPeopleSearch, setMessagesPeopleSearch] = useState("");
   const [messagesDirectoryUsers, setMessagesDirectoryUsers] = useState([]);
@@ -209,7 +211,7 @@ function App() {
       {showMainLayout ? (
         // Main app layout with sidebar and topbar
         <div className={`app ${userMode}-mode`}>
-          <aside className="sidebar" style={{ width: sidebarOpen ? 256 : 0 }}>
+          <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
             <Sidebar
               currentUser={currentUser}
               userMode={userMode}
@@ -217,6 +219,16 @@ function App() {
               onLogout={handleLogout}
             />
           </aside>
+
+          {/* Dark backdrop behind the sidebar when it's open as an overlay on
+              tablet/mobile. Tapping it closes the sidebar. Hidden on desktop
+              via CSS (the sidebar isn't an overlay there). */}
+          {sidebarOpen && (
+            <div
+              className="sidebar-backdrop"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
 
           <div className="main">
             <TopBar

@@ -108,8 +108,9 @@ function AIAgentModal({ onClose, initialMessage = "", docked = false }) {
           >
             <RotateCcw size={15} />
           </button>
-          {/* No close button when docked — the panel lives on the page. */}
-          {!docked && (
+          {/* Close button. In the popup it dismisses the modal; when docked it
+              closes the side panel. Only shown if an onClose handler exists. */}
+          {onClose && (
             <button className="close-btn" onClick={onClose}>
               <X size={15} />
             </button>
@@ -182,7 +183,18 @@ function AIAgentModal({ onClose, initialMessage = "", docked = false }) {
     return chatPanel;
   }
 
-  return <div className="modal-bg">{chatPanel}</div>;
+  // Clicking the dark backdrop (but not the panel itself) closes the popup.
+  // The `e.target === e.currentTarget` check makes sure we only close when the
+  // click lands on the backdrop, not when it bubbles up from inside the chat.
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget && onClose) onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={handleBackdropClick}>
+      {chatPanel}
+    </div>
+  );
 }
 
 export default AIAgentModal;

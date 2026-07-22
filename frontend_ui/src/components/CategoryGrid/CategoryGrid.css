@@ -10,67 +10,146 @@
   margin-bottom: 16px;
 }
 
-/* Wide cards, about four per row. They wrap to fewer columns on narrow screens. */
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
+/* Carousel wrapper: the arrows sit on the left/right, the scrolling row of
+   tiles in the middle. `position: relative` lets us place the arrows over the
+   ends of the row. */
+.category-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+/* The "window" between the arrows that clips whatever tiles slide past its
+   edges. `flex: 0 1 auto` means: don't grow past the tiles' natural width (so a
+   wide feed — e.g. when the chat is closed — doesn't leave a gap before the
+   right arrow), but DO shrink when space is tight (chat open) so the arrows can
+   page through. `min-width: 0` is required for a flex item to shrink below its
+   content width. */
+.category-row {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  padding: 4px 0;             /* vertical room so hover lift isn't clipped */
+}
+
+/* The wider strip inside the window. It holds all the tiles in a row and is
+   slid sideways with transform (see CategoryGrid.jsx) to animate one step at a
+   time. The gap here (16px) must match TILE_STEP in the JS. */
+.category-track {
+  display: flex;
+  gap: 16px;
+  width: max-content;         /* as wide as all tiles, so they don't shrink */
+}
+
+/* Compact tile: icon on top, label underneath (Uber-Eats style). A fixed width
+   plus flex-shrink: 0 keeps every tile the same size in the scrolling row. */
 .category-tile {
-  /* Wide, short card: title + emoji on top, "SHOW MORE" link at the bottom. */
+  flex-shrink: 0;
+  width: 130px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 20px;
-  min-height: 130px;
-  padding: 20px 22px;
-  background: #fff;
-  border: 1px solid #E5E7EB;
-  border-radius: 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: none;
+  border: none;
   cursor: pointer;
-  text-align: left;
-  transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+  transition: transform 0.15s;
+}
+
+/* Fill mode: used when all tiles already fit (arrows hidden). The tiles grow to
+   fill the full width instead of leaving empty space on the right. Driven from
+   the carousel so we can force the row (the flex "window") to grow too. */
+
+/* Let the row grow to fill all the space between the (hidden) arrows. */
+.category-carousel-fill .category-row {
+  flex: 1;
+}
+
+/* The track spans the full row width... */
+.category-carousel-fill .category-track {
+  width: 100%;
+}
+
+/* ...and each tile flexes to an equal share of it. */
+.category-carousel-fill .category-tile {
+  flex: 1;
+  width: auto;
+}
+
+/* Bigger icons in fill mode to match the extra width. */
+.category-carousel-fill .category-tile-icon {
+  width: 88px;
+  height: 88px;
 }
 
 .category-tile:hover {
   transform: translateY(-2px);
-  border-color: var(--primary, #7B8FC8);
-  box-shadow: 0 4px 16px rgba(139, 159, 212, 0.2);
-}
-
-/* Top row: category name on the left, emoji illustration on the right. */
-.category-tile-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.category-tile-label {
-  font-size: 17px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  color: var(--primary, #7B8FC8);
-  line-height: 1.2;
 }
 
 .category-tile-icon {
-  width: 52px;
-  height: 52px;
+  width: 96px;
+  height: 96px;
   object-fit: cover;
-  border-radius: 12px;
-  flex-shrink: 0;
+  border-radius: 16px;
 }
 
-/* Bottom "SHOW MORE ↗" link. */
-.category-tile-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
+.category-tile-label {
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.5px;
   color: #1E2340;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Round arrow buttons at the ends of the carousel. */
+.category-arrow {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #E5E7EB;
+  background: #fff;
+  color: #1E2340;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.category-arrow:hover {
+  background: #F3F4F6;
+  border-color: var(--primary, #7B8FC8);
+}
+
+/* Arrows still take up their space (so the tiles don't shift) but are invisible
+   and can't be clicked when every category already fits. */
+.category-arrow-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ===================================================================
+   Responsive: mobile (≤640px)
+   =================================================================== */
+
+/* Smaller category tiles and icons on phones so more fit and they don't
+   dominate the screen. (TILE_STEP in the JS is the desktop value; the carousel
+   still slides — just by slightly more than one tile on mobile, which is fine.) */
+@media (max-width: 640px) {
+  .category-tile {
+    width: 84px;
+  }
+
+  .category-tile-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .category-heading {
+    font-size: 15px;
+  }
 }

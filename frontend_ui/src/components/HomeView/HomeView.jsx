@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowLeft } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
@@ -15,6 +15,10 @@ function prettyCategory(value) {
 function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMore, isLoading, isLoadingMore, usePersonalized, category, showCategories }) {
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
+
+  // Whether the docked AI chat panel on the right is open. Starts open; the
+  // panel's X closes it, and a floating button reopens it.
+  const [chatOpen, setChatOpen] = useState(true);
 
   // The "sentinel" is an empty div at the very bottom of the feed. An
   // IntersectionObserver watches it: when it scrolls into view, we know the
@@ -102,10 +106,24 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMo
       )}
       </div>
 
-      {/* Right column: the live AI chat, docked in place (no popup). */}
-      <aside className="home-side">
-        <AIAgentModal docked />
-      </aside>
+      {/* Right column: the live AI chat, docked in place (no popup). Shown
+          only while open; the X inside it sets chatOpen to false. */}
+      {chatOpen && (
+        <aside className="home-side">
+          <AIAgentModal docked onClose={() => setChatOpen(false)} />
+        </aside>
+      )}
+
+      {/* When the chat is closed, a floating button in the corner reopens it. */}
+      {!chatOpen && (
+        <button
+          className="chat-reopen-btn"
+          onClick={() => setChatOpen(true)}
+          aria-label="Open AI assistant"
+        >
+          <Sparkles size={22} />
+        </button>
+      )}
     </div>
   );
 }
