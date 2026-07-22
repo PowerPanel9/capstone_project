@@ -40,10 +40,16 @@ function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
       )}
       <div className="card-body">
         <div className="card-header">
-          <div className="card-poster" onClick={goToPosterProfile}>
-            <ProfilePicture initials={initials(listing.user)} size="xs" />
+          <div className="card-poster">
+            {/* Only the avatar and the name navigate to the poster's profile.
+                The location (and the rest of the card) opens the listing. */}
+            <span className="card-poster-link" onClick={goToPosterProfile}>
+              <ProfilePicture initials={initials(listing.user)} size="xs" />
+            </span>
             <div className="card-meta">
-              <div className="card-name">{fullName(listing.user)}</div>
+              <div className="card-name card-poster-link" onClick={goToPosterProfile}>
+                {fullName(listing.user)}
+              </div>
               <div className="card-loc">
                 <MapPin size={9} />
                 {listingLocation}

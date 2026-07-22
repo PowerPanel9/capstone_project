@@ -1,29 +1,48 @@
 import { useState } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X } from 'lucide-react';
+import { applyToListing } from '../../api/applications';
 import './ApplicationModal.css';
 
-function ApplicationModal({ listing, onClose }) {
-  const [experiences, setExperiences] = useState(["", ""]);
-  const [certs, setCerts] = useState([""]);
+// Simple application form. The applicant is the logged-in user (name shown from
+// their account), and they provide a phone + short message. On submit it saves
+// an application linked to this listing.
+function ApplicationModal({ listing, currentUser, onClose, onSuccess }) {
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [done, setDone] = useState(false);
 
-  const addExperience = () => {
-    setExperiences([...experiences, ""]);
-  };
+  const firstName = currentUser?.firstName ?? "";
+  const lastName = currentUser?.lastName ?? "";
 
-  const addCert = () => {
-    setCerts([...certs, ""]);
-  };
-
-  const updateExperience = (index, value) => {
-    const newExperiences = [...experiences];
-    newExperiences[index] = value;
-    setExperiences(newExperiences);
-  };
-
-  const updateCert = (index, value) => {
-    const newCerts = [...certs];
-    newCerts[index] = value;
-    setCerts(newCerts);
+  const handleSubmit = async () => {
+    setError(null);
+    if (!listing?.id) {
+      setError("No listing selected.");
+      return;
+    }
+    if (!message.trim()) {
+      setError("Please add a short message about why you're a fit.");
+      return;
+    }
+    try {
+      setIsSubmitting(true);
+      await applyToListing({
+        listingId: listing.id,
+        phone: phone.trim() || null,
+        message: message.trim(),
+      });
+      setDone(true);
+      if (onSuccess) onSuccess();
+      // Close shortly after showing the success state.
+      setTimeout(() => onClose(), 1200);
+    } catch (err) {
+      console.error("Failed to apply:", err);
+      setError(err.response?.data?.error || "Could not submit application. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -33,7 +52,7 @@ function ApplicationModal({ listing, onClose }) {
           <div className="modal-header">
             <div>
               <div className="modal-title">Apply for Position</div>
-              <div className="modal-sub">{listing?.title ?? "Senior React Developer"}</div>
+              <div className="modal-sub">{listing?.title ?? "This listing"}</div>
             </div>
             <button className="close-btn" onClick={onClose}>
               <X size={17} />
@@ -44,86 +63,45 @@ function ApplicationModal({ listing, onClose }) {
             <div className="form-grid">
               <div>
                 <label className="field-label">First Name</label>
-                <input className="field-input" placeholder="Alex" />
+                <input className="field-input" value={firstName} readOnly />
               </div>
               <div>
                 <label className="field-label">Last Name</label>
-                <input className="field-input" placeholder="Rivera" />
-              </div>
-            </div>
-
-            <div className="form-grid">
-              <div>
-                <label className="field-label">Email</label>
-                <input type="email" className="field-input" placeholder="alex@example.com" />
-              </div>
-              <div>
-                <label className="field-label">Available From</label>
-                <input type="date" className="field-input" />
+                <input className="field-input" value={lastName} readOnly />
               </div>
             </div>
 
             <div>
-              <label className="field-label">Experience</label>
-              <div className="exp-wrap">
-                {experiences.map((exp, i) => (
-                  <input
-                    key={i}
-                    className="exp-input"
-                    value={exp}
-                    onChange={(e) => updateExperience(i, e.target.value)}
-                    placeholder={`Job title & company ${i + 1}`}
-                  />
-                ))}
-                <button className="add-more-btn" onClick={addExperience}>
-                  <Plus size={11} />
-                  Add more
-                </button>
-              </div>
+              <label className="field-label">Phone (optional)</label>
+              <input
+                className="field-input"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. 555-123-4567"
+              />
             </div>
 
             <div>
-              <label className="field-label">Certifications</label>
-              <div className="exp-wrap">
-                {certs.map((cert, i) => (
-                  <input
-                    key={i}
-                    className="exp-input"
-                    value={cert}
-                    onChange={(e) => updateCert(i, e.target.value)}
-                    placeholder="Certification name or URL"
-                  />
-                ))}
-                <button className="add-more-btn" onClick={addCert}>
-                  <Plus size={11} />
-                  Add more
-                </button>
-              </div>
+              <label className="field-label">Message</label>
+              <textarea
+                className="field-input"
+                rows={4}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Tell them why you're a good fit for this job..."
+              />
             </div>
 
-            <div>
-              <label className="field-label">Resume URL</label>
-              <input className="field-input" placeholder="https://your-resume.com" />
-            </div>
-
-            <div>
-              <label className="field-label">Availability</label>
-              <div className="form-grid">
-                <select className="field-input">
-                  <option>Immediately</option>
-                  <option>Within 2 weeks</option>
-                  <option>Within a month</option>
-                </select>
-                <select className="field-input">
-                  <option>Full-time</option>
-                  <option>Part-time</option>
-                  <option>Weekends only</option>
-                </select>
-              </div>
-            </div>
+            {error && <div className="modal-error">{error}</div>}
           </div>
 
-          <button className="modal-submit">Submit Application</button>
+          <button
+            className="modal-submit"
+            onClick={handleSubmit}
+            disabled={isSubmitting || done}
+          >
+            {done ? "✓ Application sent!" : isSubmitting ? "Submitting…" : "Submit Application"}
+          </button>
         </div>
       </div>
     </div>

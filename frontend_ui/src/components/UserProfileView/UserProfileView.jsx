@@ -3,9 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { MapPin, Briefcase, FileText, ChevronDown } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
 import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
-import { getListings } from "../../api/listings";
-import { formatCityState } from "../../utils/location";
+import { getListingsByUser, updateListing } from "../../api/listings";
+import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 import { getReviewsForUser } from "../../api/reviews";
+import { getMyApplications, getReceivedApplications } from "../../api/applications";
+import ApplicationDetailModal from "../ApplicationDetailModal/ApplicationDetailModal";
+// Brings in .app-status / .status-* badge styles used on the application cards.
+import "../ApplicationDetailModal/ApplicationDetailModal.css";
+
+// Friendly label for an application status.
+const STATUS_LABELS = { PENDING: "Pending", ACCEPTED: "Accepted", REJECTED: "Rejected" };
 import "./UserProfileView.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -209,26 +216,12 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
         setIsLoadingListings(true);
         setListingsError("");
 
-        const combinedListings = [];
-        let page = 1;
-        let hasMore = true;
-        const PAGE_LIMIT = 50;
-        const MAX_PAGES = 20; // safety guard
+        // Use the per-user endpoint, which returns ALL of the user's listings
+        // regardless of status. (The home feed endpoint only returns OPEN ones,
+        // which would hide IN_PROGRESS/COMPLETED listings from the owner.)
+        const mine = await getListingsByUser(profile.id);
 
-        while (hasMore && page <= MAX_PAGES) {
-          const data = await getListings({ page, limit: PAGE_LIMIT });
-          const pageListings = Array.isArray(data.listings) ? data.listings : [];
-          combinedListings.push(...pageListings);
-          hasMore = Boolean(data.hasMore);
-          page += 1;
-        }
-
-        const mine = combinedListings.filter((listing) => {
-          const ownerId = listing?.userId ?? listing?.user?.id;
-          return Number(ownerId) === Number(profile.id);
-        });
-
-        if (!ignore) setUserListings(mine);
+        if (!ignore) setUserListings(Array.isArray(mine) ? mine : []);
       } catch (error) {
         if (!ignore) {
           setListingsError("Failed to load your listings.");
@@ -460,6 +453,63 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     navigate(`/listing/${listingId}`, { state: { from: "profile" } });
   };
 
+  // Mark an in-progress listing as COMPLETED (owner only).
+  const markListingCompleted = async (listingId) => {
+    try {
+      await updateListing(listingId, { status: "COMPLETED" });
+      setUserListings((prev) =>
+        prev.map((l) => (l.id === listingId ? { ...l, status: "COMPLETED" } : l))
+      );
+    } catch (err) {
+      console.error("Failed to mark listing completed:", err);
+    }
+  };
+
+  // Renders one of the current user's listing cards (PRIVATE / owner view).
+  // Owner rules: gray ONLY when COMPLETED. Shows a "Mark as Completed" button
+  // while the listing is IN_PROGRESS.
+  const renderOwnerListingCard = (listing) => {
+    const grayed = isListingGrayed(listing.status, { isOwnerView: true });
+    return (
+      <div
+        key={listing.id}
+        className={`mini-card ${grayed ? "listing-grayed" : ""}`}
+        role="button"
+        tabIndex={0}
+        onClick={() => openListingDetails(listing.id)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openListingDetails(listing.id);
+          }
+        }}
+        style={{ cursor: "pointer" }}
+      >
+        <ProfilePicture initials="LS" size="xs" />
+        <div className="mini-info">
+          <div className="mini-title">{listing.title}</div>
+          <div className="mini-desc">{listing.description}</div>
+        </div>
+        <div className="listing-status-row">
+          <span className={`listing-status listing-status-${(listing.status || "OPEN").toLowerCase()}`}>
+            {listingStatusLabel(listing.status)}
+          </span>
+          {listing.status === "IN_PROGRESS" && (
+            <button
+              className="mark-done-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                markListingCompleted(listing.id);
+              }}
+            >
+              Mark as Completed
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const addSkill = () => {
     const trimmed = newSkill.trim();
     if (!trimmed) return;
@@ -562,9 +612,42 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
       ? `${currentUser.city}, ${currentUser.state}`
       : formatCityState(currentUser.location);
 
-  // TODO: Fetch applications data from backend API
-  const applications = [];
-  const incomingApplications = [];
+  // Applications sent by me (provider view) and received on my listings (client view).
+  const [applications, setApplications] = useState([]);
+  const [incomingApplications, setIncomingApplications] = useState([]);
+
+  // Bumped to force a re-fetch of applications after an accept/reject.
+  const [applicationsRefresh, setApplicationsRefresh] = useState(0);
+  // The application a client clicked to view in detail (client view).
+  const [selectedApplication, setSelectedApplication] = useState(null);
+
+  useEffect(() => {
+    getMyApplications()
+      .then((apps) =>
+        setApplications(
+          apps.map((a) => ({ id: a.id, title: a.listing?.title ?? "Listing", status: a.status }))
+        )
+      )
+      .catch((err) => console.error("Failed to load your applications:", err));
+  }, [applicationsRefresh]);
+
+  useEffect(() => {
+    getReceivedApplications()
+      .then((apps) =>
+        setIncomingApplications(
+          apps.map((a) => ({
+            id: a.id,
+            providerId: a.provider?.id,
+            providerName: `${a.provider?.firstName ?? ""} ${a.provider?.lastName ?? ""}`.trim(),
+            listingTitle: a.listing?.title ?? "Listing",
+            phone: a.phone,
+            message: a.message,
+            status: a.status,
+          }))
+        )
+      )
+      .catch((err) => console.error("Failed to load received applications:", err));
+  }, [applicationsRefresh]);
 
   return (
     <div className="profile-wrap">
@@ -693,28 +776,7 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               {listingsError}
             </div>
           ) : userListings.length > 0 ? (
-            userListings.slice(0, 2).map((listing) => (
-              <div
-                key={listing.id}
-                className="mini-card"
-                role="button"
-                tabIndex={0}
-                onClick={() => openListingDetails(listing.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openListingDetails(listing.id);
-                  }
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ProfilePicture initials="LS" size="xs" />
-                <div className="mini-info">
-                  <div className="mini-title">{listing.title}</div>
-                  <div className="mini-desc">{listing.description}</div>
-                </div>
-              </div>
-            ))
+            userListings.slice(0, 2).map((listing) => renderOwnerListingCard(listing))
           ) : (
             <div style={{ padding: 20, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
               No listings yet
@@ -734,28 +796,7 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               {listingsError}
             </div>
           ) : userListings.length > 0 ? (
-            userListings.map((listing) => (
-              <div
-                key={listing.id}
-                className="mini-card"
-                role="button"
-                tabIndex={0}
-                onClick={() => openListingDetails(listing.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openListingDetails(listing.id);
-                  }
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ProfilePicture initials="LS" size="xs" />
-                <div className="mini-info">
-                  <div className="mini-title">{listing.title}</div>
-                  <div className="mini-desc">{listing.description}</div>
-                </div>
-              </div>
-            ))
+            userListings.map((listing) => renderOwnerListingCard(listing))
           ) : (
             <div style={{
               display: 'flex',
@@ -844,6 +885,9 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
                 <div className="mini-info">
                   <div className="mini-title">{app.title}</div>
                 </div>
+                <span className={`app-status status-${(app.status || "PENDING").toLowerCase()}`}>
+                  {STATUS_LABELS[app.status] ?? "Pending"}
+                </span>
               </div>
             ))
           ) : (
@@ -873,12 +917,30 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
           </div>
           {incomingApplications.length > 0 ? (
             incomingApplications.map((app) => (
-              <div key={app.id} className="mini-card">
+              <div
+                key={app.id}
+                className="mini-card"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedApplication(app)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedApplication(app);
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 <ProfilePicture initials="AP" size="xs" />
                 <div className="mini-info">
                   <div className="mini-title">{app.providerName}</div>
-                  <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>Applied to: {app.listingTitle}</div>
+                  <div style={{ fontSize: 14, color: "#4B5563", marginTop: 4 }}>
+                    Applied to: <span style={{ fontWeight: 700, color: "#1E2340" }}>{app.listingTitle}</span>
+                  </div>
                 </div>
+                <span className={`app-status status-${(app.status || "PENDING").toLowerCase()}`}>
+                  {STATUS_LABELS[app.status] ?? "Pending"}
+                </span>
               </div>
             ))
           ) : (
@@ -1040,6 +1102,24 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
           revieweeId={currentUser.id}
           currentUser={currentUser}
           onClose={() => setShowReviews(false)}
+        />
+      )}
+
+      {/* Client clicks a received application -> detailed view with Accept/Reject */}
+      {selectedApplication && (
+        <ApplicationDetailModal
+          application={selectedApplication}
+          onClose={() => setSelectedApplication(null)}
+          onStatusChange={(id, newStatus) => {
+            // Update the card in place, and refetch so both tabs stay in sync.
+            setIncomingApplications((prev) =>
+              prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
+            );
+            setSelectedApplication((prev) =>
+              prev && prev.id === id ? { ...prev, status: newStatus } : prev
+            );
+            setApplicationsRefresh((n) => n + 1);
+          }}
         />
       )}
     </div>
