@@ -5,16 +5,11 @@ import ListingCard from '../ListingCard/ListingCard';
 import CategoryGrid from '../CategoryGrid/CategoryGrid';
 import './HomeView.css';
 
-// Turn a category enum value (e.g. "BABYSITTING") into a nice label ("Babysitting").
-function prettyCategory(value) {
-  if (!value) return '';
-  return value.charAt(0) + value.slice(1).toLowerCase();
-}
-
-function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore, personalized, category, showCategories }) {
+function HomeView({ listings, providers = [], showProviders = false, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore }) {
   const [aiInput, setAiInput] = useState("");
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
+  const safeProviders = Array.isArray(providers) ? providers : [];
 
   // The "sentinel" is an empty div at the very bottom of the feed. An
   // IntersectionObserver watches it: when it scrolls into view, we know the
@@ -86,47 +81,77 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onOpenAI, onLoadM
       )}
 
       <div className="feed-header">
-        {category ? (
-          // Browsing a specific category.
-          <span className="feed-title">{prettyCategory(category)} listings</span>
-        ) : personalized ? (
-          // AI-ranked landing feed.
-          <span className="feed-title feed-title-ai">
-            <Sparkles size={15} />
-            Recommended for you
-          </span>
-        ) : (
-          <span className="feed-title">Listings</span>
-        )}
+        <span className="feed-title">{showProviders ? "Providers" : "Listings"}</span>
       </div>
 
-      <div className="listing-feed">
-        {safeListings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            bookmarked={bookmarks.has(listing.id)}
-            onBookmark={() => onBookmark(listing.id)}
-            onClick={() => navigate(`/listing/${listing.id}`)}
-            userMode={userMode}
-          />
-        ))}
-      </div>
+      {showProviders ? (
+        // Client mode: show providers as circular avatar cards. Clicking one
+        // opens that provider's public profile.
+        <div className="provider-grid">
+          {safeProviders.length === 0 ? (
+            <p className="feed-status">No providers found</p>
+          ) : (
+            safeProviders.map((provider) => {
+              const name =
+                `${provider.firstName || ""} ${provider.lastName || ""}`.trim() || "Unknown";
+              const initials =
+                `${(provider.firstName?.[0] || "")}${(provider.lastName?.[0] || "")}`.toUpperCase() || "?";
+              const picture =
+                typeof provider.profilePicture === "string" ? provider.profilePicture.trim() : "";
+              const skills = Array.isArray(provider.skills) ? provider.skills.slice(0, 3) : [];
 
-      {/* Nothing in this category yet. */}
-      {safeListings.length === 0 && !isLoadingMore && (
-        <p className="feed-status">No listings here yet.</p>
-      )}
+              return (
+                <button
+                  type="button"
+                  className="provider-tile"
+                  key={provider.id}
+                  onClick={() => navigate(`/users/${provider.id}`)}
+                >
+                  <div
+                    className="provider-avatar"
+                    style={picture ? { backgroundImage: `url("${picture}")` } : undefined}
+                  >
+                    {!picture && initials}
+                  </div>
+                  <div className="provider-tile-name">{name}</div>
+                  {skills.length > 0 && (
+                    <div className="provider-tile-skills">
+                      {skills.map((skill) => (
+                        <span key={skill} className="provider-tile-skill">{skill}</span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              );
+            })
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="listing-feed">
+            {safeListings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                bookmarked={bookmarks.has(listing.id)}
+                onBookmark={() => onBookmark(listing.id)}
+                onClick={() => navigate(`/listing/${listing.id}`)}
+                userMode={userMode}
+              />
+            ))}
+          </div>
 
-      {/* Invisible marker at the bottom; when it scrolls into view we load more. */}
-      <div ref={sentinelRef} />
+          {/* Invisible marker at the bottom; when it scrolls into view we load more. */}
+          <div ref={sentinelRef} />
 
-      {/* Feedback while a new page is loading */}
-      {isLoadingMore && <p className="feed-status">Loading more…</p>}
+          {/* Feedback while a new page is loading */}
+          {isLoadingMore && <p className="feed-status">Loading more…</p>}
 
-      {/* End-of-list message once there's nothing left to load */}
-      {!hasMore && safeListings.length > 0 && (
-        <p className="feed-status feed-end">No more listings</p>
+          {/* End-of-list message once there's nothing left to load */}
+          {!hasMore && safeListings.length > 0 && (
+            <p className="feed-status feed-end">No more listings</p>
+          )}
+        </>
       )}
     </div>
   );

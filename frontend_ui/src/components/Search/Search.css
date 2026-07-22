@@ -1,0 +1,33 @@
+/* Styles for the listings search box.
+   These class names match the ones in TopBar.css so the search box looks the
+   same as before. The messages "search people" box still uses the copies in
+   TopBar.css, so those were left in place. */
+
+.search-wrap {
+  position: relative;
+  margin-left: auto;
+}
+
+.search-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.search-input {
+  padding: 8px 16px 8px 38px;
+  background: #F3F4F6;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 224px;
+  outline: none;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 2px #D1D5DB;
+}
