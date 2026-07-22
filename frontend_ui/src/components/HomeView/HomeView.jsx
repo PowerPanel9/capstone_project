@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
 import './HomeView.css';
 
-function HomeView({ listings, providers = [], isProviderSearch = false, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore }) {
+function HomeView({ listings, providers = [], showProviders = false, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore }) {
   const [aiInput, setAiInput] = useState("");
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
@@ -69,26 +69,49 @@ function HomeView({ listings, providers = [], isProviderSearch = false, bookmark
       </div>
 
       <div className="feed-header">
-        <span className="feed-title">{isProviderSearch ? "Providers" : "Listings"}</span>
+        <span className="feed-title">{showProviders ? "Providers" : "Listings"}</span>
       </div>
 
-      {isProviderSearch ? (
-        // Client mode: show the providers whose name matched the search.
-        <div className="provider-list">
+      {showProviders ? (
+        // Client mode: show providers as circular avatar cards. Clicking one
+        // opens that provider's public profile.
+        <div className="provider-grid">
           {safeProviders.length === 0 ? (
             <p className="feed-status">No providers found</p>
           ) : (
-            safeProviders.map((provider) => (
-              <div className="provider-card" key={provider.id}>
-                <div className="provider-name">
-                  {`${provider.firstName || ""} ${provider.lastName || ""}`.trim() || "Unknown"}
-                </div>
-                {provider.bio && <div className="provider-bio">{provider.bio}</div>}
-                {Array.isArray(provider.skills) && provider.skills.length > 0 && (
-                  <div className="provider-skills">{provider.skills.join(", ")}</div>
-                )}
-              </div>
-            ))
+            safeProviders.map((provider) => {
+              const name =
+                `${provider.firstName || ""} ${provider.lastName || ""}`.trim() || "Unknown";
+              const initials =
+                `${(provider.firstName?.[0] || "")}${(provider.lastName?.[0] || "")}`.toUpperCase() || "?";
+              const picture =
+                typeof provider.profilePicture === "string" ? provider.profilePicture.trim() : "";
+              const skills = Array.isArray(provider.skills) ? provider.skills.slice(0, 3) : [];
+
+              return (
+                <button
+                  type="button"
+                  className="provider-tile"
+                  key={provider.id}
+                  onClick={() => navigate(`/users/${provider.id}`)}
+                >
+                  <div
+                    className="provider-avatar"
+                    style={picture ? { backgroundImage: `url("${picture}")` } : undefined}
+                  >
+                    {!picture && initials}
+                  </div>
+                  <div className="provider-tile-name">{name}</div>
+                  {skills.length > 0 && (
+                    <div className="provider-tile-skills">
+                      {skills.map((skill) => (
+                        <span key={skill} className="provider-tile-skill">{skill}</span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              );
+            })
           )}
         </div>
       ) : (

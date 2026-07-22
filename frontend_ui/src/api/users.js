@@ -29,3 +29,13 @@ export async function getUserById(id) {
   const response = await api.get(`/api/users/${id}`);
   return response.data;
 }
+
+// GET /api/users/providers  -> a randomized list of providers for the
+// client-mode home feed. Pass excludeId to leave the logged-in user out.
+// Only returns safe public fields (id, name, profilePicture, skills).
+export async function getProviders(excludeId) {
+  const params = {};
+  if (excludeId) params.excludeId = excludeId;
+  const response = await api.get("/api/users/providers", { params });
+  return Array.isArray(response.data) ? response.data : [];
+}
