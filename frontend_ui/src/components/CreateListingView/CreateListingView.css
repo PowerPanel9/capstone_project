@@ -230,3 +230,47 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Required Skills tag list (added skills shown as removable chips). */
+.skills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.modal-skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F3F4F6;
+  color: var(--primary, #7B8FC8);
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.skill-remove-btn {
+  border: none;
+  background: transparent;
+  color: #6B7280;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.skill-remove-btn:hover {
+  color: #111827;
+}
+
+/* Put the input and the "Add" button on the same row. */
+.skill-add-row {
+  display: flex;
+  gap: 10px;
+}
+
+.skill-add-row input {
+  margin: 0;
+}

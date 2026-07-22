@@ -1,6 +1,51 @@
 .home-wrap {
   padding: 24px;
   width: 100%;
+  /* Two columns: the feed on the left, the AI Assistant panel on the right. */
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+/* Left column grows to fill the space next to the AI panel. */
+.home-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Right column holds the floating AI Assistant. `sticky` keeps it pinned near
+   the top as the feed scrolls, so it stays visible like a side rail. */
+.home-side {
+  width: 300px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+}
+
+/* Floating round button (bottom-right) that reopens the chat once it's closed.
+   `fixed` keeps it pinned to the screen corner regardless of scrolling. */
+.chat-reopen-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--primary-gradient-ai, linear-gradient(135deg, #8B9FD4, #7B8FC8, #9BAEE0));
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+  transition: transform 0.15s, box-shadow 0.15s;
+  z-index: 30;
+}
+
+.chat-reopen-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(15, 23, 42, 0.3);
 }
 
 .ai-banner {
@@ -10,6 +55,16 @@
   position: relative;
   overflow: hidden;
   background: var(--primary-gradient-ai, linear-gradient(135deg, #8B9FD4, #7B8FC8, #9BAEE0));
+}
+
+/* The docked AI chat fills the side column. Fixed to the visible screen
+   height, not the page, so it never runs off-screen. We subtract:
+     56px  the top bar above the content area
+     24px  the sticky top offset (.home-side top: 24px)
+     24px  breathing room at the bottom of the screen
+   position: sticky on .home-side keeps it from scrolling away with the feed. */
+.home-side .ai-modal-docked {
+  height: calc(100vh - 104px);
 }
 
 .ai-banner-blob1 {
@@ -151,10 +206,27 @@
   font-family: inherit;
 }
 
+/* Two columns of listing cards in a masonry (Pinterest-style) flow. Using CSS
+   `columns` instead of grid means each column flows independently, so a short
+   card doesn't leave a gap waiting for a taller card beside it — the next card
+   just moves up. Drops to one column on narrow screens. */
 .listing-feed {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  column-count: 2;
+  column-gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .listing-feed {
+    column-count: 1;
+  }
+}
+
+/* Each card is a column item. `break-inside: avoid` stops a card from being
+   split across the two columns, and the bottom margin gives vertical spacing
+   (column layouts don't use `gap` for that). */
+.listing-feed > * {
+  break-inside: avoid;
+  margin-bottom: 16px;
 }
 
 /* Status messages under the feed (loading more / end of list / error).
@@ -245,4 +317,30 @@
   background: #EEF2FF;
   border-radius: 999px;
   padding: 3px 10px;
+}
+
+/* ===================================================================
+   Responsive: tablet/iPad (≤1024px) and mobile (≤640px)
+   =================================================================== */
+
+/* Tablet and below: hide the docked AI side panel and the floating reopen
+   button, and let the feed take the full width. The AI popup is still reachable
+   from the sidebar. */
+@media (max-width: 1024px) {
+  .home-side,
+  .chat-reopen-btn {
+    display: none;
+  }
+
+  .home-wrap {
+    /* Single column now that the AI panel is gone. */
+    display: block;
+  }
+}
+
+/* Mobile: one listing card per row (matches App.css) and tighter feed spacing. */
+@media (max-width: 640px) {
+  .listing-feed {
+    column-count: 1;
+  }
 }

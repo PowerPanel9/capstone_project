@@ -7,6 +7,7 @@ import { getUserById } from "../../api/users";
 import { getListings } from "../../api/listings";
 import { getReviewsForUser } from "../../api/reviews";
 import { fullName } from "../../utils/user";
+import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 // Reuse the same styles as the logged-in user's profile so this read-only
 // profile looks identical to it.
 import "../UserProfileView/UserProfileView.css";
@@ -28,8 +29,6 @@ function PublicProfileView({ currentUser }) {
   const [error, setError] = useState(null);
 
   const EXPERIENCES_STORAGE_PREFIX = "userProfileExperiences";
-  const [activeTab, setActiveTab] = useState("All");
-  const tabs = ["All", "Listings", "Experience"];
 
   const [userListings, setUserListings] = useState([]);
   const [isLoadingListings, setIsLoadingListings] = useState(false);
@@ -147,20 +146,9 @@ function PublicProfileView({ currentUser }) {
     navigate(`/listing/${listingId}`);
   };
 
-  if (isLoading) return <p className="feed-status">Loading profile…</p>;
-  if (error) return <p className="feed-status feed-error">{error}</p>;
-  if (!user) return <p className="feed-status feed-error">User not found</p>;
-
-  const revieweeId = Number(userId);
-  const skills = Array.isArray(user.skills) ? user.skills : [];
-  const profilePicture = typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";
-  const bannerImageUrl = typeof user.imageUrl === "string" ? user.imageUrl.trim() : "";
-  const bannerStyle = bannerImageUrl ? { backgroundImage: `url("${bannerImageUrl}")` } : undefined;
-
-  const openListingDetails = (id) => navigate(`/listing/${id}`);
-
   // Renders one listing card with its status badge. This is the PUBLIC view, so
-  // grayed rules: IN_PROGRESS and COMPLETED are grayed out.
+  // listings that are IN_PROGRESS or COMPLETED show grayed out (no longer
+  // taking applicants).
   const renderListingCard = (listing) => {
     const grayed = isListingGrayed(listing.status, { isOwnerView: false });
     return (
@@ -192,17 +180,18 @@ function PublicProfileView({ currentUser }) {
     );
   };
 
-  const profilePicture =
-    typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";
-  const bannerImageUrl =
-    typeof user.imageUrl === "string" ? user.imageUrl.trim() : "";
-  const bannerStyle = bannerImageUrl
-    ? { backgroundImage: `url("${bannerImageUrl}")` }
-    : undefined;
+  if (isLoading) return <p className="feed-status">Loading profile…</p>;
+  if (error) return <p className="feed-status feed-error">{error}</p>;
+  if (!user) return <p className="feed-status feed-error">User not found</p>;
+
+  const revieweeId = Number(userId);
+  const skills = Array.isArray(user.skills) ? user.skills : [];
+  const profilePicture = typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";
+  const bannerImageUrl = typeof user.imageUrl === "string" ? user.imageUrl.trim() : "";
+  const bannerStyle = bannerImageUrl ? { backgroundImage: `url("${bannerImageUrl}")` } : undefined;
   const profileInitials = `${(user.firstName?.[0] || "").toUpperCase()}${(user.lastName?.[0] || "").toUpperCase()}`;
   const displayLocation =
     user.city && user.state ? `${user.city}, ${user.state}` : (user.location || "Location");
-  const skills = Array.isArray(user.skills) ? user.skills : [];
 
   return (
     <div className="profile-wrap">
@@ -304,28 +293,7 @@ function PublicProfileView({ currentUser }) {
               {listingsError}
             </div>
           ) : userListings.length > 0 ? (
-            userListings.slice(0, 2).map((listing) => (
-              <div
-                key={listing.id}
-                className="mini-card"
-                role="button"
-                tabIndex={0}
-                onClick={() => openListingDetails(listing.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openListingDetails(listing.id);
-                  }
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ProfilePicture initials="LS" size="xs" />
-                <div className="mini-info">
-                  <div className="mini-title">{listing.title}</div>
-                  <div className="mini-desc">{listing.description}</div>
-                </div>
-              </div>
-            ))
+            userListings.slice(0, 2).map((listing) => renderListingCard(listing))
           ) : (
             <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
               No listings yet
@@ -345,28 +313,7 @@ function PublicProfileView({ currentUser }) {
               {listingsError}
             </div>
           ) : userListings.length > 0 ? (
-            userListings.map((listing) => (
-              <div
-                key={listing.id}
-                className="mini-card"
-                role="button"
-                tabIndex={0}
-                onClick={() => openListingDetails(listing.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openListingDetails(listing.id);
-                  }
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ProfilePicture initials="LS" size="xs" />
-                <div className="mini-info">
-                  <div className="mini-title">{listing.title}</div>
-                  <div className="mini-desc">{listing.description}</div>
-                </div>
-              </div>
-            ))
+            userListings.map((listing) => renderListingCard(listing))
           ) : (
             <div style={{
               display: "flex",

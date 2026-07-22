@@ -3,13 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowLeft } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
 import CategoryGrid from '../CategoryGrid/CategoryGrid';
+import AIAgentModal from '../AIAgentModal/AIAgentModal';
 import './HomeView.css';
 
-function HomeView({ listings, providers = [], showProviders = false, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoadingMore }) {
-  const [aiInput, setAiInput] = useState("");
+// Turn a category enum value (e.g. "BABYSITTING") into a nice label ("Babysitting").
+function prettyCategory(value) {
+  if (!value) return '';
+  return value.charAt(0) + value.slice(1).toLowerCase();
+}
+
+function HomeView({ listings, providers = [], showProviders = false, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoading, isLoadingMore, usePersonalized, category, showCategories }) {
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
   const safeProviders = Array.isArray(providers) ? providers : [];
+
+  // Whether the docked AI chat panel on the right is open. Starts open; the
+  // panel's X closes it, and a floating button reopens it.
+  const [chatOpen, setChatOpen] = useState(true);
 
   // The "sentinel" is an empty div at the very bottom of the feed. An
   // IntersectionObserver watches it: when it scrolls into view, we know the
@@ -30,46 +40,11 @@ function HomeView({ listings, providers = [], showProviders = false, bookmarks, 
     return () => observer.disconnect(); // clean up when deps change/unmount
   }, [hasMore, onLoadMore, safeListings.length]);
 
-  // Open the AI chat modal, passing the typed query so it prefills the chat.
-  const handleAskAI = () => {
-    if (aiInput.trim()) {
-      onOpenAI(aiInput);
-      setAiInput(""); // clear the banner box now that it's handed off to the modal
-    }
-  };
-
   return (
     <div className="home-wrap">
-      <div className="ai-banner">
-        <div className="ai-banner-blob1" />
-        <div className="ai-banner-blob2" />
-        <div style={{ position: "relative" }}>
-          <div className="ai-label">
-            <Sparkles size={14} />
-            AI Assistant
-          </div>
-          <div className="ai-title">Find your perfect match</div>
-          <div className="ai-input-row">
-            <Sparkles size={14} />
-            <input
-              className="ai-input"
-              value={aiInput}
-              onChange={(e) => setAiInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAskAI()}
-              placeholder='e.g. "React developer, 3 yrs exp, remote under $100/hr"'
-            />
-            <button
-              className="ai-ask-btn"
-              onClick={handleAskAI}
-              disabled={!aiInput.trim()}
-            >
-              Ask AI
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* On the landing page, category tiles sit just below the AI banner. */}
+      {/* Left column: categories + the listings feed. */}
+      <div className="home-main">
+      {/* On the landing page, category tiles sit at the top of the feed. */}
       {showCategories && <CategoryGrid userMode={userMode} />}
 
       {/* When viewing a category, offer a way back to the category tiles. */}
@@ -81,8 +56,32 @@ function HomeView({ listings, providers = [], showProviders = false, bookmarks, 
       )}
 
       <div className="feed-header">
-        <span className="feed-title">{showProviders ? "Providers" : "Listings"}</span>
+        {showProviders ? (
+          // Client mode: the feed shows providers, not listings.
+          <span className="feed-title">Providers</span>
+        ) : category ? (
+          // Browsing a specific category.
+          <span className="feed-title">{prettyCategory(category)} listings</span>
+        ) : usePersonalized ? (
+          // AI-ranked landing feed. Use `usePersonalized` (our intent) so the
+          // header reads "Recommended for you" even while listings are loading,
+          // before the backend confirms it actually AI-ranked the feed.
+          <span className="feed-title feed-title-ai">
+            <Sparkles size={15} />
+            Recommended for you
+          </span>
+        ) : (
+          <span className="feed-title">Listings</span>
+        )}
       </div>
+
+      {/* Feedback while the first batch loads, shown here in the feed area
+          (under the header) rather than at the top of the page. */}
+      {isLoading && (
+        <p className="feed-status">
+          {showProviders ? "Loading providers…" : "Loading listings…"}
+        </p>
+      )}
 
       {showProviders ? (
         // Client mode: show providers as circular avatar cards. Clicking one
@@ -141,6 +140,12 @@ function HomeView({ listings, providers = [], showProviders = false, bookmarks, 
             ))}
           </div>
 
+          {/* Nothing to show yet. Wait until loading finishes so this doesn't
+              flash while the first batch is still on its way. */}
+          {safeListings.length === 0 && !isLoading && !isLoadingMore && (
+            <p className="feed-status">No listings here yet.</p>
+          )}
+
           {/* Invisible marker at the bottom; when it scrolls into view we load more. */}
           <div ref={sentinelRef} />
 
@@ -152,6 +157,26 @@ function HomeView({ listings, providers = [], showProviders = false, bookmarks, 
             <p className="feed-status feed-end">No more listings</p>
           )}
         </>
+      )}
+      </div>
+
+      {/* Right column: the live AI chat, docked in place (no popup). Shown
+          only while open; the X inside it sets chatOpen to false. */}
+      {chatOpen && (
+        <aside className="home-side">
+          <AIAgentModal docked onClose={() => setChatOpen(false)} />
+        </aside>
+      )}
+
+      {/* When the chat is closed, a floating button in the corner reopens it. */}
+      {!chatOpen && (
+        <button
+          className="chat-reopen-btn"
+          onClick={() => setChatOpen(true)}
+          aria-label="Open AI assistant"
+        >
+          <Sparkles size={22} />
+        </button>
       )}
     </div>
   );

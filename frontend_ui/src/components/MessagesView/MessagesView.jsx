@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, Search, Send, X } from "lucide-react";
+import { MessageSquare, Search, Send, X, ArrowLeft } from "lucide-react";
 import { getConversation, getInbox, sendMessage } from "../../api/messages";
 import './MessagesView.css';
 
@@ -118,7 +118,9 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
   const selectedPartnerId = selectedPartner?.id;
 
   return (
-    <div className="messages-wrap">
+    // `has-selection` lets the CSS show one pane at a time on mobile: the list
+    // when nothing's selected, the chat once a conversation is open.
+    <div className={`messages-wrap ${selectedPartner ? "has-selection" : ""}`}>
       <div className="conv-list">
         <div className="conv-search">
           <div className="conv-tools">
@@ -185,6 +187,16 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
         ) : (
           <div className="chat-live">
             <div className="chat-header">
+              {/* Back button returns to the conversation list on mobile
+                  (hidden on desktop, where both panes are visible). */}
+              <button
+                className="chat-back-btn"
+                type="button"
+                onClick={() => setSelectedPartner(null)}
+                aria-label="Back to conversations"
+              >
+                <ArrowLeft size={18} />
+              </button>
               <p className="chat-header-name">{toName(selectedPartner)}</p>
             </div>
             <div className="chat-messages">

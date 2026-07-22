@@ -15,11 +15,11 @@ import AuthModal from './components/AuthModal/AuthModal';
 import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
-import { getListings, getListingById } from './api/listings';
 import { getUsersByName, getProviders } from './api/users';
 import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
+import { getMyApplications } from './api/applications';
 import { getUsers as getMessageUsers } from './api/messages';
 import { Bookmark } from 'lucide-react';
 import './App.css';
@@ -32,11 +32,16 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyListing, setApplyListing] = useState(null); // the listing being applied to
+  // Listing ids the user has just applied to during this session. We use this
+  // to instantly flip the "Apply Now" button to "Applied" without a reload.
+  const [appliedListingIds, setAppliedListingIds] = useState([]);
   const [showAIModal, setShowAIModal] = useState(false);
   // Text to prefill the AI chat box with (used when "Ask AI" is clicked with a
   // typed query). Empty string means open the modal with a blank box.
   const [aiInitialMessage, setAiInitialMessage] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Sidebar starts open on desktop, but closed on tablet/mobile (≤1024px) so it
+  // doesn't cover the page on load. On small screens it opens as an overlay.
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
   const [messagesComposerOpen, setMessagesComposerOpen] = useState(false);
   const [messagesPeopleSearch, setMessagesPeopleSearch] = useState("");
   const [messagesDirectoryUsers, setMessagesDirectoryUsers] = useState([]);
@@ -212,7 +217,7 @@ function App() {
       {showMainLayout ? (
         // Main app layout with sidebar and topbar
         <div className={`app ${userMode}-mode`}>
-          <aside className="sidebar" style={{ width: sidebarOpen ? 256 : 0 }}>
+          <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
             <Sidebar
               currentUser={currentUser}
               userMode={userMode}
@@ -220,6 +225,16 @@ function App() {
               onLogout={handleLogout}
             />
           </aside>
+
+          {/* Dark backdrop behind the sidebar when it's open as an overlay on
+              tablet/mobile. Tapping it closes the sidebar. Hidden on desktop
+              via CSS (the sidebar isn't an overlay there). */}
+          {sidebarOpen && (
+            <div
+              className="sidebar-backdrop"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
 
           <div className="main">
             <TopBar
@@ -264,10 +279,13 @@ function App() {
                     isAuthenticated ? (
                       <ListingDetailPage
                         userMode={userMode}
+                        appliedListingIds={appliedListingIds}
                         onApply={(listing) => {
                           setApplyListing(listing);
                           setShowApplyModal(true);
                         }}
+                        onMessageUser={setMessagesStartUser}
+                        onMessageListing={setMessagesStartListing}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -363,6 +381,15 @@ function App() {
               listing={applyListing}
               currentUser={currentUser}
               onClose={() => setShowApplyModal(false)}
+              onSuccess={() => {
+                // Remember this listing as applied so its button flips to
+                // "Applied" right away, without needing a page reload.
+                if (applyListing?.id != null) {
+                  setAppliedListingIds((prev) =>
+                    prev.includes(applyListing.id) ? prev : [...prev, applyListing.id]
+                  );
+                }
+              }}
             />
           )}
 
@@ -443,9 +470,10 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
     setIsLoading(true);
     setError(null);
 
+    // Client mode: the home feed shows PROVIDERS instead of listings. We either
+    // search providers by name or browse a random set. Both return the full
+    // list at once, so there are no extra pages to load.
     if (showProviders) {
-      // Either search by name or browse random providers. Both return the full
-      // list at once, so there are no extra pages to load.
       const request = isSearching
         ? getUsersByName(search)
         : getProviders(currentUserId);
@@ -463,16 +491,13 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
         .finally(() => {
           if (!ignore) setIsLoading(false);
         });
-    } else {
-      getListings({ search, page: 1 })
-        .then((data) => {
-          if (ignore) return;
-          setListings(data.listings);
-          setHasMore(data.hasMore);
-          setPage(1);
-    // Try the personalized feed first for providers. If it fails (or isn't
-    // personalized), we fall back to the normal newest-first feed so the home
-    // page always shows something.
+
+      return () => { ignore = true; };
+    }
+
+    // Provider mode, landing page: try the personalized AI-ranked feed first.
+    // If it fails (or isn't personalized), fall back to the normal newest-first
+    // feed so the home page always shows something.
     if (usePersonalized) {
       getRecommendedListings()
         .then((data) => {
@@ -501,10 +526,29 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
         .finally(() => {
           if (!ignore) setIsLoading(false);
         });
+
+      return () => { ignore = true; };
     }
 
+    // Provider mode, browsing a category or searching: the plain listings feed.
+    setPersonalized(false); // normal feed is not AI-ranked
+    getListings({ search, category, page: 1 })
+      .then((data) => {
+        if (ignore) return;
+        setListings(data.listings);
+        setHasMore(data.hasMore);
+        setPage(1);
+      })
+      .catch((err) => {
+        console.error("Failed to load listings:", err);
+        if (!ignore) setError("Could not load listings. Is the backend running?");
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
+
     return () => { ignore = true; };
-  }, [search, showProviders, isSearching, currentUserId]);
+  }, [search, category, showProviders, isSearching, usePersonalized, currentUserId]);
 
   // Load the next page and append it to the list. Called when the user scrolls
   // to the bottom. Guarded so we don't fire while a load is already happening
@@ -543,8 +587,10 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
         onOpenAI={onOpenAI}
         onLoadMore={loadMore}
         hasMore={hasMore}
+        isLoading={isLoading}
         isLoadingMore={isLoadingMore}
         personalized={personalized}
+        usePersonalized={usePersonalized}
         category={category}
         showCategories={isLanding}
       />
@@ -553,7 +599,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
 }
 
 // Listing Detail Page Component
-function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing }) {
+function ListingDetailPage({ userMode, appliedListingIds = [], onApply, onMessageUser, onMessageListing }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -563,6 +609,9 @@ function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing 
   const [listing, setListing] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Whether the logged-in user has already applied to this listing (checked
+  // against the server on load). Used to show "Applied" instead of "Apply Now".
+  const [appliedFromServer, setAppliedFromServer] = useState(false);
 
   useEffect(() => {
     getListingById(id)
@@ -572,6 +621,22 @@ function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing 
         setError("Could not load listing details.");
       })
       .finally(() => setIsLoading(false));
+  }, [id]);
+
+  // Ask the backend which listings this user already applied to, then check if
+  // the current listing is one of them. This keeps "Applied" correct even after
+  // a page reload (App-level state resets, but the server remembers).
+  useEffect(() => {
+    getMyApplications()
+      .then((applications) => {
+        const alreadyApplied = applications.some(
+          (application) => Number(application.listingId) === Number(id)
+        );
+        setAppliedFromServer(alreadyApplied);
+      })
+      .catch((err) => {
+        console.error("Failed to load your applications:", err);
+      });
   }, [id]);
 
   // Work out if the logged-in user owns this listing. The user object was
@@ -614,12 +679,21 @@ function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing 
   if (error) return <p className="feed-status feed-error">{error}</p>;
   if (!listing) return <p className="feed-status feed-error">Listing not found</p>;
 
+  // The user has applied if the server says so OR they just applied in this
+  // session (the App tracks that in appliedListingIds for an instant update).
+  const hasApplied =
+    appliedFromServer || appliedListingIds.some((appliedId) => Number(appliedId) === Number(id));
+
   return (
     <ListingDetailView
       listing={listing}
       userMode={userMode}
+      isOwner={isOwner}
+      hasApplied={hasApplied}
       onBack={() => navigate(-1)}
       onApply={() => onApply(listing)}
+      onDelete={handleDelete}
+      onMessage={handleMessage}
     />
   );
 }

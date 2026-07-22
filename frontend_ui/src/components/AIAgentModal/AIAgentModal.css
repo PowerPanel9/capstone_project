@@ -10,6 +10,105 @@
   overflow: hidden;
 }
 
+/* Docked variant: fill the side column instead of floating as a popup.
+   Height is set by the container (.home-side .ai-modal-docked). */
+.ai-modal-docked {
+  max-width: none;
+  height: 100%;
+  border-radius: 16px;
+  box-shadow: none;
+  border: none;
+  /* Same purple gradient the AI Assistant banner used to have. */
+  background: var(--primary-gradient-ai, linear-gradient(135deg, #8B9FD4, #7B8FC8, #9BAEE0));
+}
+
+/* --- Docked chat: make text readable on the gradient + frosted-glass look --- */
+
+/* Header sits on the gradient, so use a translucent white divider and light
+   icon chip instead of the white-background versions. */
+.ai-modal-docked .ai-modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ai-modal-docked .ai-modal-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* "SideHustle AI" title -> white so it reads on purple. */
+.ai-modal-docked .ai-modal-name {
+  color: #fff;
+}
+
+/* "Online · Ready to help" was teal/green (unreadable on purple) -> soft white. */
+.ai-modal-docked .ai-modal-status {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Header buttons (reset/clear) -> frosted glass with a light icon. */
+.ai-modal-docked .close-btn {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ai-modal-docked .close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Frosted-glass input bar, like the old banner's input row. */
+.ai-modal-docked .ai-input-bar {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ai-modal-docked .ai-input-inner {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Input text + placeholder on the frosted bar. */
+.ai-modal-docked .ai-text-input {
+  color: #fff;
+}
+
+.ai-modal-docked .ai-text-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* AI message bubbles -> frosted glass with white text (were light gray). */
+.ai-modal-docked .ai-bubble.ai {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* The small sparkle icon next to AI messages -> match the glass look. */
+.ai-modal-docked .ai-icon-sm {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* User bubbles -> a touch more opaque so they stand out from AI bubbles. */
+.ai-modal-docked .ai-bubble.user {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  color: #fff;
+}
+
+/* Suggestion chips -> frosted glass with light text. */
+.ai-modal-docked .suggestion-btn {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.ai-modal-docked .suggestion-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .ai-modal-header {
   display: flex;
   align-items: center;
