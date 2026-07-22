@@ -251,6 +251,74 @@
   color: var(--primary, #7B8FC8);
 }
 
+/* Provider browse/search results (client mode). Circular avatar tiles laid out
+   in a responsive grid: profile picture (or initials) on top, then the name,
+   then up to 3 skills. */
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.provider-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 20px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.provider-tile:hover {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+  transform: translateY(-2px);
+}
+
+/* The circular avatar. Shows the profile picture as a background image, or
+   falls back to the user's initials. */
+.provider-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: #EEF2FF;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary, #7B8FC8);
+}
+
+.provider-tile-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E2340;
+}
+
+.provider-tile-skills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.provider-tile-skill {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary, #7B8FC8);
+  background: #EEF2FF;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
 /* ===================================================================
    Responsive: tablet/iPad (≤1024px) and mobile (≤640px)
    =================================================================== */

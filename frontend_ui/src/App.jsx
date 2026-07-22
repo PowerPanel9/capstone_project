@@ -15,6 +15,7 @@ import AuthModal from './components/AuthModal/AuthModal';
 import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
+import { getUsersByName, getProviders } from './api/users';
 import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
@@ -238,6 +239,8 @@ function App() {
           <div className="main">
             <TopBar
               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+              onLogout={handleLogout}
+              userMode={userMode}
               messagesComposerOpen={messagesComposerOpen}
               onToggleMessagesComposer={() => {
                 setMessagesComposerOpen((prev) => {
@@ -263,7 +266,7 @@ function App() {
                   path="/home"
                   element={
                     isAuthenticated ? (
-                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} userMode={userMode} onOpenAI={openAI} />
+                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} userMode={userMode} onOpenAI={openAI} currentUserId={currentUserId} />
                     ) : (
                       <Navigate to="/" replace />
                     )
@@ -429,9 +432,10 @@ function App() {
 }
 
 // Home Page Component
-function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
+function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) {
   const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
+  const [providers, setProviders] = useState([]); // provider cards (browse or search)
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);   // first page / new search
@@ -443,6 +447,14 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
   const search = searchParams.get('search') || '';
   const category = searchParams.get('category') || '';
 
+  // In client mode the home feed shows PROVIDERS instead of listings:
+  //   - empty search box  -> browse a random list of providers
+  //   - typed search text -> providers whose name matches
+  // In provider mode we always show the normal listings feed.
+  const showProviders = userMode === 'client';
+  const isSearching = showProviders && search.trim() !== '';
+
+  // When the mode or search changes, load fresh results.
   // The landing page (no category chosen, no search) shows category tiles plus
   // a "Recommended for you" strip. Once a category is picked, we switch to the
   // normal feed filtered by that category.
@@ -458,9 +470,34 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
     setIsLoading(true);
     setError(null);
 
-    // Try the personalized feed first for providers. If it fails (or isn't
-    // personalized), we fall back to the normal newest-first feed so the home
-    // page always shows something.
+    // Client mode: the home feed shows PROVIDERS instead of listings. We either
+    // search providers by name or browse a random set. Both return the full
+    // list at once, so there are no extra pages to load.
+    if (showProviders) {
+      const request = isSearching
+        ? getUsersByName(search)
+        : getProviders(currentUserId);
+
+      request
+        .then((users) => {
+          if (ignore) return;
+          setProviders(users);
+          setHasMore(false);
+        })
+        .catch((err) => {
+          console.error("Failed to load providers:", err);
+          if (!ignore) setError("Could not load providers. Is the backend running?");
+        })
+        .finally(() => {
+          if (!ignore) setIsLoading(false);
+        });
+
+      return () => { ignore = true; };
+    }
+
+    // Provider mode, landing page: try the personalized AI-ranked feed first.
+    // If it fails (or isn't personalized), fall back to the normal newest-first
+    // feed so the home page always shows something.
     if (usePersonalized) {
       getRecommendedListings()
         .then((data) => {
@@ -493,6 +530,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
       return () => { ignore = true; };
     }
 
+    // Provider mode, browsing a category or searching: the plain listings feed.
     setPersonalized(false); // normal feed is not AI-ranked
     getListings({ search, category, page: 1 })
       .then((data) => {
@@ -510,13 +548,14 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
       });
 
     return () => { ignore = true; };
-  }, [search, category, usePersonalized]);
+  }, [search, category, showProviders, isSearching, usePersonalized, currentUserId]);
 
   // Load the next page and append it to the list. Called when the user scrolls
   // to the bottom. Guarded so we don't fire while a load is already happening
   // or when there's nothing left to load.
   const loadMore = () => {
     if (isLoading || isLoadingMore || !hasMore) return;
+    if (showProviders) return; // providers are returned all at once
 
     const nextPage = page + 1;
     setIsLoadingMore(true);
@@ -532,9 +571,16 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
 
   return (
     <>
+      {isLoading && (
+        <p className="feed-status">
+          {showProviders ? "Loading providers…" : "Loading listings…"}
+        </p>
+      )}
       {error && <p className="feed-status feed-error">{error}</p>}
       <HomeView
         listings={listings}
+        providers={providers}
+        showProviders={showProviders}
         bookmarks={bookmarks}
         onBookmark={onBookmark}
         userMode={userMode}
@@ -693,7 +739,7 @@ function BookmarksPage({ bookmarks, onBookmark }) {
             bookmarked={true}
             onBookmark={() => onBookmark(listing.id)}
             onClick={() => navigate(`/listing/${listing.id}`)}
-            userMode="provider"
+            userMode="client"
           />
         ))}
         {savedListings.length === 0 && (
