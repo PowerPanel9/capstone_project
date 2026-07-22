@@ -18,6 +18,7 @@ import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
+import { getMyApplications } from './api/applications';
 import { getUsers as getMessageUsers } from './api/messages';
 import { Bookmark } from 'lucide-react';
 import './App.css';
@@ -30,6 +31,9 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyListing, setApplyListing] = useState(null); // the listing being applied to
+  // Listing ids the user has just applied to during this session. We use this
+  // to instantly flip the "Apply Now" button to "Applied" without a reload.
+  const [appliedListingIds, setAppliedListingIds] = useState([]);
   const [showAIModal, setShowAIModal] = useState(false);
   // Text to prefill the AI chat box with (used when "Ask AI" is clicked with a
   // typed query). Empty string means open the modal with a blank box.
@@ -272,6 +276,7 @@ function App() {
                     isAuthenticated ? (
                       <ListingDetailPage
                         userMode={userMode}
+                        appliedListingIds={appliedListingIds}
                         onApply={(listing) => {
                           setApplyListing(listing);
                           setShowApplyModal(true);
@@ -371,6 +376,15 @@ function App() {
               listing={applyListing}
               currentUser={currentUser}
               onClose={() => setShowApplyModal(false)}
+              onSuccess={() => {
+                // Remember this listing as applied so its button flips to
+                // "Applied" right away, without needing a page reload.
+                if (applyListing?.id != null) {
+                  setAppliedListingIds((prev) =>
+                    prev.includes(applyListing.id) ? prev : [...prev, applyListing.id]
+                  );
+                }
+              }}
             />
           )}
 
@@ -537,7 +551,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
 }
 
 // Listing Detail Page Component
-function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing }) {
+function ListingDetailPage({ userMode, appliedListingIds = [], onApply, onMessageUser, onMessageListing }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -547,6 +561,9 @@ function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing 
   const [listing, setListing] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Whether the logged-in user has already applied to this listing (checked
+  // against the server on load). Used to show "Applied" instead of "Apply Now".
+  const [appliedFromServer, setAppliedFromServer] = useState(false);
 
   useEffect(() => {
     getListingById(id)
@@ -556,6 +573,22 @@ function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing 
         setError("Could not load listing details.");
       })
       .finally(() => setIsLoading(false));
+  }, [id]);
+
+  // Ask the backend which listings this user already applied to, then check if
+  // the current listing is one of them. This keeps "Applied" correct even after
+  // a page reload (App-level state resets, but the server remembers).
+  useEffect(() => {
+    getMyApplications()
+      .then((applications) => {
+        const alreadyApplied = applications.some(
+          (application) => Number(application.listingId) === Number(id)
+        );
+        setAppliedFromServer(alreadyApplied);
+      })
+      .catch((err) => {
+        console.error("Failed to load your applications:", err);
+      });
   }, [id]);
 
   // Work out if the logged-in user owns this listing. The user object was
@@ -598,12 +631,21 @@ function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing 
   if (error) return <p className="feed-status feed-error">{error}</p>;
   if (!listing) return <p className="feed-status feed-error">Listing not found</p>;
 
+  // The user has applied if the server says so OR they just applied in this
+  // session (the App tracks that in appliedListingIds for an instant update).
+  const hasApplied =
+    appliedFromServer || appliedListingIds.some((appliedId) => Number(appliedId) === Number(id));
+
   return (
     <ListingDetailView
       listing={listing}
       userMode={userMode}
+      isOwner={isOwner}
+      hasApplied={hasApplied}
       onBack={() => navigate(-1)}
       onApply={() => onApply(listing)}
+      onDelete={handleDelete}
+      onMessage={handleMessage}
     />
   );
 }

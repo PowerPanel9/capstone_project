@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Sparkles, Send, RotateCcw } from 'lucide-react';
 import { sendAgentMessage } from '../../api/agent';
 import './AIAgentModal.css';
@@ -35,10 +35,35 @@ function AIAgentModal({ onClose, initialMessage = "", docked = false }) {
   // message and stop the user from sending a second request mid-flight.
   const [loading, setLoading] = useState(false);
 
+  // A direct handle to the text input so we can focus it ourselves.
+  const inputRef = useRef(null);
+
+  // An empty marker at the bottom of the message list. We scroll it into view
+  // to keep the newest message visible.
+  const messagesEndRef = useRef(null);
+
   // Save messages to sessionStorage whenever they change
   useEffect(() => {
     sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
   }, [messages]);
+
+  // Auto-scroll to the newest message. This runs whenever a message is added
+  // or the "Thinking…" bubble appears/disappears, so the latest text is always
+  // in view without the user scrolling manually.
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loading]);
+
+  // Keep the cursor ready in the input. This runs when the modal opens and
+  // again each time `loading` turns false (right after the AI replies), so the
+  // user can start typing their next message without clicking the box again.
+  useEffect(() => {
+    if (!loading && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [loading]);
 
   // Clear conversation and start fresh
   const clearConversation = () => {
@@ -138,6 +163,9 @@ function AIAgentModal({ onClose, initialMessage = "", docked = false }) {
               <div className="ai-bubble ai">Thinking…</div>
             </div>
           )}
+
+          {/* Empty marker we scroll to so the newest message stays in view. */}
+          <div ref={messagesEndRef} />
         </div>
 
         {messages.length === 1 && !loading && (
@@ -157,13 +185,13 @@ function AIAgentModal({ onClose, initialMessage = "", docked = false }) {
         <div className="ai-input-bar">
           <div className="ai-input-inner">
             <input
+              ref={inputRef}
               className="ai-text-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
               placeholder="Ask SideHustle AI anything..."
               disabled={loading}
-              autoFocus={!docked}
             />
             <button
               className="ai-send-btn"

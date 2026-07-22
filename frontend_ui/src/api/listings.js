@@ -93,3 +93,13 @@ export async function updateListing(id, updates) {
   });
   return response.data;
 }
+
+// DELETE /api/listings/:id
+// Removes a listing. Only the owner can delete, so we send the auth token.
+export async function deleteListing(id) {
+  const token = localStorage.getItem("token");
+  const response = await api.delete(`/api/listings/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return response.data;
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Phone, User } from 'lucide-react';
+import { X, Phone, User, Sparkles } from 'lucide-react';
 import { updateApplicationStatus } from '../../api/applications';
 import './ApplicationDetailModal.css';
 
@@ -14,6 +14,8 @@ const STATUS_META = {
 // Detailed view of one application (client side). Shows what the applicant
 // submitted, a link to their public profile, and Accept/Reject buttons.
 // `application` shape: { id, providerId, providerName, listingTitle, phone, message, status }
+// May also include AI ranking info when opened from the AI-sorted list:
+// { aiRank: number, aiReason: string }
 // `onStatusChange(id, newStatus)` is called after a successful accept/reject.
 function ApplicationDetailModal({ application, onClose, onStatusChange }) {
   const navigate = useNavigate();
@@ -65,6 +67,20 @@ function ApplicationDetailModal({ application, onClose, onStatusChange }) {
           </div>
           <span className={`app-status ${meta.className}`}>{meta.label}</span>
         </div>
+
+        {/* AI ranking insight — only when opened from the AI-sorted list */}
+        {application.aiReason && (
+          <div className="app-detail-ai">
+            <div className="app-detail-ai-head">
+              <Sparkles size={13} />
+              AI match
+              {application.aiRank && (
+                <span className="app-detail-ai-rank">#{application.aiRank} best fit</span>
+              )}
+            </div>
+            <p className="app-detail-ai-reason">{application.aiReason}</p>
+          </div>
+        )}
 
         {/* Their message */}
         <div className="app-detail-section">

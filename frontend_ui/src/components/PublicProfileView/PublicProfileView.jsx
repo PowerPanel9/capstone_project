@@ -8,6 +8,7 @@ import { getReviewsForUser } from "../../api/reviews";
 import { getListingsByUser } from "../../api/listings";
 import { fullName, initials } from "../../utils/user";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
+import { formatCityState } from "../../utils/location";
 // Reuse the profile page's styles so this looks like the user's own profile.
 import "../UserProfileView/UserProfileView.css";
 import "./PublicProfileView.css";
@@ -168,7 +169,7 @@ function PublicProfileView({ currentUser }) {
           {user.location && (
             <div className="profile-sub">
               <MapPin size={13} />
-              {user.location}
+              {formatCityState(user.location)}
             </div>
           )}
 

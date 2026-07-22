@@ -19,9 +19,9 @@ const OpenAI = require("openai");
 
 const prisma = new PrismaClient();
 
-// Same Salesforce LLM gateway settings the rest of the app uses.
-// AI_KEY and AI_BASE_URL both come from backend_api/.env, which index.js loads.
-const MODEL = "claude-sonnet-4-5-20250929";
+// AI settings all come from backend_api/.env, which index.js loads.
+// Switching AI providers only means editing .env, not this file.
+const MODEL = process.env.AI_MODEL;
 const BASE_URL = process.env.AI_BASE_URL;
 
 // How many open listings we consider / return. Keeping this small keeps the AI

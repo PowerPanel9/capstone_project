@@ -6,7 +6,7 @@ import { fullName, initials } from '../../utils/user';
 import { formatCityState } from '../../utils/location';
 import './ListingDetailView.css';
 
-function ListingDetailView({ listing, userMode, isOwner, onDelete, onMessage, onBack, onApply, backLabel = "Back to listings" }) {
+function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, onMessage, onBack, onApply, backLabel = "Back to listings" }) {
   // The owner can delete their own listing, but only while in client mode
   // (deleting is a client action).
   const canDelete = isOwner && userMode === "client";
@@ -65,11 +65,19 @@ function ListingDetailView({ listing, userMode, isOwner, onDelete, onMessage, on
                 {listingLocation}
               </p>
             </div>
-            {userMode === 'provider' && (
+            {userMode === 'provider' && !isOwner && (
               <div className="detail-actions">
-                <button className="apply-btn" onClick={onApply}>
-                  Apply Now
-                </button>
+                {/* Once the provider has applied, show a disabled "Applied"
+                    button so they can't apply to the same listing twice. */}
+                {hasApplied ? (
+                  <button className="apply-btn apply-btn-applied" disabled>
+                    Applied
+                  </button>
+                ) : (
+                  <button className="apply-btn" onClick={onApply}>
+                    Apply Now
+                  </button>
+                )}
                 <button
                   type="button"
                   className="message-btn"

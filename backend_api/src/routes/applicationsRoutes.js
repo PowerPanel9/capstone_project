@@ -10,6 +10,7 @@ const {
   getMyApplications,
   getReceivedApplications,
   getApplicationsForListing,
+  getRankedApplicationsForListing,
   updateApplicationStatus,
   withdrawApplication,
 } = require("../controllers/applicationsController");
@@ -28,6 +29,9 @@ router.get("/received", requireAuth, getReceivedApplications);
 // GET /api/applications/listing/:listing_id -> applications for one listing (owner only)
 // Placed before "/:id"-style routes so "listing" isn't read as an id.
 router.get("/listing/:listing_id", requireAuth, getApplicationsForListing);
+
+// GET /api/applications/listing/:listing_id/ranked -> AI-ranked applicants (owner only)
+router.get("/listing/:listing_id/ranked", requireAuth, getRankedApplicationsForListing);
 
 // PUT /api/applications/:id -> accept/reject (listing owner only)
 router.put("/:id", requireAuth, updateApplicationStatus);

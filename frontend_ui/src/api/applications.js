@@ -39,6 +39,17 @@ export async function getReceivedApplications() {
   return response.data;
 }
 
+// GET /api/applications/listing/:listingId/ranked -> AI-ranked applicants (owner only)
+// Returns { listingId, listingTitle, applicants, aiRanked }. Each applicant has a
+// rank + reason when aiRanked is true; when it's false the list is in natural order.
+export async function getRankedApplicationsForListing(listingId) {
+  const response = await api.get(
+    `/api/applications/listing/${listingId}/ranked`,
+    { headers: authHeader() }
+  );
+  return response.data;
+}
+
 // PUT /api/applications/:id -> accept or reject (listing owner only)
 export async function updateApplicationStatus(id, status) {
   const response = await api.put(

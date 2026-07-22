@@ -32,11 +32,10 @@ const BACKEND_DIR = path.join(__dirname, "..");
 // how this module is loaded. `quiet: true` suppresses dotenv's startup banner.
 dotenv.config({ path: path.join(BACKEND_DIR, ".env"), quiet: true });
 
-// Use a model available in the Salesforce gateway (from the docs)
-const MODEL = "claude-sonnet-4-5-20250929";
-
-// Salesforce LLM Gateway Express base URL
-const BASE_URL = "https://eng-ai-model-gateway.sfproxy.devx-preprod.aws-esvc1-useast2.aws.sfdc.cl";
+// Model and base URL come from backend_api/.env (loaded above), so switching
+// AI providers only means editing .env, not this file.
+const MODEL = process.env.AI_MODEL;
+const BASE_URL = process.env.AI_BASE_URL;
 
 // Safety cap: how many times Claude may call tools before we stop. This makes
 // it impossible for the tool loop to run forever if something goes wrong.
