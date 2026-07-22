@@ -563,3 +563,11 @@
     width: 100%;
   }
 }
+/* Rating stat is clickable to open the reviews modal */
+.stat-clickable {
+  cursor: pointer;
+}
+
+.stat-clickable:hover .stat-n {
+  color: var(--primary, #7B8FC8);
+}

@@ -1,0 +1,226 @@
+[
+  {
+    "reviewerEmail": "alex.rivera@seed.local",
+    "revieweeEmail": "marcus.chen@seed.local",
+    "stars": 5,
+    "title": "Lawn looks amazing",
+    "description": "Marcus showed up right on time and left my yard looking better than it has in years. Edges were crisp and he bagged everything. Will book again."
+  },
+  {
+    "reviewerEmail": "jamie.thompson@seed.local",
+    "revieweeEmail": "marcus.chen@seed.local",
+    "stars": 4,
+    "title": "Solid and reliable",
+    "description": "Good work overall, lawn was mowed evenly. Ran about 15 minutes late but sent a text ahead of time, which I appreciated."
+  },
+  {
+    "reviewerEmail": "taylor.kim@seed.local",
+    "revieweeEmail": "marcus.chen@seed.local",
+    "stars": 5,
+    "title": "Highly recommend",
+    "description": "Very thorough and friendly. Even swept the clippings off the sidewalk without being asked. Great value for the price."
+  },
+  {
+    "reviewerEmail": "morgan.davis@seed.local",
+    "revieweeEmail": "sarah.mills@seed.local",
+    "stars": 5,
+    "title": "Spotless move-out clean",
+    "description": "Sarah deep cleaned my apartment top to bottom before my move-out inspection and I got my full deposit back. Kitchen and bathrooms were immaculate."
+  },
+  {
+    "reviewerEmail": "casey.martinez@seed.local",
+    "revieweeEmail": "sarah.mills@seed.local",
+    "stars": 5,
+    "title": "Best cleaner I've hired",
+    "description": "Detail-oriented and trustworthy. She noticed things I would have missed and left the place smelling fresh. Booking her weekly now."
+  },
+  {
+    "reviewerEmail": "riley.patel@seed.local",
+    "revieweeEmail": "sarah.mills@seed.local",
+    "stars": 4,
+    "title": "Great job, minor scheduling hiccup",
+    "description": "The clean itself was excellent. Only reason it's not five stars is we had to reschedule once, but the results spoke for themselves."
+  },
+  {
+    "reviewerEmail": "alex.rivera@seed.local",
+    "revieweeEmail": "jordan.lee@seed.local",
+    "stars": 5,
+    "title": "My son finally gets pre-algebra",
+    "description": "Jordan is patient and explains concepts in a way that clicks. My 7th grader went from dreading math to feeling confident before his exam."
+  },
+  {
+    "reviewerEmail": "jamie.thompson@seed.local",
+    "revieweeEmail": "jordan.lee@seed.local",
+    "stars": 5,
+    "title": "Fantastic tutor",
+    "description": "Always prepared with practice problems and genuinely cares about progress. Highly recommend for any middle-school math help."
+  },
+  {
+    "reviewerEmail": "morgan.davis@seed.local",
+    "revieweeEmail": "jordan.lee@seed.local",
+    "stars": 4,
+    "title": "Very knowledgeable",
+    "description": "Clearly knows the material and is good with kids. Video sessions occasionally had connection issues but nothing major."
+  },
+  {
+    "reviewerEmail": "taylor.kim@seed.local",
+    "revieweeEmail": "emily.park@seed.local",
+    "stars": 5,
+    "title": "Fixed the leak fast",
+    "description": "Emily diagnosed the leak under my sink in minutes and had it repaired within the hour. Clean, professional, and fairly priced."
+  },
+  {
+    "reviewerEmail": "casey.martinez@seed.local",
+    "revieweeEmail": "emily.park@seed.local",
+    "stars": 4,
+    "title": "Good work",
+    "description": "Faucet no longer drips and the repair looks solid. Had to wait a day for a part but she kept me updated the whole time."
+  },
+  {
+    "reviewerEmail": "riley.patel@seed.local",
+    "revieweeEmail": "priya.nair@seed.local",
+    "stars": 5,
+    "title": "Kids adored her",
+    "description": "Priya was wonderful with our two little ones. Followed the bedtime routine exactly and sent us a couple photos so we could enjoy our evening."
+  },
+  {
+    "reviewerEmail": "alex.rivera@seed.local",
+    "revieweeEmail": "priya.nair@seed.local",
+    "stars": 5,
+    "title": "Trustworthy and warm",
+    "description": "Punctual, responsible, and great with kids. The house was tidy when we got home and both kids were already asleep. Will absolutely rebook."
+  },
+  {
+    "reviewerEmail": "jamie.thompson@seed.local",
+    "revieweeEmail": "tom.garcia@seed.local",
+    "stars": 4,
+    "title": "Strong and efficient",
+    "description": "Tom helped move a heavy couch and a mattress up a flight of stairs without complaint. Careful with the walls too. Would hire again."
+  },
+  {
+    "reviewerEmail": "morgan.davis@seed.local",
+    "revieweeEmail": "tom.garcia@seed.local",
+    "stars": 5,
+    "title": "Lifesaver on moving day",
+    "description": "Showed up ready to work and had the whole truck loaded faster than I expected. Super friendly and handled everything with care."
+  },
+  {
+    "reviewerEmail": "taylor.kim@seed.local",
+    "revieweeEmail": "jasmine.carter@seed.local",
+    "stars": 5,
+    "title": "Stunning bridal look",
+    "description": "Jasmine did my wedding hair and makeup and it lasted the entire day through happy tears and dancing. The trial beforehand made me feel so at ease."
+  },
+  {
+    "reviewerEmail": "casey.martinez@seed.local",
+    "revieweeEmail": "jasmine.carter@seed.local",
+    "stars": 4,
+    "title": "Beautiful work",
+    "description": "Really talented and professional. Makeup was flawless. Ran slightly behind schedule but the final result was worth it."
+  },
+  {
+    "reviewerEmail": "riley.patel@seed.local",
+    "revieweeEmail": "aaliyah.johnson@seed.local",
+    "stars": 5,
+    "title": "Perfect box braids",
+    "description": "Aaliyah is a true artist. My braids are neat, even, and not too tight. She was quick without rushing and the whole vibe was relaxing."
+  },
+  {
+    "reviewerEmail": "alex.rivera@seed.local",
+    "revieweeEmail": "aaliyah.johnson@seed.local",
+    "stars": 5,
+    "title": "Best braider in town",
+    "description": "Booked her twice now and she's consistent every time. Great with styling advice too. Highly recommend."
+  },
+  {
+    "reviewerEmail": "jamie.thompson@seed.local",
+    "revieweeEmail": "greg.sullivan@seed.local",
+    "stars": 4,
+    "title": "TV mounted perfectly level",
+    "description": "Greg mounted our TV over the fireplace and hid all the cables cleanly. Knew exactly where the studs were. Good, tidy work."
+  },
+  {
+    "reviewerEmail": "morgan.davis@seed.local",
+    "revieweeEmail": "greg.sullivan@seed.local",
+    "stars": 5,
+    "title": "Handy and dependable",
+    "description": "Fixed a sticking door and assembled two dressers in one visit. Fast, careful, and friendly. My go-to handyman from now on."
+  },
+  {
+    "reviewerEmail": "taylor.kim@seed.local",
+    "revieweeEmail": "hana.okafor@seed.local",
+    "stars": 4,
+    "title": "Assembled everything quickly",
+    "description": "Hana put together a bookshelf and two dressers without any leftover screws. Cleaned up the boxes afterward too."
+  },
+  {
+    "reviewerEmail": "casey.martinez@seed.local",
+    "revieweeEmail": "diane.foster@seed.local",
+    "stars": 5,
+    "title": "Flower beds look incredible",
+    "description": "Diane weeded and mulched my front beds and they look professionally landscaped now. Clearly knows her plants."
+  },
+  {
+    "reviewerEmail": "riley.patel@seed.local",
+    "revieweeEmail": "diane.foster@seed.local",
+    "stars": 4,
+    "title": "Great gardening help",
+    "description": "Did a thorough job on the weeding. Beds look great. A little pricier than I expected but the quality made up for it."
+  },
+  {
+    "reviewerEmail": "alex.rivera@seed.local",
+    "revieweeEmail": "andre.washington@seed.local",
+    "stars": 5,
+    "title": "Chemistry finally makes sense",
+    "description": "Andre broke down stoichiometry so my daughter could actually follow it. Her test scores jumped after just a few sessions."
+  },
+  {
+    "reviewerEmail": "jamie.thompson@seed.local",
+    "revieweeEmail": "margaret.pierce@seed.local",
+    "stars": 5,
+    "title": "Reliable grocery delivery",
+    "description": "Margaret picks up my weekly groceries like clockwork and always brings everything right inside. So dependable and kind."
+  },
+  {
+    "reviewerEmail": "morgan.davis@seed.local",
+    "revieweeEmail": "laura.bishop@seed.local",
+    "stars": 5,
+    "title": "My dog loves her",
+    "description": "Laura walked my Lab twice a day while I was slammed at work. Sent updates each time and my dog was happy and tired. Wonderful."
+  },
+  {
+    "reviewerEmail": "taylor.kim@seed.local",
+    "revieweeEmail": "laura.bishop@seed.local",
+    "stars": 4,
+    "title": "Great with pets",
+    "description": "Very caring and reliable dog walker. Walks were a touch shorter than agreed a couple times but my pup was always happy."
+  },
+  {
+    "reviewerEmail": "casey.martinez@seed.local",
+    "revieweeEmail": "elijah.turner@seed.local",
+    "stars": 5,
+    "title": "Clean fade at my door",
+    "description": "Elijah came to my place and gave me the best fade and beard lineup I've had in a while. Super convenient and professional."
+  },
+  {
+    "reviewerEmail": "riley.patel@seed.local",
+    "revieweeEmail": "frank.delgado@seed.local",
+    "stars": 4,
+    "title": "Toilet fixed same day",
+    "description": "Frank replaced the fill valve and it stopped running immediately. Straightforward and knew what he was doing."
+  },
+  {
+    "reviewerEmail": "alex.rivera@seed.local",
+    "revieweeEmail": "olivia.bennett@seed.local",
+    "stars": 5,
+    "title": "Wonderful weekly cleaner",
+    "description": "Olivia is consistent and detailed. My house has never stayed this clean. She's become part of our routine and we love her."
+  },
+  {
+    "reviewerEmail": "jamie.thompson@seed.local",
+    "revieweeEmail": "carla.jimenez@seed.local",
+    "stars": 5,
+    "title": "Patient reading tutor",
+    "description": "Carla is so encouraging with my 2nd grader. His reading fluency has really improved and he actually looks forward to their sessions."
+  }
+]

@@ -23,3 +23,9 @@ export async function getUsersByName(name) {
   const data = response.data;
   return Array.isArray(data) ? data : [];
 }
+
+// GET /api/users/:id  -> a user's public profile
+export async function getUserById(id) {
+  const response = await api.get(`/api/users/${id}`);
+  return response.data;
+}

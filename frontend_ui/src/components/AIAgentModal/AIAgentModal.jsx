@@ -1,15 +1,53 @@
-import { useState } from 'react';
-import { X, Sparkles, Send } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Sparkles, Send, RotateCcw } from 'lucide-react';
+import { sendAgentMessage } from '../../api/agent';
 import './AIAgentModal.css';
 
-function AIAgentModal({ onClose }) {
-  const [messages, setMessages] = useState([
-    {
-      from: "ai",
-      text: "Hi! I'm SideHustle AI. I can help you find the perfect freelancer, write a job listing, or match candidates to your needs. What can I help you with?"
+// Session storage key for persisting conversation
+const CHAT_STORAGE_KEY = 'sidehustle_chat_session';
+
+function AIAgentModal({ onClose, initialMessage = "" }) {
+  // Load messages from sessionStorage on mount, or use default welcome message
+  const loadMessages = () => {
+    const stored = sessionStorage.getItem(CHAT_STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to parse stored messages:', e);
+      }
     }
-  ]);
-  const [input, setInput] = useState("");
+    return [
+      {
+        from: "ai",
+        text: "Hi! I'm SideHustle AI. I can help you find the perfect freelancer, write a job listing, or match candidates to your needs. What can I help you with?"
+      }
+    ];
+  };
+
+  const [messages, setMessages] = useState(loadMessages);
+  // Prefill the input with any text passed in (e.g. from the "Ask AI" banner).
+  const [input, setInput] = useState(initialMessage);
+  // Tracks whether we're waiting for the backend so we can show a "thinking"
+  // message and stop the user from sending a second request mid-flight.
+  const [loading, setLoading] = useState(false);
+
+  // Save messages to sessionStorage whenever they change
+  useEffect(() => {
+    sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+  }, [messages]);
+
+  // Clear conversation and start fresh
+  const clearConversation = () => {
+    const freshMessages = [
+      {
+        from: "ai",
+        text: "Hi! I'm SideHustle AI. I can help you find the perfect freelancer, write a job listing, or match candidates to your needs. What can I help you with?"
+      }
+    ];
+    setMessages(freshMessages);
+    sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(freshMessages));
+  };
 
   const suggestions = [
     "Find me a React developer",
@@ -18,18 +56,30 @@ function AIAgentModal({ onClose }) {
     "Review my profile"
   ];
 
-  const sendMessage = (text) => {
-    if (!text.trim()) return;
+  // Send the user's message to the backend agent and show the real reply.
+  // This is async because the agent call goes over the network and takes a
+  // few seconds (Claude may run several MCP tool calls before answering).
+  const sendMessage = async (text) => {
+    if (!text.trim() || loading) return;
 
-    setMessages([
-      ...messages,
-      { from: "user", text },
-      {
-        from: "ai",
-        text: "Great question! Based on current listings and market data, I found 47 active React developers available right now, with rates ranging from $60–$150/hr. Would you like me to filter by experience level, location, or availability?"
-      }
-    ]);
+    // Show the user's message right away and clear the input box.
+    setMessages((prev) => [...prev, { from: "user", text }]);
     setInput("");
+    setLoading(true);
+
+    try {
+      const reply = await sendAgentMessage(text);
+      setMessages((prev) => [...prev, { from: "ai", text: reply }]);
+    } catch (error) {
+      // If the backend fails, show a friendly message instead of crashing.
+      console.error("Agent chat error:", error);
+      setMessages((prev) => [
+        ...prev,
+        { from: "ai", text: "Sorry, something went wrong. Please try again." }
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,7 +96,15 @@ function AIAgentModal({ onClose }) {
               Online · Ready to help
             </div>
           </div>
-          <button className="close-btn" style={{ marginLeft: "auto" }} onClick={onClose}>
+          <button
+            className="close-btn"
+            style={{ marginLeft: "auto", marginRight: "8px" }}
+            onClick={clearConversation}
+            title="Clear conversation"
+          >
+            <RotateCcw size={15} />
+          </button>
+          <button className="close-btn" onClick={onClose}>
             <X size={15} />
           </button>
         </div>
@@ -62,9 +120,19 @@ function AIAgentModal({ onClose }) {
               <div className={`ai-bubble ${msg.from}`}>{msg.text}</div>
             </div>
           ))}
+
+          {/* While waiting for the backend, show a temporary "thinking" bubble. */}
+          {loading && (
+            <div className="ai-msg-row">
+              <div className="ai-icon-sm">
+                <Sparkles size={12} />
+              </div>
+              <div className="ai-bubble ai">Thinking…</div>
+            </div>
+          )}
         </div>
 
-        {messages.length === 1 && (
+        {messages.length === 1 && !loading && (
           <div className="suggestions">
             {suggestions.map((suggestion) => (
               <button
@@ -86,9 +154,14 @@ function AIAgentModal({ onClose }) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
               placeholder="Ask SideHustle AI anything..."
+              disabled={loading}
               autoFocus
             />
-            <button className="ai-send-btn" onClick={() => sendMessage(input)}>
+            <button
+              className="ai-send-btn"
+              onClick={() => sendMessage(input)}
+              disabled={loading}
+            >
               <Send size={13} />
             </button>
           </div>

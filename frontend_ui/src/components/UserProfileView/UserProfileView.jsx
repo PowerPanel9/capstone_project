@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Briefcase, FileText } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
+import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
 import { getListings } from "../../api/listings";
+import { getReviewsForUser } from "../../api/reviews";
 import "./UserProfileView.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -187,7 +189,7 @@ function UserProfileView({ userMode, onToggleMode }) {
         setIsLoadingProfile(true);
         setProfileError("");
 
-        const meResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+        const meResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -202,7 +204,7 @@ function UserProfileView({ userMode, onToggleMode }) {
           throw new Error("Invalid auth response. Expected JSON user data.");
         }
 
-        const profileResponse = await fetch(`${API_BASE_URL}/users/${me.id}`, {
+        const profileResponse = await fetch(`${API_BASE_URL}/api/users/${me.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -525,7 +527,7 @@ function UserProfileView({ userMode, onToggleMode }) {
       setSaveError("");
 
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/users/${profile.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/${profile.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -562,6 +564,31 @@ function UserProfileView({ userMode, onToggleMode }) {
   };
 
   const currentUser = profile;
+
+  // Reviews shown on this profile (loaded from the backend by the user's id).
+  // The panel opens when the "Rating" stat is clicked.
+  const [showReviews, setShowReviews] = useState(false);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [avgRating, setAvgRating] = useState(null);
+
+  useEffect(() => {
+    if (!profile.id) return;
+    let ignore = false;
+    getReviewsForUser(profile.id)
+      .then((reviews) => {
+        if (ignore) return;
+        setReviewCount(reviews.length);
+        if (reviews.length > 0) {
+          const avg = reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length;
+          setAvgRating(avg.toFixed(1));
+        } else {
+          setAvgRating(null);
+        }
+      })
+      .catch((err) => console.error("Failed to load review stats:", err));
+    return () => { ignore = true; };
+  }, [profile.id, showReviews]);
+
   const userProfilePicture =
     typeof currentUser.profilePicture === "string" ? currentUser.profilePicture.trim() : "";
   const bannerImageUrl =
@@ -621,12 +648,24 @@ function UserProfileView({ userMode, onToggleMode }) {
           )}
           {profileError && <p className="error-text" style={{ marginBottom: 12 }}>{profileError}</p>}
           <div className="stats-row">
-            {[[userListings.length, "Listings"], [0, "Reviews"], [0, "Rating"]].map(([num, label]) => (
-              <div key={label}>
-                <div className="stat-n">{num}</div>
-                <div className="stat-l">{label}</div>
-              </div>
-            ))}
+            {[
+              [userListings.length, "Listings"],
+              [reviewCount, "Reviews"],
+              [avgRating ? `${avgRating} ★` : "0", "Rating"],
+            ].map(([num, label]) => {
+              // Only the Rating stat opens the reviews modal.
+              const clickable = label === "Rating";
+              return (
+                <div
+                  key={label}
+                  className={clickable ? "stat-clickable" : undefined}
+                  onClick={clickable ? () => setShowReviews(true) : undefined}
+                >
+                  <div className="stat-n">{num}</div>
+                  <div className="stat-l">{label}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1014,6 +1053,16 @@ function UserProfileView({ userMode, onToggleMode }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Reviews modal — opens only when the Rating stat is clicked.
+          Shows reviews about this profile's user. */}
+      {showReviews && (
+        <ReviewsPanel
+          revieweeId={currentUser.id}
+          currentUser={currentUser}
+          onClose={() => setShowReviews(false)}
+        />
       )}
     </div>
   );

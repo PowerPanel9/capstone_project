@@ -34,6 +34,10 @@ const seedAgentConversations = JSON.parse(
   fs.readFileSync(path.join(dataDir, "seedAgentConversations.json"), "utf-8")
 );
 
+const seedReviews = JSON.parse(
+  fs.readFileSync(path.join(dataDir, "seedReviews.json"), "utf-8")
+);
+
 // Turn poster info into email for lookups
 function seedEmail(poster) {
   return `${poster.firstName}.${poster.lastName}@seed.local`.toLowerCase();
@@ -67,7 +71,32 @@ async function main() {
       },
     });
     await prisma.application.deleteMany({ where: { providerId: { in: seedUserIds } } });
-    await prisma.bookmark.deleteMany({ where: { userId: { in: seedUserIds } } });
+    // Find seed users' listings so we can also clear bookmarks/applications that
+    // NON-seed (real) users made against them — otherwise deleting those
+    // listings below would violate the bookmark/application foreign keys.
+    const seedListingRecords = await prisma.listing.findMany({
+      where: { userId: { in: seedUserIds } },
+      select: { id: true },
+    });
+    const seedListingIds = seedListingRecords.map((l) => l.id);
+
+    await prisma.bookmark.deleteMany({
+      where: {
+        OR: [
+          { userId: { in: seedUserIds } },
+          { listingId: { in: seedListingIds } },
+        ],
+      },
+    });
+    await prisma.application.deleteMany({ where: { listingId: { in: seedListingIds } } });
+    await prisma.review.deleteMany({
+      where: {
+        OR: [
+          { reviewerId: { in: seedUserIds } },
+          { revieweeId: { in: seedUserIds } },
+        ],
+      },
+    });
     await prisma.listing.deleteMany({ where: { userId: { in: seedUserIds } } });
     await prisma.user.deleteMany({ where: { id: { in: seedUserIds } } });
     console.log(`  cleared ${seedUserIds.length} previous seed user(s) and their data`);
@@ -215,6 +244,47 @@ async function main() {
     });
 
     console.log(`  + Agent conversation for ${user.firstName} (${conv.actionTaken})`);
+  }
+
+  // ----- Create reviews -----
+  console.log("\nCreating reviews...");
+
+  // Some reviews may point at a REAL account that the seed didn't create
+  // (e.g. a developer's own account). If an email isn't in createdProviders,
+  // fall back to looking the user up in the database by email.
+  async function resolveUser(email) {
+    if (createdProviders[email]) return createdProviders[email];
+    const found = await prisma.user.findUnique({ where: { email } });
+    if (found) createdProviders[email] = found; // cache for reuse
+    return found || null;
+  }
+
+  for (const rev of seedReviews) {
+    const reviewer = await resolveUser(rev.reviewerEmail);
+    const reviewee = await resolveUser(rev.revieweeEmail);
+
+    if (!reviewer) {
+      console.warn(`  ! Reviewer not found: ${rev.reviewerEmail}`);
+      continue;
+    }
+
+    if (!reviewee) {
+      console.warn(`  ! Reviewee not found: ${rev.revieweeEmail}`);
+      continue;
+    }
+
+    await prisma.review.create({
+      data: {
+        stars: rev.stars,
+        title: rev.title,
+        description: rev.description,
+        imageUrl: rev.imageUrl || null,
+        reviewerId: reviewer.id,
+        revieweeId: reviewee.id,
+      },
+    });
+
+    console.log(`  + ${reviewer.firstName} reviewed ${reviewee.firstName} (${rev.stars}★)`);
   }
 
   console.log("\n✅ Seeding complete!");
