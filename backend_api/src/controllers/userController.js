@@ -127,6 +127,41 @@ const getUsers = async (req, res) => {
         res.status(500).json({ message: "Error fetching users" });
     }
 };
+// Search users by name. Returns a LIST of every user whose first OR last name
+// contains the search text (case-insensitive). An empty list just means no
+// matches were found, so the frontend can show a "no results" message.
+const getUserByName = async (req, res) => {
+    try {
+        const {name} = req.params;
+        const where = {
+            OR: [
+                {firstName: {contains: name, mode: 'insensitive'}},
+                {lastName: {contains: name, mode: 'insensitive'}},
+            ]
+        };
+
+        let users;
+        try {
+            users = await prisma.user.findMany({
+                where,
+                select: userProfileSelect,
+                orderBy: { firstName: 'asc' },
+            });
+        } catch (selectError) {
+            if (!isUnknownPrismaFieldError(selectError)) throw selectError;
+            users = await prisma.user.findMany({
+                where,
+                select: legacyUserProfileSelect,
+                orderBy: { firstName: 'asc' },
+            });
+        }
+
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("getUserByName error:", error);
+        res.status(500).json({ message: "Error fetching users" });
+    }
+};
 const getUserById = async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -284,5 +319,6 @@ const updateUser = async (req, res) => {
 module.exports = {
     getUsers,
     getUserById,
+    getUserByName,
     updateUser,
 };

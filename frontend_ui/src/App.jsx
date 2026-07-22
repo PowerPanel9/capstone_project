@@ -15,6 +15,7 @@ import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById } from './api/listings';
+import { getUsersByName } from './api/users';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
 import { getUsers as getMessageUsers } from './api/messages';
 import { Bookmark } from 'lucide-react';
@@ -205,6 +206,7 @@ function App() {
             <TopBar
               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
               onLogout={handleLogout}
+              userMode={userMode}
               messagesComposerOpen={messagesComposerOpen}
               onToggleMessagesComposer={() => {
                 setMessagesComposerOpen((prev) => {
@@ -359,6 +361,7 @@ function App() {
 function HomePage({ bookmarks, onBookmark, userMode }) {
   const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
+  const [providers, setProviders] = useState([]); // provider search results
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);   // first page / new search
@@ -367,35 +370,60 @@ function HomePage({ bookmarks, onBookmark, userMode }) {
 
   const search = searchParams.get('search') || '';
 
-  // When the search changes, start over: clear listings and load page 1.
+  // In client mode, typing in the search box means the user is looking for
+  // PROVIDERS by name. In provider mode (or with an empty box), we show the
+  // normal listings feed instead.
+  const isProviderSearch = userMode === 'client' && search.trim() !== '';
+
+  // When the search changes, start over and load fresh results.
   useEffect(() => {
     let ignore = false;
     setIsLoading(true);
     setError(null);
 
-    getListings({ search, page: 1 })
-      .then((data) => {
-        if (ignore) return;
-        setListings(data.listings);
-        setHasMore(data.hasMore);
-        setPage(1);
-      })
-      .catch((err) => {
-        console.error("Failed to load listings:", err);
-        if (!ignore) setError("Could not load listings. Is the backend running?");
-      })
-      .finally(() => {
-        if (!ignore) setIsLoading(false);
-      });
+    if (isProviderSearch) {
+      // Ask the backend to find users whose name matches (triggers
+      // getUserByName on the server). This returns all matches at once, so
+      // there are no extra pages to load.
+      getUsersByName(search)
+        .then((users) => {
+          if (ignore) return;
+          setProviders(users);
+          setHasMore(false);
+        })
+        .catch((err) => {
+          console.error("Failed to search providers:", err);
+          if (!ignore) setError("Could not search providers. Is the backend running?");
+        })
+        .finally(() => {
+          if (!ignore) setIsLoading(false);
+        });
+    } else {
+      getListings({ search, page: 1 })
+        .then((data) => {
+          if (ignore) return;
+          setListings(data.listings);
+          setHasMore(data.hasMore);
+          setPage(1);
+        })
+        .catch((err) => {
+          console.error("Failed to load listings:", err);
+          if (!ignore) setError("Could not load listings. Is the backend running?");
+        })
+        .finally(() => {
+          if (!ignore) setIsLoading(false);
+        });
+    }
 
     return () => { ignore = true; };
-  }, [search]);
+  }, [search, isProviderSearch]);
 
   // Load the next page and append it to the list. Called when the user scrolls
   // to the bottom. Guarded so we don't fire while a load is already happening
   // or when there's nothing left to load.
   const loadMore = () => {
     if (isLoading || isLoadingMore || !hasMore) return;
+    if (isProviderSearch) return; // provider search returns everything at once
 
     const nextPage = page + 1;
     setIsLoadingMore(true);
@@ -411,10 +439,16 @@ function HomePage({ bookmarks, onBookmark, userMode }) {
 
   return (
     <>
-      {isLoading && <p className="feed-status">Loading listings…</p>}
+      {isLoading && (
+        <p className="feed-status">
+          {isProviderSearch ? "Searching providers…" : "Loading listings…"}
+        </p>
+      )}
       {error && <p className="feed-status feed-error">{error}</p>}
       <HomeView
         listings={listings}
+        providers={providers}
+        isProviderSearch={isProviderSearch}
         bookmarks={bookmarks}
         onBookmark={onBookmark}
         userMode={userMode}
@@ -499,7 +533,7 @@ function BookmarksPage({ bookmarks, onBookmark }) {
             bookmarked={true}
             onBookmark={() => onBookmark(listing.id)}
             onClick={() => navigate(`/listing/${listing.id}`)}
-            userMode="provider"
+            userMode="client"
           />
         ))}
         {savedListings.length === 0 && (

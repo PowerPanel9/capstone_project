@@ -4,10 +4,11 @@ import { Sparkles } from 'lucide-react';
 import ListingCard from '../ListingCard/ListingCard';
 import './HomeView.css';
 
-function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMore, isLoadingMore }) {
+function HomeView({ listings, providers = [], isProviderSearch = false, bookmarks, onBookmark, userMode, onLoadMore, hasMore, isLoadingMore }) {
   const [aiInput, setAiInput] = useState("");
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
+  const safeProviders = Array.isArray(providers) ? providers : [];
 
   // The "sentinel" is an empty div at the very bottom of the feed. An
   // IntersectionObserver watches it: when it scrolls into view, we know the
@@ -67,31 +68,54 @@ function HomeView({ listings, bookmarks, onBookmark, userMode, onLoadMore, hasMo
       </div>
 
       <div className="feed-header">
-        <span className="feed-title">Listings</span>
+        <span className="feed-title">{isProviderSearch ? "Providers" : "Listings"}</span>
       </div>
 
-      <div className="listing-feed">
-        {safeListings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            bookmarked={bookmarks.has(listing.id)}
-            onBookmark={() => onBookmark(listing.id)}
-            onClick={() => navigate(`/listing/${listing.id}`)}
-            userMode={userMode}
-          />
-        ))}
-      </div>
+      {isProviderSearch ? (
+        // Client mode: show the providers whose name matched the search.
+        <div className="provider-list">
+          {safeProviders.length === 0 ? (
+            <p className="feed-status">No providers found</p>
+          ) : (
+            safeProviders.map((provider) => (
+              <div className="provider-card" key={provider.id}>
+                <div className="provider-name">
+                  {`${provider.firstName || ""} ${provider.lastName || ""}`.trim() || "Unknown"}
+                </div>
+                {provider.bio && <div className="provider-bio">{provider.bio}</div>}
+                {Array.isArray(provider.skills) && provider.skills.length > 0 && (
+                  <div className="provider-skills">{provider.skills.join(", ")}</div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="listing-feed">
+            {safeListings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                bookmarked={bookmarks.has(listing.id)}
+                onBookmark={() => onBookmark(listing.id)}
+                onClick={() => navigate(`/listing/${listing.id}`)}
+                userMode={userMode}
+              />
+            ))}
+          </div>
 
-      {/* Invisible marker at the bottom; when it scrolls into view we load more. */}
-      <div ref={sentinelRef} />
+          {/* Invisible marker at the bottom; when it scrolls into view we load more. */}
+          <div ref={sentinelRef} />
 
-      {/* Feedback while a new page is loading */}
-      {isLoadingMore && <p className="feed-status">Loading more…</p>}
+          {/* Feedback while a new page is loading */}
+          {isLoadingMore && <p className="feed-status">Loading more…</p>}
 
-      {/* End-of-list message once there's nothing left to load */}
-      {!hasMore && safeListings.length > 0 && (
-        <p className="feed-status feed-end">No more listings</p>
+          {/* End-of-list message once there's nothing left to load */}
+          {!hasMore && safeListings.length > 0 && (
+            <p className="feed-status feed-end">No more listings</p>
+          )}
+        </>
       )}
     </div>
   );

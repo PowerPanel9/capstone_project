@@ -1,10 +1,12 @@
-import { Menu, PenSquare, Search } from 'lucide-react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { Menu, PenSquare, Search as SearchIcon } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import Search from '../Search/Search';
 import './TopBar.css';
 
 function TopBar({
   onToggleSidebar,
   onLogout,
+  userMode,
   messagesComposerOpen,
   onToggleMessagesComposer,
   messagesPeopleSearch,
@@ -13,9 +15,6 @@ function TopBar({
   onSelectMessagesPerson,
 }) {
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const search = searchParams.get('search') || '';
 
   // Generate title based on current route
   const getPageTitle = () => {
@@ -30,14 +29,6 @@ function TopBar({
     return 'SideHustle';
   };
 
-  const handleSearchChange = (value) => {
-    if (value) {
-      setSearchParams({ search: value });
-    } else {
-      setSearchParams({});
-    }
-  };
-
   // Only show search on home page
   const showSearch = location.pathname === '/home';
   const showMessagesSearch = location.pathname === "/messages";
@@ -48,20 +39,10 @@ function TopBar({
         <Menu size={18} />
       </button>
       <span className="topbar-title">{getPageTitle()}</span>
-      {showSearch && (
-        <div className="search-wrap">
-          <Search size={14} />
-          <input
-            className="search-input"
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Search listings..."
-          />
-        </div>
-      )}
+      {showSearch && <Search userMode={userMode} />}
       {showMessagesSearch && messagesComposerOpen && (
         <div className="search-wrap topbar-messages-search">
-          <Search size={14} />
+          <SearchIcon size={14} />
           <input
             className="search-input"
             value={messagesPeopleSearch}
