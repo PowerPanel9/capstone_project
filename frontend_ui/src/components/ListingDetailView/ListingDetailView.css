@@ -268,6 +268,13 @@
   font-weight: 600;
 }
 
+/* Muted "None" text shown when a listing has no required skills. */
+.skill-tag-none {
+  color: #9CA3AF;
+  font-size: 14px;
+  font-style: italic;
+}
+
 .client-card {
   background: #F9FAFB;
   border-radius: 16px;

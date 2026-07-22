@@ -281,6 +281,8 @@ function App() {
                           setApplyListing(listing);
                           setShowApplyModal(true);
                         }}
+                        onMessageUser={setMessagesStartUser}
+                        onMessageListing={setMessagesStartListing}
                       />
                     ) : (
                       <Navigate to="/" replace />

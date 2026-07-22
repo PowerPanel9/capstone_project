@@ -125,9 +125,15 @@ function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, o
               <div>
                 <div className="section-title">Required Skills</div>
                 <div className="skill-tags">
-                  {listing.skillsRequired.map((skill) => (
-                    <span key={skill} className="skill-tag">{skill}</span>
-                  ))}
+                  {/* If the listing has skills, show them as tags. Otherwise
+                      show "None" so the section isn't just blank. */}
+                  {listing.skillsRequired.length > 0 ? (
+                    listing.skillsRequired.map((skill) => (
+                      <span key={skill} className="skill-tag">{skill}</span>
+                    ))
+                  ) : (
+                    <span className="skill-tag-none">None</span>
+                  )}
                 </div>
               </div>
             </div>
