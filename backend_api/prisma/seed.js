@@ -119,6 +119,7 @@ async function main() {
         email: userData.email,
         password: userData.password,
         authProvider: userData.authProvider,
+        role: userData.role,
         bio: userData.bio,
         skills: userData.skills,
         location: userData.location,

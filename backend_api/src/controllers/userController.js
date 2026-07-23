@@ -8,6 +8,7 @@ const userProfileSelect = {
     firstName: true,
     lastName: true,
     email: true,
+    role: true,
     bio: true,
     skills: true,
     location: true,

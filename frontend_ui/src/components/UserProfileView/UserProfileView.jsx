@@ -70,6 +70,23 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newSkill, setNewSkill] = useState("");
+  // Skill input shown on the Experience tab (separate from the edit modal input).
+  const [newExperienceSkill, setNewExperienceSkill] = useState("");
+  const [isSavingSkill, setIsSavingSkill] = useState(false);
+  const [skillError, setSkillError] = useState("");
+  // Controls whether the skill input is shown. Starts hidden so we only show
+  // the "+ Add Skill" button until the user clicks it.
+  const [isAddingSkill, setIsAddingSkill] = useState(false);
+  // Resume and certification inputs on the Experience tab. Each has its own
+  // "is the input open" flag, text value, saving flag, and error message.
+  const [isAddingResume, setIsAddingResume] = useState(false);
+  const [newResumeUrl, setNewResumeUrl] = useState("");
+  const [isSavingResume, setIsSavingResume] = useState(false);
+  const [resumeError, setResumeError] = useState("");
+  const [isAddingCertification, setIsAddingCertification] = useState(false);
+  const [newCertificationUrl, setNewCertificationUrl] = useState("");
+  const [isSavingCertification, setIsSavingCertification] = useState(false);
+  const [certificationError, setCertificationError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
@@ -621,6 +638,135 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     }
   };
 
+  // Save a partial profile change to the backend right away (used by the
+  // Experience tab). We always send the WHOLE profile plus the changed fields,
+  // because the backend resets some fields (like contact info) to null when they
+  // are missing from the request body. `changes` holds only the fields we edited.
+  const saveProfileFields = async (changes) => {
+    const res = await fetch(`${API_BASE_URL}/api/users/${profile.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(() => {
+          const token = localStorage.getItem("token");
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        })(),
+      },
+      body: JSON.stringify({
+        bio: profile.bio,
+        imageUrl: profile.imageUrl,
+        profilePicture: profile.profilePicture,
+        contactEmail: profile.contactEmail,
+        phoneNumber: profile.phoneNumber,
+        mailingAddress: profile.mailingAddress,
+        resumeUrl: profile.resumeUrl,
+        certificationUrl: profile.certificationUrl,
+        addressText: profile.location,
+        skills: profile.skills,
+        ...changes,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = (await readJsonSafe(res)) || {};
+      throw new Error(err.message || "Failed to save changes");
+    }
+
+    return (await readJsonSafe(res)) || {};
+  };
+
+  // Save a new skills list to the backend right away (used by the Skills page).
+  const saveSkills = async (nextSkills) => {
+    if (!profile.id) {
+      setSkillError("Profile id not found");
+      return;
+    }
+
+    setIsSavingSkill(true);
+    setSkillError("");
+
+    try {
+      const updated = await saveProfileFields({ skills: nextSkills });
+      setProfile((prev) => ({
+        ...prev,
+        skills: Array.isArray(updated?.skills) ? updated.skills : nextSkills,
+      }));
+    } catch (error) {
+      setSkillError(error.message || "Error saving skill");
+    } finally {
+      setIsSavingSkill(false);
+    }
+  };
+
+  // Add a skill from the Experience tab, then save immediately.
+  const addExperienceSkill = () => {
+    const trimmed = newExperienceSkill.trim();
+    if (!trimmed) return;
+    if (profile.skills.includes(trimmed)) return;
+    const nextSkills = [...profile.skills, trimmed];
+    setNewExperienceSkill("");
+    setIsAddingSkill(false);
+    saveSkills(nextSkills);
+  };
+
+  // Remove a skill from the Experience tab, then save immediately.
+  const removeExperienceSkill = (skillToRemove) => {
+    const nextSkills = profile.skills.filter((skill) => skill !== skillToRemove);
+    saveSkills(nextSkills);
+  };
+
+  // Save the resume URL from the Experience tab, then save immediately.
+  const saveResumeUrl = async () => {
+    if (!profile.id) {
+      setResumeError("Profile id not found");
+      return;
+    }
+    const trimmed = newResumeUrl.trim();
+    if (!trimmed) return;
+
+    setIsSavingResume(true);
+    setResumeError("");
+    try {
+      const updated = await saveProfileFields({ resumeUrl: trimmed });
+      setProfile((prev) => ({
+        ...prev,
+        resumeUrl: updated?.resumeUrl ?? trimmed,
+      }));
+      setNewResumeUrl("");
+      setIsAddingResume(false);
+    } catch (error) {
+      setResumeError(error.message || "Error saving resume");
+    } finally {
+      setIsSavingResume(false);
+    }
+  };
+
+  // Save the certification URL from the Experience tab, then save immediately.
+  const saveCertificationUrl = async () => {
+    if (!profile.id) {
+      setCertificationError("Profile id not found");
+      return;
+    }
+    const trimmed = newCertificationUrl.trim();
+    if (!trimmed) return;
+
+    setIsSavingCertification(true);
+    setCertificationError("");
+    try {
+      const updated = await saveProfileFields({ certificationUrl: trimmed });
+      setProfile((prev) => ({
+        ...prev,
+        certificationUrl: updated?.certificationUrl ?? trimmed,
+      }));
+      setNewCertificationUrl("");
+      setIsAddingCertification(false);
+    } catch (error) {
+      setCertificationError(error.message || "Error saving certification");
+    } finally {
+      setIsSavingCertification(false);
+    }
+  };
+
   const currentUser = profile;
 
   // Reviews shown on this profile (loaded from the backend by the user's id).
@@ -966,8 +1112,16 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {currentUser.skills.length > 0 ? (
                   currentUser.skills.map((skill) => (
-                    <span key={skill} className="tag">
+                    <span key={skill} className="modal-skill-tag">
                       {skill}
+                      <button
+                        type="button"
+                        className="skill-remove-btn"
+                        onClick={() => removeExperienceSkill(skill)}
+                        disabled={isSavingSkill}
+                      >
+                        x
+                      </button>
                     </span>
                   ))
                 ) : (
@@ -976,6 +1130,199 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
                   </p>
                 )}
               </div>
+
+              {isAddingSkill ? (
+                <div className="skill-add-row" style={{ marginTop: 16 }}>
+                  <input
+                    autoFocus
+                    value={newExperienceSkill}
+                    onChange={(e) => setNewExperienceSkill(e.target.value)}
+                    onKeyDown={(e) => {
+                      // Add the skill when the user presses Enter/Return.
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addExperienceSkill();
+                      }
+                    }}
+                    placeholder="Add skill"
+                    disabled={isSavingSkill}
+                  />
+                  <button
+                    type="button"
+                    className="modal-btn modal-btn-secondary"
+                    onClick={addExperienceSkill}
+                    disabled={isSavingSkill}
+                  >
+                    {isSavingSkill ? "Saving..." : "Add"}
+                  </button>
+                  <button
+                    type="button"
+                    className="modal-btn modal-btn-secondary"
+                    onClick={() => {
+                      setIsAddingSkill(false);
+                      setNewExperienceSkill("");
+                      setSkillError("");
+                    }}
+                    disabled={isSavingSkill}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div style={{ marginTop: 16 }}>
+                  <button
+                    type="button"
+                    className="experience-add-btn"
+                    onClick={() => setIsAddingSkill(true)}
+                  >
+                    + Add Skill
+                  </button>
+                </div>
+              )}
+
+              {skillError && <p className="error-text">{skillError}</p>}
+            </div>
+
+            <div className="info-card" style={{ padding: 20, marginTop: 16 }}>
+              <div className="info-card-title" style={{ marginBottom: 16 }}>
+                Resume
+              </div>
+              {currentUser.resumeUrl ? (
+                <a
+                  href={currentUser.resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 14, color: "#4F46E5", fontWeight: 600 }}
+                >
+                  View Resume
+                </a>
+              ) : (
+                <p style={{ fontSize: 13, color: "#9CA3AF" }}>No resume added yet</p>
+              )}
+
+              {isAddingResume ? (
+                <div className="skill-add-row" style={{ marginTop: 16 }}>
+                  <input
+                    autoFocus
+                    value={newResumeUrl}
+                    onChange={(e) => setNewResumeUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        saveResumeUrl();
+                      }
+                    }}
+                    placeholder="Paste resume URL"
+                    disabled={isSavingResume}
+                  />
+                  <button
+                    type="button"
+                    className="modal-btn modal-btn-secondary"
+                    onClick={saveResumeUrl}
+                    disabled={isSavingResume}
+                  >
+                    {isSavingResume ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    className="modal-btn modal-btn-secondary"
+                    onClick={() => {
+                      setIsAddingResume(false);
+                      setNewResumeUrl("");
+                      setResumeError("");
+                    }}
+                    disabled={isSavingResume}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div style={{ marginTop: 16 }}>
+                  <button
+                    type="button"
+                    className="experience-add-btn"
+                    onClick={() => {
+                      setNewResumeUrl(currentUser.resumeUrl || "");
+                      setIsAddingResume(true);
+                    }}
+                  >
+                    {currentUser.resumeUrl ? "Edit Resume" : "+ Add Resume"}
+                  </button>
+                </div>
+              )}
+
+              {resumeError && <p className="error-text">{resumeError}</p>}
+            </div>
+
+            <div className="info-card" style={{ padding: 20, marginTop: 16 }}>
+              <div className="info-card-title" style={{ marginBottom: 16 }}>
+                Certification
+              </div>
+              {currentUser.certificationUrl ? (
+                <a
+                  href={currentUser.certificationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 14, color: "#4F46E5", fontWeight: 600 }}
+                >
+                  View Certification
+                </a>
+              ) : (
+                <p style={{ fontSize: 13, color: "#9CA3AF" }}>No certification added yet</p>
+              )}
+
+              {isAddingCertification ? (
+                <div className="skill-add-row" style={{ marginTop: 16 }}>
+                  <input
+                    autoFocus
+                    value={newCertificationUrl}
+                    onChange={(e) => setNewCertificationUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        saveCertificationUrl();
+                      }
+                    }}
+                    placeholder="Paste certification URL"
+                    disabled={isSavingCertification}
+                  />
+                  <button
+                    type="button"
+                    className="modal-btn modal-btn-secondary"
+                    onClick={saveCertificationUrl}
+                    disabled={isSavingCertification}
+                  >
+                    {isSavingCertification ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    className="modal-btn modal-btn-secondary"
+                    onClick={() => {
+                      setIsAddingCertification(false);
+                      setNewCertificationUrl("");
+                      setCertificationError("");
+                    }}
+                    disabled={isSavingCertification}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div style={{ marginTop: 16 }}>
+                  <button
+                    type="button"
+                    className="experience-add-btn"
+                    onClick={() => {
+                      setNewCertificationUrl(currentUser.certificationUrl || "");
+                      setIsAddingCertification(true);
+                    }}
+                  >
+                    {currentUser.certificationUrl ? "Edit Certification" : "+ Add Certification"}
+                  </button>
+                </div>
+              )}
+
+              {certificationError && <p className="error-text">{certificationError}</p>}
             </div>
           </div>
 
