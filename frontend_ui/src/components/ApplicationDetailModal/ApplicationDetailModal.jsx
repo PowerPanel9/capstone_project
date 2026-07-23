@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Phone, User, Sparkles } from 'lucide-react';
+import { X, Phone, User, Check, Sparkles } from 'lucide-react';
 import { updateApplicationStatus } from '../../api/applications';
+import { generatePaymentInvoice, getPaymentForListing } from '../../api/payments';
+import PaymentModal from '../PaymentModal/PaymentModal';
 import './ApplicationDetailModal.css';
 
 // Human-friendly label + color for each application status.
@@ -22,6 +24,43 @@ function ApplicationDetailModal({ application, onClose, onStatusChange }) {
   const [status, setStatus] = useState(application.status);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paid, setPaid] = useState(false);
+  const [paidPaymentId, setPaidPaymentId] = useState(null);
+  const [isGettingReceipt, setIsGettingReceipt] = useState(false);
+
+  // On open, check if this listing already has a completed payment. If so, mark
+  // it paid so the "View receipt" button persists across sessions (not just
+  // right after paying in this session).
+  useEffect(() => {
+    if (!application.listingId) return;
+    let ignore = false;
+    getPaymentForListing(application.listingId)
+      .then((payment) => {
+        if (ignore || !payment) return;
+        if (payment.status === "HELD" || payment.status === "RELEASED") {
+          setPaid(true);
+          setPaidPaymentId(payment.id);
+        }
+      })
+      .catch((err) => console.error("Failed to check payment status:", err));
+    return () => { ignore = true; };
+  }, [application.listingId]);
+
+  // Generate (or fetch) the receipt invoice, then open its hosted page.
+  const handleGetReceipt = async () => {
+    if (!paidPaymentId) return;
+    try {
+      setIsGettingReceipt(true);
+      const { invoiceUrl } = await generatePaymentInvoice(paidPaymentId);
+      if (invoiceUrl) window.open(invoiceUrl, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Failed to get receipt:", err);
+      setError("Could not generate the receipt.");
+    } finally {
+      setIsGettingReceipt(false);
+    }
+  };
 
   const meta = STATUS_META[status] ?? STATUS_META.PENDING;
   const isDecided = status === "ACCEPTED" || status === "REJECTED";
@@ -124,9 +163,42 @@ function ApplicationDetailModal({ application, onClose, onStatusChange }) {
         ) : (
           <div className="app-detail-decided">
             This application has been <strong>{meta.label.toLowerCase()}</strong>.
+            {/* Once accepted, the client can pay this provider (funds are held
+                until the job is marked completed). */}
+            {status === "ACCEPTED" && (
+              paid ? (
+                <>
+                  <div className="app-detail-paid"><Check size={13} /> Payment sent and held until you mark the job completed.</div>
+                  <button
+                    className="app-detail-profile-btn"
+                    onClick={handleGetReceipt}
+                    disabled={isGettingReceipt}
+                    style={{ marginTop: 10 }}
+                  >
+                    {isGettingReceipt ? "Preparing receipt…" : "View receipt"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="app-btn app-btn-pay"
+                  onClick={() => setShowPayment(true)}
+                >
+                  Pay {application.providerName || "provider"}
+                </button>
+              )
+            )}
           </div>
         )}
       </div>
+
+      {showPayment && (
+        <PaymentModal
+          applicationId={application.id}
+          providerName={application.providerName}
+          onPaid={(paymentId) => { setPaid(true); setPaidPaymentId(paymentId); setShowPayment(false); }}
+          onClose={() => setShowPayment(false)}
+        />
+      )}
     </div>
   );
 }

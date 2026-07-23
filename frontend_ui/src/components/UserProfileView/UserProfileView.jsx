@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Briefcase, FileText, ChevronDown } from "lucide-react";
+import { MapPin, Briefcase, FileText, ChevronDown, Check } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
 import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
+import ConnectOnboarding from "../ConnectOnboarding/ConnectOnboarding";
+import { getOnboardingStatus } from "../../api/connect";
 import { getListingsByUser, updateListing } from "../../api/listings";
+import { getPaymentForListing, releasePayment } from "../../api/payments";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 import { formatCityState } from "../../utils/location";
 import { getReviewsForUser } from "../../api/reviews";
@@ -458,13 +461,27 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     navigate(`/listing/${listingId}`, { state: { from: "profile" } });
   };
 
-  // Mark an in-progress listing as COMPLETED (owner only).
+  // Mark an in-progress listing as COMPLETED (owner only). Completing the job
+  // also RELEASES the held payment to the provider (the money the client paid
+  // is held until the job is done).
   const markListingCompleted = async (listingId) => {
     try {
       await updateListing(listingId, { status: "COMPLETED" });
       setUserListings((prev) =>
         prev.map((l) => (l.id === listingId ? { ...l, status: "COMPLETED" } : l))
       );
+
+      // If a payment was made and is still HELD, release it to the provider.
+      try {
+        const payment = await getPaymentForListing(listingId);
+        if (payment && payment.status === "HELD") {
+          await releasePayment(payment.id);
+        }
+      } catch (payErr) {
+        // Don't undo the completion if release fails — just log it. The client
+        // can retry payout later if needed.
+        console.error("Listing marked completed, but releasing payment failed:", payErr);
+      }
     } catch (err) {
       console.error("Failed to mark listing completed:", err);
     }
@@ -584,6 +601,27 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
   const [reviewCount, setReviewCount] = useState(0);
   const [avgRating, setAvgRating] = useState(null);
 
+  // Whether this user has Stripe payouts enabled -> drives the "Payment
+  // verified" checkmark in the header.
+  const [payoutsEnabled, setPayoutsEnabled] = useState(false);
+  const [payoutsLoading, setPayoutsLoading] = useState(true);
+  // Read the "just finished onboarding" flag ONCE (set by ConnectReturn). We
+  // clear it immediately so a page refresh no longer shows the confirmation box.
+  const [justOnboarded] = useState(() => {
+    const flag = sessionStorage.getItem("justOnboarded") === "true";
+    if (flag) sessionStorage.removeItem("justOnboarded");
+    return flag;
+  });
+
+  useEffect(() => {
+    let ignore = false;
+    getOnboardingStatus()
+      .then((data) => { if (!ignore) setPayoutsEnabled(Boolean(data?.onboarded)); })
+      .catch(() => { if (!ignore) setPayoutsEnabled(false); })
+      .finally(() => { if (!ignore) setPayoutsLoading(false); });
+    return () => { ignore = true; };
+  }, []);
+
   useEffect(() => {
     if (!profile.id) return;
     let ignore = false;
@@ -653,7 +691,7 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
             id: a.id,
             providerId: a.provider?.id,
             providerName: `${a.provider?.firstName ?? ""} ${a.provider?.lastName ?? ""}`.trim(),
-            listingId: a.listing?.id,
+            listingId: a.listingId ?? a.listing?.id,
             listingTitle: a.listing?.title ?? "Listing",
             phone: a.phone,
             message: a.message,
@@ -752,7 +790,21 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               )}
             </div>
           </div>
-          <h1 className="profile-name">{displayFirstName} {displayLastName}</h1>
+          <div className="profile-name-row">
+            <h1 className="profile-name">{displayFirstName} {displayLastName}</h1>
+            {/* Next to the name: a small loading note while we check payout
+                status, then the "Payment verified" pill once enabled. Only
+                relevant for providers (they're the ones who receive payouts). */}
+            {userMode === "provider" && payoutsLoading && (
+              <span className="payment-status-loading">Checking payout status…</span>
+            )}
+            {!payoutsLoading && payoutsEnabled && (
+              <span className="payment-verified">
+                <Check size={13} />
+                Payment verified
+              </span>
+            )}
+          </div>
           <div className="profile-sub">
             <MapPin size={13} />
             {displayLocation} · {userMode === 'client' ? 'Client' : 'Provider'}
@@ -783,6 +835,15 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
           </div>
         </div>
       </div>
+
+      {/* Providers set up Stripe payouts here so they can receive payments.
+          After onboarding, this box shows once then disappears on refresh (the
+          header "Payment verified" checkmark becomes the lasting indicator). */}
+      {userMode === "provider" && (
+        <div style={{ marginTop: 16, marginBottom: 24 }}>
+          <ConnectOnboarding justOnboarded={justOnboarded} />
+        </div>
+      )}
 
       <div className="tabs-bar">
         {tabs.map((tab) => (

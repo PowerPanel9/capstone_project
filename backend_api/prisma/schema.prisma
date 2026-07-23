@@ -25,6 +25,18 @@ enum ApplicationStatus {
   REJECTED
 }
 
+// payment.status — tracks the money lifecycle for a job.
+//   PENDING    = PaymentIntent created, client hasn't paid yet
+//   HELD       = client paid; funds held on the platform balance (not yet released)
+//   RELEASED   = funds transferred to the provider's connected account (job completed)
+//   REFUNDED   = payment refunded to the client
+enum PaymentStatus {
+  PENDING
+  HELD
+  RELEASED
+  REFUNDED
+}
+
 // listing.category — used by the search bar / FilterBar to filter listings.
 // OTHER is a catch-all so any side hustle still has a valid category.
 enum ListingCategory {
@@ -59,6 +71,8 @@ model User {
   location         String? // Map / nearby-location feature (type TBD)
   resumeUrl        String?  @map("resume_url") // Optional link to resume
   certificationUrl String?  @map("certification_url") // Optional link to certifications
+  stripeAccountId  String?  @map("stripe_account_id") // Provider's Stripe Connect (Express) account id
+  stripeCustomerId String?  @map("stripe_customer_id") // Client's Stripe Customer id (for invoices/receipts)
 
   // Relations
   listings          Listing[] // Listings this user created
@@ -69,6 +83,8 @@ model User {
   messagesReceived  Message[] @relation("MessagesReceived")
   applications      Application[] // Applications this user (as provider) submitted
   agentConversations AgentConversation[]
+  paymentsMade      Payment[] @relation("PaymentsMade")     // Payments this user made as a client
+  paymentsReceived  Payment[] @relation("PaymentsReceived") // Payments this user received as a provider
 
   @@map("user")
 }
@@ -93,6 +109,7 @@ model Listing {
   bookmarks    Bookmark[]
   applications Application[]
   messages     Message[]
+  payments     Payment[]
 
   @@map("listing")
 }
@@ -157,9 +174,39 @@ model Application {
   // Relations
   provider User    @relation(fields: [providerId], references: [id])
   listing  Listing @relation(fields: [listingId], references: [id])
+  payments Payment[]
 
   @@unique([providerId, listingId]) // Prevent applying to the same listing twice
   @@map("application")
+}
+
+// One payment for a completed/agreed job. Uses "separate charges and transfers":
+// the client's payment is HELD on the platform balance, then RELEASED to the
+// provider's connected account when the job is marked completed.
+model Payment {
+  id                    Int           @id @default(autoincrement())
+  listingId             Int           @map("listing_id") // Job being paid for (FK -> listing)
+  applicationId         Int?          @map("application_id") // Accepted application this pays (FK -> application)
+  clientId              Int           @map("client_id") // Who pays (the listing owner / client)
+  providerId            Int           @map("provider_id") // Who gets paid (the accepted provider)
+  amount                Int // Amount in the smallest currency unit (cents)
+  currency              String        @default("usd")
+  status                PaymentStatus @default(PENDING)
+  stripePaymentIntentId String?       @map("stripe_payment_intent_id") // The held charge
+  stripeTransferId      String?       @map("stripe_transfer_id") // The release transfer to the provider
+  transferGroup         String?       @map("transfer_group") // Links the charge and its transfer
+  stripeInvoiceId       String?       @map("stripe_invoice_id") // Receipt invoice for this payment
+  invoiceUrl            String?       @map("invoice_url") // Hosted invoice/receipt URL
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  listing     Listing      @relation(fields: [listingId], references: [id])
+  application Application?  @relation(fields: [applicationId], references: [id])
+  client      User          @relation("PaymentsMade", fields: [clientId], references: [id])
+  provider    User          @relation("PaymentsReceived", fields: [providerId], references: [id])
+
+  @@map("payment")
 }
 
 model AgentConversation {

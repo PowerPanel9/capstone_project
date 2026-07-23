@@ -8,6 +8,21 @@
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const stripe = require("../utils/stripe");
+
+// Check whether a user has Stripe payouts enabled (for the "Payment verified"
+// badge). Returns false if they have no account or the check fails. Never
+// exposes the raw account id.
+async function computePaymentVerified(stripeAccountId) {
+  if (!stripeAccountId) return false;
+  try {
+    const account = await stripe.accounts.retrieve(stripeAccountId);
+    return Boolean(account.payouts_enabled);
+  } catch (err) {
+    console.error("Could not check payout status:", err.message);
+    return false;
+  }
+}
 
 // Valid listing categories from prisma/schema.prisma (ListingCategory enum).
 // Keeping this as plain strings avoids runtime crashes when enum exports differ
@@ -138,6 +153,14 @@ async function getListingById(req, res) {
 
     if (!listing) {
       return res.status(404).json({ error: "Listing not found" });
+    }
+
+    // Attach a public "paymentVerified" flag to the listing's owner (for the
+    // "Payment verified" badge on the detail view) and strip the raw account id.
+    if (listing.user) {
+      const { stripeAccountId, ...publicUser } = listing.user;
+      publicUser.paymentVerified = await computePaymentVerified(stripeAccountId);
+      listing.user = publicUser;
     }
 
     return res.status(200).json(listing);

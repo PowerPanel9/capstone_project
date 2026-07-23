@@ -1,0 +1,70 @@
+.connect-card {
+  border: 1px solid #D8DCF5;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.connect-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.connect-card-done {
+  flex-direction: row;
+  align-items: center;
+  background: #F0FDF4;
+  border-color: #86EFAC;
+  color: #166534;
+}
+
+.connect-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E2340;
+}
+
+.connect-card-done .connect-title {
+  color: #166534;
+}
+
+.connect-sub {
+  font-size: 12px;
+  color: #6B7280;
+  margin-top: 2px;
+}
+
+.connect-btn {
+  align-self: flex-start;
+  background: var(--primary, #7B8FC8);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.connect-btn:hover:not(:disabled) {
+  background: var(--primary-dark, #6678B8);
+}
+
+.connect-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.connect-error {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
