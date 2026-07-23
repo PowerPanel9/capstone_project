@@ -14,6 +14,7 @@ import LandingPage from './components/LandingPage/LandingPage';
 import AuthModal from './components/AuthModal/AuthModal';
 import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
+import ConnectReturn from './components/ConnectOnboarding/ConnectReturn';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
@@ -383,6 +384,9 @@ function App() {
           />
           <Route path="/auth/success" element={<AuthSuccess />} />
           <Route path="/auth/failure" element={<AuthFailure />} />
+          {/* Stripe Connect onboarding redirects land here. */}
+          <Route path="/connect/return" element={<ConnectReturn />} />
+          <Route path="/connect/refresh" element={<ConnectReturn />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       )}

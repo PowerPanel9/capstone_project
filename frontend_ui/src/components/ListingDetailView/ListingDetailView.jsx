@@ -144,7 +144,10 @@ function ListingDetailView({ listing, userMode, isOwner, onDelete, onMessage, on
               <div className="client-details">
                 <p><MapPin size={12} />{listingLocation}</p>
                 <p><Briefcase size={12} />8 jobs posted</p>
-                <p><Check size={12} />Payment verified</p>
+                {/* Only show when the client actually has Stripe payouts enabled. */}
+                {listing.user?.paymentVerified && (
+                  <p><Check size={12} />Payment verified</p>
+                )}
               </div>
             </div>
           </div>

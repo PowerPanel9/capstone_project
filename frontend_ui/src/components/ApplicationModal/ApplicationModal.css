@@ -141,3 +141,11 @@
   padding: 10px 12px;
   font-size: 13px;
 }
+
+/* Center an icon + label inside the submit button (e.g. success state). */
+.btn-with-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
