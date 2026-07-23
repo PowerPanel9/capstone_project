@@ -254,69 +254,47 @@
 /* Provider browse/search results (client mode). Circular avatar tiles laid out
    in a responsive grid: profile picture (or initials) on top, then the name,
    then up to 3 skills. */
-.provider-grid {
+.experience-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 16px;
+  row-gap: 32px;
 }
 
-.provider-tile {
+/* One experience card, Facebook Marketplace style: just the image with the
+   title in plain text below it — no card box or border. */
+.experience-grid-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 8px;
-  background: #fff;
-  border: 1px solid #E5E7EB;
-  border-radius: 16px;
-  padding: 20px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
   cursor: pointer;
   font-family: inherit;
-  transition: box-shadow 0.15s, transform 0.15s;
 }
 
-.provider-tile:hover {
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
-  transform: translateY(-2px);
-}
-
-/* The circular avatar. Shows the profile picture as a background image, or
-   falls back to the user's initials. */
-.provider-avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
+/* The cover image sits in a fixed-ratio box so every card lines up neatly. */
+.experience-grid-image {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
   background-color: #EEF2FF;
   background-size: cover;
   background-position: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--primary, #7B8FC8);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.2);
+  transition: opacity 0.15s;
 }
 
-.provider-tile-name {
+.experience-grid-card:hover .experience-grid-image {
+  opacity: 0.9;
+}
+
+.experience-grid-title {
   font-size: 14px;
-  font-weight: 700;
-  color: #1E2340;
-}
-
-.provider-tile-skills {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-}
-
-.provider-tile-skill {
-  font-size: 11px;
   font-weight: 600;
-  color: var(--primary, #7B8FC8);
-  background: #EEF2FF;
-  border-radius: 999px;
-  padding: 3px 10px;
+  color: #1E2340;
+  margin-top: 8px;
 }
 
 /* ===================================================================
@@ -336,11 +314,21 @@
     /* Single column now that the AI panel is gone. */
     display: block;
   }
+
+  /* Experiences drop from 4 columns to 2 so cards aren't too narrow. */
+  .experience-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Mobile: one listing card per row (matches App.css) and tighter feed spacing. */
 @media (max-width: 640px) {
   .listing-feed {
     column-count: 1;
+  }
+
+  /* Experiences go to a single column on phones. */
+  .experience-grid {
+    grid-template-columns: 1fr;
   }
 }

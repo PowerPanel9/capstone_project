@@ -10,6 +10,7 @@ import { getPaymentForListing, releasePayment } from "../../api/payments";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 import { formatCityState } from "../../utils/location";
 import { getReviewsForUser } from "../../api/reviews";
+import { getExperiencesByUser, createExperience } from "../../api/experiences";
 import {
   getMyApplications,
   getReceivedApplications,
@@ -24,6 +25,22 @@ const STATUS_LABELS = { PENDING: "Pending", ACCEPTED: "Accepted", REJECTED: "Rej
 import "./UserProfileView.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+// Category options for the experience form. `value` matches the backend
+// ListingCategory enum; `label` is the friendlier text the user sees. Same
+// list the "Post a Listing" form uses.
+const CATEGORY_OPTIONS = [
+  { value: "CLEANING", label: "Cleaning" },
+  { value: "TUTORING", label: "Tutoring" },
+  { value: "PLUMBING", label: "Plumbing" },
+  { value: "GARDENING", label: "Gardening" },
+  { value: "BEAUTY", label: "Beauty" },
+  { value: "BABYSITTING", label: "Babysitting" },
+  { value: "MOVING", label: "Moving" },
+  { value: "HANDYMAN", label: "Handyman" },
+  { value: "DELIVERY", label: "Delivery" },
+  { value: "OTHER", label: "Other" },
+];
 
 async function readJsonSafe(response) {
   const contentType = response.headers.get("content-type") || "";
@@ -44,7 +61,6 @@ function toDisplayName(value) {
 }
 
 function UserProfileView({ userMode, onToggleMode, onLogout }) {
-  const EXPERIENCES_STORAGE_PREFIX = "userProfileExperiences";
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All");
   const tabs =
@@ -68,6 +84,8 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
   const actionsMenuRef = useRef(null);
   const [experienceForm, setExperienceForm] = useState({
     jobTitle: "",
+    category: "CLEANING",
+    customCategory: "",
     description: "",
     images: [],
   });
@@ -247,31 +265,25 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     };
   }, [profile.id]);
 
+  // Load this user's experiences from the backend. `ignore` guards against a
+  // late response updating state after the profile changed or unmounted.
   useEffect(() => {
     if (!profile.id) return;
-    const storageKey = `${EXPERIENCES_STORAGE_PREFIX}:${profile.id}`;
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) {
-        setExperiences([]);
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      setExperiences(Array.isArray(parsed) ? parsed : []);
-    } catch (_error) {
-      setExperiences([]);
-    }
-  }, [profile.id]);
+    let ignore = false;
 
-  useEffect(() => {
-    if (!profile.id) return;
-    const storageKey = `${EXPERIENCES_STORAGE_PREFIX}:${profile.id}`;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(experiences));
-    } catch (_error) {
-      // Ignore storage write errors (private mode/full storage).
-    }
-  }, [profile.id, experiences]);
+    getExperiencesByUser(profile.id)
+      .then((list) => {
+        if (!ignore) setExperiences(list);
+      })
+      .catch((error) => {
+        console.error("Failed to load experiences:", error);
+        if (!ignore) setExperiences([]);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [profile.id]);
 
   const openEditModal = () => {
     setFormData({
@@ -388,6 +400,8 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     setExperienceSaveError("");
     setExperienceForm({
       jobTitle: "",
+      category: "CLEANING",
+      customCategory: "",
       description: "",
       images: [],
     });
@@ -428,9 +442,10 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     });
   };
 
-  const handleSaveExperience = () => {
+  const handleSaveExperience = async () => {
     const jobTitle = experienceForm.jobTitle.trim();
     const description = experienceForm.description.trim();
+    const customCategory = experienceForm.customCategory.trim();
 
     if (!jobTitle) {
       setExperienceSaveError("Job title is required.");
@@ -442,16 +457,29 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
       return;
     }
 
-    setExperiences((prev) => [
-      {
-        id: Date.now(),
+    // When "Other" is picked, require the free-text category (same as listings).
+    if (experienceForm.category === "OTHER" && !customCategory) {
+      setExperienceSaveError("Please enter a custom category.");
+      return;
+    }
+
+    try {
+      setExperienceSaveError("");
+      // Save to the backend. It returns the created experience (with its real
+      // database id), which we add to the top of the list so it shows right away.
+      const saved = await createExperience({
         jobTitle,
+        category: experienceForm.category,
+        customCategory: experienceForm.category === "OTHER" ? customCategory : null,
         description,
         images: experienceForm.images,
-      },
-      ...prev,
-    ]);
-    setIsExperienceModalOpen(false);
+      });
+      setExperiences((prev) => [saved, ...prev]);
+      setIsExperienceModalOpen(false);
+    } catch (error) {
+      console.error("Failed to save experience:", error);
+      setExperienceSaveError("Could not save experience. Please try again.");
+    }
   };
 
   const openListingDetails = (listingId) => {
@@ -1261,6 +1289,34 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               onChange={handleExperienceFieldChange}
               placeholder="Ex: Frontend Developer"
             />
+
+            <label className="modal-label" htmlFor="experience-category">Primary Category</label>
+            <select
+              id="experience-category"
+              name="category"
+              value={experienceForm.category}
+              onChange={handleExperienceFieldChange}
+            >
+              {CATEGORY_OPTIONS.map((cat) => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </select>
+
+            {/* Custom category text box — only shown when "Other" is picked */}
+            {experienceForm.category === "OTHER" && (
+              <>
+                <label className="modal-label" htmlFor="experience-custom-category">
+                  Custom Category
+                </label>
+                <input
+                  id="experience-custom-category"
+                  name="customCategory"
+                  value={experienceForm.customCategory}
+                  onChange={handleExperienceFieldChange}
+                  placeholder="Ex: Dog Walking"
+                />
+              </>
+            )}
 
             <label className="modal-label" htmlFor="experience-description">Description</label>
             <textarea
