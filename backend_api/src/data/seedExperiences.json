@@ -1,0 +1,69 @@
+[
+  {
+    "poster": { "firstName": "Alex", "lastName": "Rivera" },
+    "jobTitle": "Kitchen Faucet Replacement",
+    "category": "PLUMBING",
+    "description": "Replaced a leaking kitchen faucet and cleaned up the old corroded fittings. The homeowner now has a modern pull-down sprayer with no drips.",
+    "images": [
+      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=900&h=900&fit=crop",
+      "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=900&h=900&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Alex", "lastName": "Rivera" },
+    "jobTitle": "Custom Built-In Shelving",
+    "category": "HANDYMAN",
+    "description": "Designed and built floor-to-ceiling shelving for a living room. Sanded, stained, and mounted everything level to the wall.",
+    "images": [
+      "https://images.unsplash.com/photo-1594620302200-9a762244a156?w=900&h=900&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Jamie", "lastName": "Thompson" },
+    "jobTitle": "Deep Clean for Move-Out",
+    "category": "CLEANING",
+    "description": "Full move-out deep clean of a two-bedroom apartment: baseboards, appliances, windows, and floors. Client got their full deposit back.",
+    "images": [
+      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=900&h=900&fit=crop",
+      "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=900&h=900&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Taylor", "lastName": "Kim" },
+    "jobTitle": "Backyard Garden Makeover",
+    "category": "GARDENING",
+    "description": "Cleared an overgrown backyard, laid fresh mulch, and planted a mix of native flowers and vegetables. Added a small stone path through the beds.",
+    "images": [
+      "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=900&h=900&fit=crop",
+      "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=900&h=900&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Morgan", "lastName": "Davis" },
+    "jobTitle": "Bridal Hair & Makeup",
+    "category": "BEAUTY",
+    "description": "Did hair and makeup for a bride and three bridesmaids on the morning of the wedding. Soft glam look that lasted all day and night.",
+    "images": [
+      "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=900&h=900&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Casey", "lastName": "Martinez" },
+    "jobTitle": "Math Tutoring Session",
+    "category": "TUTORING",
+    "description": "Weekly algebra tutoring for a high-school student. We worked through quadratic equations and their upcoming exam prep together.",
+    "images": [
+      "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=900&h=900&fit=crop",
+      "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=900&h=900&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Riley", "lastName": "Patel" },
+    "jobTitle": "Local Furniture Move",
+    "category": "MOVING",
+    "description": "Helped a client move a couch, bed frame, and boxes across town. Wrapped and padded everything so nothing got scratched in transit.",
+    "images": [
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=900&h=900&fit=crop"
+    ]
+  }
+]

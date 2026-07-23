@@ -1,0 +1,67 @@
+.experience-detail {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 0 40px;
+}
+
+/* "Back to home" link at the top, styled like the category-back button. */
+.experience-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--primary, #7B8FC8);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 16px;
+}
+
+.experience-detail-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1E2340;
+  margin: 0 0 8px;
+}
+
+/* The poster's name — a button that navigates to their profile. */
+.experience-detail-poster {
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 20px;
+  color: var(--primary, #7B8FC8);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.experience-detail-poster:hover {
+  text-decoration: underline;
+}
+
+.experience-detail-description {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #374151;
+  margin: 0 0 24px;
+  white-space: pre-wrap;
+}
+
+/* Images stack vertically, each filling the column width. */
+.experience-detail-images {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.experience-detail-images img {
+  width: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+}

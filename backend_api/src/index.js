@@ -12,6 +12,7 @@ const agentRoutes = require("./routes/agentRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const reviewsRoutes = require("./routes/reviewsRoutes");
 const applicationsRoutes = require("./routes/applicationsRoutes");
+const experienceRoutes = require("./routes/experienceRoute");
 const app = express();
 const PORT = process.env.PORT || 3000;
 // Middleware
@@ -40,6 +41,7 @@ app.use("/api/agent", agentRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/applications", applicationsRoutes);
+app.use("/api/experiences", experienceRoutes);
 
 // Start the server
 app.listen(PORT, () => {

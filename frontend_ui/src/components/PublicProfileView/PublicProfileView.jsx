@@ -6,6 +6,7 @@ import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
 import { getUserById } from "../../api/users";
 import { getListings } from "../../api/listings";
 import { getReviewsForUser } from "../../api/reviews";
+import { getExperiencesByUser } from "../../api/experiences";
 import { fullName } from "../../utils/user";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 // Reuse the same styles as the logged-in user's profile so this read-only
@@ -28,15 +29,13 @@ function PublicProfileView({ currentUser }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const EXPERIENCES_STORAGE_PREFIX = "userProfileExperiences";
-
   const [userListings, setUserListings] = useState([]);
   const [isLoadingListings, setIsLoadingListings] = useState(false);
   const [listingsError, setListingsError] = useState("");
 
-  // Experiences are read-only here. They are saved in the profile OWNER's
-  // browser (localStorage), so a viewer only sees them when looking at the
-  // same browser that created them. A backend (AWS S3) will replace this later.
+  // Experiences are read-only here. They come from the backend database (the
+  // same endpoint the owner's own profile uses), so anyone viewing this profile
+  // sees the experiences this user posted.
   const [experiences, setExperiences] = useState([]);
 
   const [showReviews, setShowReviews] = useState(false);
@@ -128,17 +127,22 @@ function PublicProfileView({ currentUser }) {
     return () => { ignore = true; };
   }, [userId, showReviews]);
 
-  // Read this user's saved experiences from localStorage (owner's browser only).
+  // Load this user's experiences from the backend. `ignore` guards against a
+  // late response updating state after the user changed or we unmounted.
   useEffect(() => {
     if (!userId) return;
-    const storageKey = `${EXPERIENCES_STORAGE_PREFIX}:${userId}`;
-    try {
-      const raw = localStorage.getItem(storageKey);
-      const parsed = raw ? JSON.parse(raw) : [];
-      setExperiences(Array.isArray(parsed) ? parsed : []);
-    } catch (_error) {
-      setExperiences([]);
-    }
+    let ignore = false;
+
+    getExperiencesByUser(userId)
+      .then((list) => {
+        if (!ignore) setExperiences(list);
+      })
+      .catch((err) => {
+        console.error("Failed to load experiences:", err);
+        if (!ignore) setExperiences([]);
+      });
+
+    return () => { ignore = true; };
   }, [userId]);
 
   const openListingDetails = (listingId) => {

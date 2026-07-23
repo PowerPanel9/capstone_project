@@ -69,8 +69,25 @@ model User {
   messagesReceived  Message[] @relation("MessagesReceived")
   applications      Application[] // Applications this user (as provider) submitted
   agentConversations AgentConversation[]
+  experiences       Experience[] // Experiences this user posted
 
   @@map("user")
+}
+
+model Experience {
+  id             Int             @id @default(autoincrement())
+  userId         Int             @map("user_id") // Who posted the experience (FK -> user)
+  jobTitle       String          @map("job_title") // Short title/header of the experience
+  category       ListingCategory @default(OTHER) // Primary category (reuses the listing categories)
+  customCategory String?         @map("custom_category") // Free-text category, only used when category = OTHER
+  description    String // Longer write-up of the experience
+  images         String[] // Base64 image data URLs attached to the experience
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("experience")
 }
 
 model Listing {
