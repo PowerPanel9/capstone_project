@@ -8,6 +8,7 @@ import { getOnboardingStatus } from "../../api/connect";
 import { getListingsByUser, updateListing } from "../../api/listings";
 import { getPaymentForListing, releasePayment } from "../../api/payments";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
+import { formatCityState } from "../../utils/location";
 import { getReviewsForUser } from "../../api/reviews";
 import { getMyApplications, getReceivedApplications } from "../../api/applications";
 import ApplicationDetailModal from "../ApplicationDetailModal/ApplicationDetailModal";

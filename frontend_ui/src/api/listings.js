@@ -93,3 +93,14 @@ export async function updateListing(id, updates) {
   });
   return response.data;
 }
+
+// DELETE /api/listings/:id -> delete one listing.
+// This route is protected and owner-only, so we send the logged-in user's
+// token. The backend checks that the token's user owns the listing.
+export async function deleteListing(id) {
+  const token = localStorage.getItem("token");
+  const response = await api.delete(`/api/listings/${id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return response.data;
+}
