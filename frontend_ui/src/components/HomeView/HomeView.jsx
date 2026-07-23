@@ -12,10 +12,10 @@ function prettyCategory(value) {
   return value.charAt(0) + value.slice(1).toLowerCase();
 }
 
-function HomeView({ listings, providers = [], showProviders = false, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoading, isLoadingMore, usePersonalized, category, showCategories }) {
+function HomeView({ listings, experiences = [], showExperiences = false, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoading, isLoadingMore, usePersonalized, category, showCategories }) {
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
-  const safeProviders = Array.isArray(providers) ? providers : [];
+  const safeExperiences = Array.isArray(experiences) ? experiences : [];
 
   // Whether the docked AI chat panel on the right is open. Starts open; the
   // panel's X closes it, and a floating button reopens it.
@@ -56,9 +56,9 @@ function HomeView({ listings, providers = [], showProviders = false, bookmarks, 
       )}
 
       <div className="feed-header">
-        {showProviders ? (
-          // Client mode: the feed shows providers, not listings.
-          <span className="feed-title">Providers</span>
+        {showExperiences ? (
+          // Client mode: the feed shows a grid of posted experiences.
+          <span className="feed-title">Experiences</span>
         ) : category ? (
           // Browsing a specific category.
           <span className="feed-title">{prettyCategory(category)} listings</span>
@@ -79,47 +79,36 @@ function HomeView({ listings, providers = [], showProviders = false, bookmarks, 
           (under the header) rather than at the top of the page. */}
       {isLoading && (
         <p className="feed-status">
-          {showProviders ? "Loading providers…" : "Loading listings…"}
+          {showExperiences ? "Loading experiences…" : "Loading listings…"}
         </p>
       )}
 
-      {showProviders ? (
-        // Client mode: show providers as circular avatar cards. Clicking one
-        // opens that provider's public profile.
-        <div className="provider-grid">
-          {safeProviders.length === 0 ? (
-            <p className="feed-status">No providers found</p>
+      {showExperiences ? (
+        // Client mode: show a grid of posted experiences. Each card shows the
+        // first image, the job title, and who posted it. Clicking a card opens
+        // that experience's detail page.
+        <div className="experience-grid">
+          {safeExperiences.length === 0 ? (
+            <p className="feed-status">No experiences yet</p>
           ) : (
-            safeProviders.map((provider) => {
-              const name =
-                `${provider.firstName || ""} ${provider.lastName || ""}`.trim() || "Unknown";
-              const initials =
-                `${(provider.firstName?.[0] || "")}${(provider.lastName?.[0] || "")}`.toUpperCase() || "?";
-              const picture =
-                typeof provider.profilePicture === "string" ? provider.profilePicture.trim() : "";
-              const skills = Array.isArray(provider.skills) ? provider.skills.slice(0, 3) : [];
+            safeExperiences.map((experience) => {
+              const cover =
+                Array.isArray(experience.images) && experience.images.length > 0
+                  ? experience.images[0]
+                  : "";
 
               return (
                 <button
                   type="button"
-                  className="provider-tile"
-                  key={provider.id}
-                  onClick={() => navigate(`/users/${provider.id}`)}
+                  className="experience-grid-card"
+                  key={experience.id}
+                  onClick={() => navigate(`/experiences/${experience.id}`)}
                 >
                   <div
-                    className="provider-avatar"
-                    style={picture ? { backgroundImage: `url("${picture}")` } : undefined}
-                  >
-                    {!picture && initials}
-                  </div>
-                  <div className="provider-tile-name">{name}</div>
-                  {skills.length > 0 && (
-                    <div className="provider-tile-skills">
-                      {skills.map((skill) => (
-                        <span key={skill} className="provider-tile-skill">{skill}</span>
-                      ))}
-                    </div>
-                  )}
+                    className="experience-grid-image"
+                    style={cover ? { backgroundImage: `url("${cover}")` } : undefined}
+                  />
+                  <div className="experience-grid-title">{experience.jobTitle}</div>
                 </button>
               );
             })

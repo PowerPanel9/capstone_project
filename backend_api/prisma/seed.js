@@ -38,6 +38,10 @@ const seedReviews = JSON.parse(
   fs.readFileSync(path.join(dataDir, "seedReviews.json"), "utf-8")
 );
 
+const seedExperiences = JSON.parse(
+  fs.readFileSync(path.join(dataDir, "seedExperiences.json"), "utf-8")
+);
+
 // Turn poster info into email for lookups
 function seedEmail(poster) {
   return `${poster.firstName}.${poster.lastName}@seed.local`.toLowerCase();
@@ -62,6 +66,7 @@ async function main() {
   if (seedUserIds.length > 0) {
     // Delete related data first (foreign key constraints)
     await prisma.agentConversation.deleteMany({ where: { userId: { in: seedUserIds } } });
+    await prisma.experience.deleteMany({ where: { userId: { in: seedUserIds } } });
     await prisma.message.deleteMany({
       where: {
         OR: [
@@ -300,6 +305,30 @@ async function main() {
     });
 
     console.log(`  + ${reviewer.firstName} reviewed ${reviewee.firstName} (${rev.stars}★)`);
+  }
+
+  // ----- Create experiences -----
+  console.log("\nCreating experiences...");
+  for (const exp of seedExperiences) {
+    // Look up the poster by their seed email (e.g. alex.rivera@seed.local).
+    const poster = await resolveUser(seedEmail(exp.poster));
+
+    if (!poster) {
+      console.warn(`  ! Experience poster not found: ${exp.poster.firstName} ${exp.poster.lastName}`);
+      continue;
+    }
+
+    await prisma.experience.create({
+      data: {
+        userId: poster.id,
+        jobTitle: exp.jobTitle,
+        category: exp.category || "OTHER",
+        description: exp.description,
+        images: Array.isArray(exp.images) ? exp.images : [],
+      },
+    });
+
+    console.log(`  + "${exp.jobTitle}" (by ${poster.firstName})`);
   }
 
   console.log("\n✅ Seeding complete!");
