@@ -15,6 +15,7 @@ import LandingPage from './components/LandingPage/LandingPage';
 import AuthModal from './components/AuthModal/AuthModal';
 import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
+import ConnectReturn from './components/ConnectOnboarding/ConnectReturn';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getExperiences } from './api/experiences';
 import { getListings, getListingById, deleteListing } from './api/listings';
@@ -426,6 +427,9 @@ function App() {
           />
           <Route path="/auth/success" element={<AuthSuccess />} />
           <Route path="/auth/failure" element={<AuthFailure />} />
+          {/* Stripe Connect onboarding redirects land here. */}
+          <Route path="/connect/return" element={<ConnectReturn />} />
+          <Route path="/connect/refresh" element={<ConnectReturn />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       )}
@@ -741,6 +745,20 @@ function BookmarksPage({ bookmarks, onBookmark }) {
 
   if (isLoading) return <p className="feed-status">Loading bookmarks…</p>;
 
+  // When there are no bookmarks, show the empty state on its own (outside the
+  // masonry column layout) so it centers across the full page width.
+  if (savedListings.length === 0) {
+    return (
+      <div className="home-wrap">
+        <div className="empty-state">
+          <Bookmark size={32} />
+          <p>No bookmarks yet</p>
+          <small>Save listings to find them here</small>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="home-wrap">
       <div className="listing-feed">
@@ -754,13 +772,6 @@ function BookmarksPage({ bookmarks, onBookmark }) {
             userMode="client"
           />
         ))}
-        {savedListings.length === 0 && (
-          <div className="empty-state">
-            <Bookmark size={32} />
-            <p>No bookmarks yet</p>
-            <small>Save listings to find them here</small>
-          </div>
-        )}
       </div>
     </div>
   );

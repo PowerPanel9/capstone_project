@@ -256,8 +256,9 @@
    then up to 3 skills. */
 .experience-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 16px;
+  row-gap: 32px;
 }
 
 /* One experience card, Facebook Marketplace style: just the image with the
@@ -276,11 +277,12 @@
 /* The cover image sits in a fixed-ratio box so every card lines up neatly. */
 .experience-grid-image {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 12px;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
   background-color: #EEF2FF;
   background-size: cover;
   background-position: center;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.2);
   transition: opacity 0.15s;
 }
 
@@ -312,11 +314,21 @@
     /* Single column now that the AI panel is gone. */
     display: block;
   }
+
+  /* Experiences drop from 4 columns to 2 so cards aren't too narrow. */
+  .experience-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Mobile: one listing card per row (matches App.css) and tighter feed spacing. */
 @media (max-width: 640px) {
   .listing-feed {
     column-count: 1;
+  }
+
+  /* Experiences go to a single column on phones. */
+  .experience-grid {
+    grid-template-columns: 1fr;
   }
 }

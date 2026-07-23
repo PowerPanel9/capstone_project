@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MapPin, ChevronLeft, Briefcase } from "lucide-react";
+import { MapPin, ChevronLeft, Briefcase, Check } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
 import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
 import { getUserById } from "../../api/users";
@@ -222,7 +222,16 @@ function PublicProfileView({ currentUser }) {
             </div>
             {/* No toggle or Edit button here — this is someone else's profile. */}
           </div>
-          <h1 className="profile-name">{fullName(user)}</h1>
+          <div className="profile-name-row">
+            <h1 className="profile-name">{fullName(user)}</h1>
+            {/* Lets clients see the provider has Stripe payouts enabled. */}
+            {user.paymentVerified && (
+              <span className="payment-verified">
+                <Check size={13} />
+                Payment verified
+              </span>
+            )}
+          </div>
           <div className="profile-sub">
             <MapPin size={13} />
             {displayLocation} · Provider

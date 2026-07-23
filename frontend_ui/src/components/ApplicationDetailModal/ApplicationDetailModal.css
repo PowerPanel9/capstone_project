@@ -223,3 +223,23 @@
   color: #6B7280;
   padding: 8px 0;
 }
+
+/* Pay button shown after an application is accepted */
+.app-btn-pay {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  background: linear-gradient(to right, #8B9FD4, #9BAEE0);
+  color: #fff;
+}
+
+.app-detail-paid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #166534;
+}

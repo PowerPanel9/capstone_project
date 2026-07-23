@@ -7,7 +7,7 @@ import axios from "axios";
 
 // The backend base URL comes from the .env file (VITE_API_URL).
 // Example: http://localhost:3000
-const API_URL = import.meta.env.VITE_API_URL || "https://side-hustle-xw5e.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // A shared axios instance pointed at our backend.
 const api = axios.create({

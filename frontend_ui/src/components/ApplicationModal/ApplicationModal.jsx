@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { applyToListing } from '../../api/applications';
 import './ApplicationModal.css';
 
@@ -100,7 +100,9 @@ function ApplicationModal({ listing, currentUser, onClose, onSuccess }) {
             onClick={handleSubmit}
             disabled={isSubmitting || done}
           >
-            {done ? "✓ Application sent!" : isSubmitting ? "Submitting…" : "Submit Application"}
+            {done ? (
+              <span className="btn-with-icon"><Check size={15} /> Application sent!</span>
+            ) : isSubmitting ? "Submitting…" : "Submit Application"}
           </button>
         </div>
       </div>

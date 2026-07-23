@@ -1,6 +1,7 @@
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 const { forwardGeocode, reverseGeocode } = require('../utils/geocoder');
+const stripe = require('../utils/stripe');
 
 const userProfileSelect = {
     id: true,
@@ -17,6 +18,7 @@ const userProfileSelect = {
     imageUrl: true,
     resumeUrl: true,
     certificationUrl: true,
+    stripeAccountId: true,
 };
 
 const legacyUserProfileSelect = {
@@ -31,6 +33,7 @@ const legacyUserProfileSelect = {
     imageUrl: true,
     resumeUrl: true,
     certificationUrl: true,
+    stripeAccountId: true,
 };
 
 function isUnknownPrismaFieldError(error) {
@@ -227,12 +230,27 @@ const getUserById = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
+        // Compute a public "paymentVerified" flag: true if this user has a Stripe
+        // account with payouts enabled. We check Stripe live only when an account
+        // id exists, and never expose the raw stripeAccountId to clients.
+        const { stripeAccountId, ...publicUser } = user;
+        let paymentVerified = false;
+        if (stripeAccountId) {
+            try {
+                const account = await stripe.accounts.retrieve(stripeAccountId);
+                paymentVerified = Boolean(account.payouts_enabled);
+            } catch (stripeErr) {
+                console.error("Could not check payout status for user", id, stripeErr.message);
+            }
+        }
+
         res.status(200).json(
             withCityState({
                 contactEmail: "",
                 phoneNumber: "",
                 mailingAddress: "",
-                ...user,
+                ...publicUser,
+                paymentVerified,
             })
         );
     } catch (error) {
