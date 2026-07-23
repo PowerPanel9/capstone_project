@@ -130,6 +130,82 @@ const getUsers = async (req, res) => {
         res.status(500).json({ message: "Error fetching users" });
     }
 };
+
+// Only the public fields the "browse providers" cards need. This keeps
+// private data (password, email, address, phone) out of the response.
+const providerCardSelect = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    profilePicture: true,
+    imageUrl: true,
+    skills: true,
+};
+
+// Get a randomized list of providers for the client-mode home feed.
+// For now every user is treated as a provider. Later, when users can choose to
+// be a provider or a client, we'll filter on that flag here.
+// Optionally excludes the logged-in user via ?excludeId=<id>.
+const getProviders = async (req, res) => {
+    try {
+        const excludeId = Number(req.query.excludeId);
+        const where =
+            Number.isInteger(excludeId) && excludeId > 0
+                ? { id: { not: excludeId } }
+                : {};
+
+        const users = await prisma.user.findMany({
+            where,
+            select: providerCardSelect,
+        });
+
+        // Shuffle so the feed shows different providers each time (Fisher–Yates).
+        for (let i = users.length - 1; i > 0; i -= 1) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [users[i], users[j]] = [users[j], users[i]];
+        }
+
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("getProviders error:", error);
+        res.status(500).json({ message: "Error fetching providers" });
+    }
+};
+// Search users by name. Returns a LIST of every user whose first OR last name
+// contains the search text (case-insensitive). An empty list just means no
+// matches were found, so the frontend can show a "no results" message.
+const getUserByName = async (req, res) => {
+    try {
+        const {name} = req.params;
+        const where = {
+            OR: [
+                {firstName: {contains: name, mode: 'insensitive'}},
+                {lastName: {contains: name, mode: 'insensitive'}},
+            ]
+        };
+
+        let users;
+        try {
+            users = await prisma.user.findMany({
+                where,
+                select: userProfileSelect,
+                orderBy: { firstName: 'asc' },
+            });
+        } catch (selectError) {
+            if (!isUnknownPrismaFieldError(selectError)) throw selectError;
+            users = await prisma.user.findMany({
+                where,
+                select: legacyUserProfileSelect,
+                orderBy: { firstName: 'asc' },
+            });
+        }
+
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("getUserByName error:", error);
+        res.status(500).json({ message: "Error fetching users" });
+    }
+};
 const getUserById = async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -301,6 +377,8 @@ const updateUser = async (req, res) => {
 
 module.exports = {
     getUsers,
+    getProviders,
     getUserById,
+    getUserByName,
     updateUser,
 };

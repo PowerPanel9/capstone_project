@@ -170,6 +170,15 @@
   background: var(--primary-dark, #6678B8);
 }
 
+/* Disabled "Applied" state: greyed out and not clickable so the provider
+   can see they've already applied and can't apply again. */
+.apply-btn-applied,
+.apply-btn-applied:hover {
+  background: #E5E7EB;
+  color: #6B7280;
+  cursor: default;
+}
+
 /* Apply + Message sit side by side, Message to the right of Apply. */
 .detail-actions {
   display: flex;
@@ -257,6 +266,13 @@
   border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
+}
+
+/* Muted "None" text shown when a listing has no required skills. */
+.skill-tag-none {
+  color: #9CA3AF;
+  font-size: 14px;
+  font-style: italic;
 }
 
 .client-card {

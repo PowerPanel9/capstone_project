@@ -16,9 +16,11 @@ import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
 import ConnectReturn from './components/ConnectOnboarding/ConnectReturn';
 import ListingCard from './components/ListingCard/ListingCard';
+import { getUsersByName, getProviders } from './api/users';
 import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
+import { getMyApplications } from './api/applications';
 import { getUsers as getMessageUsers } from './api/messages';
 import { Bookmark } from 'lucide-react';
 import './App.css';
@@ -31,11 +33,16 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyListing, setApplyListing] = useState(null); // the listing being applied to
+  // Listing ids the user has just applied to during this session. We use this
+  // to instantly flip the "Apply Now" button to "Applied" without a reload.
+  const [appliedListingIds, setAppliedListingIds] = useState([]);
   const [showAIModal, setShowAIModal] = useState(false);
   // Text to prefill the AI chat box with (used when "Ask AI" is clicked with a
   // typed query). Empty string means open the modal with a blank box.
   const [aiInitialMessage, setAiInitialMessage] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Sidebar starts open on desktop, but closed on tablet/mobile (≤1024px) so it
+  // doesn't cover the page on load. On small screens it opens as an overlay.
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
   const [messagesComposerOpen, setMessagesComposerOpen] = useState(false);
   const [messagesPeopleSearch, setMessagesPeopleSearch] = useState("");
   const [messagesDirectoryUsers, setMessagesDirectoryUsers] = useState([]);
@@ -211,7 +218,7 @@ function App() {
       {showMainLayout ? (
         // Main app layout with sidebar and topbar
         <div className={`app ${userMode}-mode`}>
-          <aside className="sidebar" style={{ width: sidebarOpen ? 256 : 0 }}>
+          <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
             <Sidebar
               currentUser={currentUser}
               userMode={userMode}
@@ -220,9 +227,21 @@ function App() {
             />
           </aside>
 
+          {/* Dark backdrop behind the sidebar when it's open as an overlay on
+              tablet/mobile. Tapping it closes the sidebar. Hidden on desktop
+              via CSS (the sidebar isn't an overlay there). */}
+          {sidebarOpen && (
+            <div
+              className="sidebar-backdrop"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+
           <div className="main">
             <TopBar
               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+              onLogout={handleLogout}
+              userMode={userMode}
               messagesComposerOpen={messagesComposerOpen}
               onToggleMessagesComposer={() => {
                 setMessagesComposerOpen((prev) => {
@@ -248,7 +267,7 @@ function App() {
                   path="/home"
                   element={
                     isAuthenticated ? (
-                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} userMode={userMode} onOpenAI={openAI} />
+                      <HomePage bookmarks={bookmarks} onBookmark={toggleBookmark} userMode={userMode} onOpenAI={openAI} currentUserId={currentUserId} />
                     ) : (
                       <Navigate to="/" replace />
                     )
@@ -261,10 +280,13 @@ function App() {
                     isAuthenticated ? (
                       <ListingDetailPage
                         userMode={userMode}
+                        appliedListingIds={appliedListingIds}
                         onApply={(listing) => {
                           setApplyListing(listing);
                           setShowApplyModal(true);
                         }}
+                        onMessageUser={setMessagesStartUser}
+                        onMessageListing={setMessagesStartListing}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -360,6 +382,15 @@ function App() {
               listing={applyListing}
               currentUser={currentUser}
               onClose={() => setShowApplyModal(false)}
+              onSuccess={() => {
+                // Remember this listing as applied so its button flips to
+                // "Applied" right away, without needing a page reload.
+                if (applyListing?.id != null) {
+                  setAppliedListingIds((prev) =>
+                    prev.includes(applyListing.id) ? prev : [...prev, applyListing.id]
+                  );
+                }
+              }}
             />
           )}
 
@@ -405,9 +436,10 @@ function App() {
 }
 
 // Home Page Component
-function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
+function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) {
   const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
+  const [providers, setProviders] = useState([]); // provider cards (browse or search)
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);   // first page / new search
@@ -419,6 +451,14 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
   const search = searchParams.get('search') || '';
   const category = searchParams.get('category') || '';
 
+  // In client mode the home feed shows PROVIDERS instead of listings:
+  //   - empty search box  -> browse a random list of providers
+  //   - typed search text -> providers whose name matches
+  // In provider mode we always show the normal listings feed.
+  const showProviders = userMode === 'client';
+  const isSearching = showProviders && search.trim() !== '';
+
+  // When the mode or search changes, load fresh results.
   // The landing page (no category chosen, no search) shows category tiles plus
   // a "Recommended for you" strip. Once a category is picked, we switch to the
   // normal feed filtered by that category.
@@ -434,9 +474,34 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
     setIsLoading(true);
     setError(null);
 
-    // Try the personalized feed first for providers. If it fails (or isn't
-    // personalized), we fall back to the normal newest-first feed so the home
-    // page always shows something.
+    // Client mode: the home feed shows PROVIDERS instead of listings. We either
+    // search providers by name or browse a random set. Both return the full
+    // list at once, so there are no extra pages to load.
+    if (showProviders) {
+      const request = isSearching
+        ? getUsersByName(search)
+        : getProviders(currentUserId);
+
+      request
+        .then((users) => {
+          if (ignore) return;
+          setProviders(users);
+          setHasMore(false);
+        })
+        .catch((err) => {
+          console.error("Failed to load providers:", err);
+          if (!ignore) setError("Could not load providers. Is the backend running?");
+        })
+        .finally(() => {
+          if (!ignore) setIsLoading(false);
+        });
+
+      return () => { ignore = true; };
+    }
+
+    // Provider mode, landing page: try the personalized AI-ranked feed first.
+    // If it fails (or isn't personalized), fall back to the normal newest-first
+    // feed so the home page always shows something.
     if (usePersonalized) {
       getRecommendedListings()
         .then((data) => {
@@ -469,6 +534,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
       return () => { ignore = true; };
     }
 
+    // Provider mode, browsing a category or searching: the plain listings feed.
     setPersonalized(false); // normal feed is not AI-ranked
     getListings({ search, category, page: 1 })
       .then((data) => {
@@ -486,13 +552,14 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
       });
 
     return () => { ignore = true; };
-  }, [search, category, usePersonalized]);
+  }, [search, category, showProviders, isSearching, usePersonalized, currentUserId]);
 
   // Load the next page and append it to the list. Called when the user scrolls
   // to the bottom. Guarded so we don't fire while a load is already happening
   // or when there's nothing left to load.
   const loadMore = () => {
     if (isLoading || isLoadingMore || !hasMore) return;
+    if (showProviders) return; // providers are returned all at once
 
     const nextPage = page + 1;
     setIsLoadingMore(true);
@@ -508,18 +575,26 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
 
   return (
     <>
-      {isLoading && <p className="feed-status">Loading listings…</p>}
+      {isLoading && (
+        <p className="feed-status">
+          {showProviders ? "Loading providers…" : "Loading listings…"}
+        </p>
+      )}
       {error && <p className="feed-status feed-error">{error}</p>}
       <HomeView
         listings={listings}
+        providers={providers}
+        showProviders={showProviders}
         bookmarks={bookmarks}
         onBookmark={onBookmark}
         userMode={userMode}
         onOpenAI={onOpenAI}
         onLoadMore={loadMore}
         hasMore={hasMore}
+        isLoading={isLoading}
         isLoadingMore={isLoadingMore}
         personalized={personalized}
+        usePersonalized={usePersonalized}
         category={category}
         showCategories={isLanding}
       />
@@ -528,7 +603,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI }) {
 }
 
 // Listing Detail Page Component
-function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing }) {
+function ListingDetailPage({ userMode, appliedListingIds = [], onApply, onMessageUser, onMessageListing }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -538,6 +613,9 @@ function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing 
   const [listing, setListing] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Whether the logged-in user has already applied to this listing (checked
+  // against the server on load). Used to show "Applied" instead of "Apply Now".
+  const [appliedFromServer, setAppliedFromServer] = useState(false);
 
   useEffect(() => {
     getListingById(id)
@@ -547,6 +625,22 @@ function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing 
         setError("Could not load listing details.");
       })
       .finally(() => setIsLoading(false));
+  }, [id]);
+
+  // Ask the backend which listings this user already applied to, then check if
+  // the current listing is one of them. This keeps "Applied" correct even after
+  // a page reload (App-level state resets, but the server remembers).
+  useEffect(() => {
+    getMyApplications()
+      .then((applications) => {
+        const alreadyApplied = applications.some(
+          (application) => Number(application.listingId) === Number(id)
+        );
+        setAppliedFromServer(alreadyApplied);
+      })
+      .catch((err) => {
+        console.error("Failed to load your applications:", err);
+      });
   }, [id]);
 
   // Work out if the logged-in user owns this listing. The user object was
@@ -589,12 +683,21 @@ function ListingDetailPage({ userMode, onApply, onMessageUser, onMessageListing 
   if (error) return <p className="feed-status feed-error">{error}</p>;
   if (!listing) return <p className="feed-status feed-error">Listing not found</p>;
 
+  // The user has applied if the server says so OR they just applied in this
+  // session (the App tracks that in appliedListingIds for an instant update).
+  const hasApplied =
+    appliedFromServer || appliedListingIds.some((appliedId) => Number(appliedId) === Number(id));
+
   return (
     <ListingDetailView
       listing={listing}
       userMode={userMode}
+      isOwner={isOwner}
+      hasApplied={hasApplied}
       onBack={() => navigate(-1)}
       onApply={() => onApply(listing)}
+      onDelete={handleDelete}
+      onMessage={handleMessage}
     />
   );
 }
@@ -630,6 +733,20 @@ function BookmarksPage({ bookmarks, onBookmark }) {
 
   if (isLoading) return <p className="feed-status">Loading bookmarks…</p>;
 
+  // When there are no bookmarks, show the empty state on its own (outside the
+  // masonry column layout) so it centers across the full page width.
+  if (savedListings.length === 0) {
+    return (
+      <div className="home-wrap">
+        <div className="empty-state">
+          <Bookmark size={32} />
+          <p>No bookmarks yet</p>
+          <small>Save listings to find them here</small>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="home-wrap">
       <div className="listing-feed">
@@ -640,16 +757,9 @@ function BookmarksPage({ bookmarks, onBookmark }) {
             bookmarked={true}
             onBookmark={() => onBookmark(listing.id)}
             onClick={() => navigate(`/listing/${listing.id}`)}
-            userMode="provider"
+            userMode="client"
           />
         ))}
-        {savedListings.length === 0 && (
-          <div className="empty-state">
-            <Bookmark size={32} />
-            <p>No bookmarks yet</p>
-            <small>Save listings to find them here</small>
-          </div>
-        )}
       </div>
     </div>
   );

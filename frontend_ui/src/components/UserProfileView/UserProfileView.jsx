@@ -10,7 +10,11 @@ import { getPaymentForListing, releasePayment } from "../../api/payments";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 import { formatCityState } from "../../utils/location";
 import { getReviewsForUser } from "../../api/reviews";
-import { getMyApplications, getReceivedApplications } from "../../api/applications";
+import {
+  getMyApplications,
+  getReceivedApplications,
+  getRankedApplicationsForListing,
+} from "../../api/applications";
 import ApplicationDetailModal from "../ApplicationDetailModal/ApplicationDetailModal";
 // Brings in .app-status / .status-* badge styles used on the application cards.
 import "../ApplicationDetailModal/ApplicationDetailModal.css";
@@ -660,6 +664,15 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
   // The application a client clicked to view in detail (client view).
   const [selectedApplication, setSelectedApplication] = useState(null);
 
+  // How each listing group is sorted. Keyed by listingId; defaults to "recent".
+  // Values: "recent" | "ai" | "alpha".
+  const [sortModes, setSortModes] = useState({});
+  // Cached AI rankings, keyed by listingId so we only ask the AI once per listing.
+  // rankings[listingId] = { order: [providerId...], reasons: {providerId: text}, aiRanked: bool }
+  const [rankings, setRankings] = useState({});
+  // Which listing is currently loading its AI ranking (so we can show a loading state).
+  const [rankingListingId, setRankingListingId] = useState(null);
+
   useEffect(() => {
     getMyApplications()
       .then((apps) =>
@@ -688,6 +701,44 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
       )
       .catch((err) => console.error("Failed to load received applications:", err));
   }, [applicationsRefresh]);
+
+  // The user picked a sort option for one listing group. "recent" and "alpha"
+  // are instant (we sort on the frontend). "ai" needs the backend, so the first
+  // time it's chosen we fetch + cache the ranking; after that it's instant too.
+  async function handleSortChange(listingId, mode) {
+    setSortModes((prev) => ({ ...prev, [listingId]: mode }));
+
+    // Only "ai" needs data, and only if we haven't already fetched it.
+    if (mode !== "ai" || rankings[listingId]) {
+      return;
+    }
+
+    setRankingListingId(listingId);
+    try {
+      const result = await getRankedApplicationsForListing(listingId);
+      const reasons = {};
+      result.applicants.forEach((applicant) => {
+        reasons[applicant.providerId] = applicant.reason;
+      });
+      setRankings((prev) => ({
+        ...prev,
+        [listingId]: {
+          order: result.applicants.map((applicant) => applicant.providerId),
+          reasons,
+          aiRanked: result.aiRanked,
+        },
+      }));
+    } catch (err) {
+      console.error("Failed to rank applicants:", err);
+      // Mark the group as "tried but unavailable" so we can show the notice.
+      setRankings((prev) => ({
+        ...prev,
+        [listingId]: { order: [], reasons: {}, aiRanked: false },
+      }));
+    } finally {
+      setRankingListingId(null);
+    }
+  }
 
   return (
     <div className="profile-wrap">
@@ -979,33 +1030,119 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
             Providers who have applied to your job listings
           </div>
           {incomingApplications.length > 0 ? (
-            incomingApplications.map((app) => (
-              <div
-                key={app.id}
-                className="mini-card"
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedApplication(app)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setSelectedApplication(app);
-                  }
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ProfilePicture initials="AP" size="xs" />
-                <div className="mini-info">
-                  <div className="mini-title">{app.providerName}</div>
-                  <div style={{ fontSize: 14, color: "#4B5563", marginTop: 4 }}>
-                    Applied to: <span style={{ fontWeight: 700, color: "#1E2340" }}>{app.listingTitle}</span>
+            // Group the flat list of applicants by the listing they applied to,
+            // so each listing gets its own heading and its own "Rank with AI" button.
+            Object.values(
+              incomingApplications.reduce((groups, app) => {
+                const key = app.listingId ?? "unknown";
+                if (!groups[key]) {
+                  groups[key] = { listingId: app.listingId, listingTitle: app.listingTitle, apps: [] };
+                }
+                groups[key].apps.push(app);
+                return groups;
+              }, {})
+            ).map((group) => {
+              const sortMode = sortModes[group.listingId] ?? "recent";
+              const ranking = rankings[group.listingId];
+              const isRanking = rankingListingId === group.listingId;
+              // AI order only "wins" when the AI sort is picked AND it succeeded.
+              const showingAi = sortMode === "ai" && ranking && ranking.aiRanked;
+
+              // Build the ordered list based on the chosen sort.
+              // "recent" = natural order (backend already sorts newest first).
+              let orderedApps = group.apps;
+              if (showingAi && ranking.order.length > 0) {
+                orderedApps = [...group.apps].sort(
+                  (a, b) =>
+                    ranking.order.indexOf(a.providerId) - ranking.order.indexOf(b.providerId)
+                );
+              } else if (sortMode === "alpha") {
+                orderedApps = [...group.apps].sort((a, b) =>
+                  a.providerName.localeCompare(b.providerName)
+                );
+              }
+
+              return (
+                <div key={group.listingId ?? "unknown"} className="rank-group">
+                  <div className="rank-group-header">
+                    <div className="rank-group-title">{group.listingTitle}</div>
+                    {group.listingId && (
+                      <div className="rank-sort">
+                        <label className="rank-sort-label" htmlFor={`sort-${group.listingId}`}>
+                          Sort by
+                        </label>
+                        <div className="rank-sort-select-wrap">
+                          <select
+                            id={`sort-${group.listingId}`}
+                            className="rank-sort-select"
+                            value={sortMode}
+                            disabled={isRanking}
+                            onChange={(e) => handleSortChange(group.listingId, e.target.value)}
+                          >
+                            <option value="recent">Most Recent</option>
+                            <option value="alpha">Name (A–Z)</option>
+                            <option value="ai">{isRanking ? "Ranking…" : "Rank with AI"}</option>
+                          </select>
+                          <ChevronDown size={14} className="rank-sort-chevron" />
+                        </div>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Fallback notice when the AI could not rank this group. */}
+                  {sortMode === "ai" && ranking && !ranking.aiRanked && (
+                    <div className="rank-notice">
+                      AI ranking is unavailable right now. Showing applicants in recent order.
+                    </div>
+                  )}
+
+                  {orderedApps.map((app) => {
+                    // A rank number only shows while the AI sort is active.
+                    const rankNumber = showingAi
+                      ? ranking.order.indexOf(app.providerId) + 1
+                      : null;
+                    // The reason travels with the app so the detail modal can show it.
+                    const reason = showingAi ? ranking.reasons[app.providerId] : null;
+                    const appForModal = reason ? { ...app, aiReason: reason, aiRank: rankNumber } : app;
+
+                    return (
+                      <div
+                        key={app.id}
+                        className="mini-card rank-card"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setSelectedApplication(appForModal)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedApplication(appForModal);
+                          }
+                        }}
+                      >
+                        {rankNumber && (
+                          <span
+                            className={`rank-badge ${rankNumber === 1 ? "rank-badge-top" : ""}`}
+                            aria-label={`Rank ${rankNumber}`}
+                          >
+                            {rankNumber}
+                          </span>
+                        )}
+                        <ProfilePicture initials="AP" size="xs" />
+                        <div className="mini-info">
+                          <div className="mini-title">{app.providerName}</div>
+                          <div className="rank-card-sub">
+                            Applied to <span>{group.listingTitle}</span>
+                          </div>
+                        </div>
+                        <span className={`app-status status-${(app.status || "PENDING").toLowerCase()}`}>
+                          {STATUS_LABELS[app.status] ?? "Pending"}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-                <span className={`app-status status-${(app.status || "PENDING").toLowerCase()}`}>
-                  {STATUS_LABELS[app.status] ?? "Pending"}
-                </span>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div style={{
               display: 'flex',
@@ -1083,6 +1220,14 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               <input
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
+                onKeyDown={(e) => {
+                  // Add the skill when the user presses Enter/Return.
+                  // preventDefault stops the form from submitting.
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSkill();
+                  }
+                }}
                 placeholder="Add skill"
               />
               <button type="button" className="modal-btn modal-btn-secondary" onClick={addSkill}>Add</button>

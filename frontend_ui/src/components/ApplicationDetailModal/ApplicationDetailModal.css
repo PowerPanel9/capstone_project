@@ -99,6 +99,45 @@
   color: #991B1B;
 }
 
+/* AI match insight box — soft brand-tinted card */
+.app-detail-ai {
+  background: linear-gradient(135deg, #F5F6FE, #EEF0FC);
+  border: 1px solid #D8DCF5;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.app-detail-ai-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary, #7B8FC8);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.app-detail-ai-rank {
+  margin-left: auto;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #4B5563;
+  background: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.app-detail-ai-reason {
+  font-size: 13px;
+  color: #4B5563;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
 .app-detail-section {
   margin-bottom: 16px;
 }

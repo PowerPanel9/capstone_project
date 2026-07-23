@@ -21,16 +21,6 @@ const CATEGORY_OPTIONS = [
   { value: "OTHER", label: "Other" },
 ];
 
-// Turn a comma-separated string ("React, Node, SQL") into a clean array of
-// strings (["React", "Node", "SQL"]). Trims spaces and drops empty entries so
-// trailing commas or double commas don't create blank skills.
-function parseSkills(text) {
-  return text
-    .split(",")
-    .map((skill) => skill.trim())
-    .filter((skill) => skill.length > 0);
-}
-
 function CreateListingView({ onDone }) {
   const [form, setForm] = useState({
     title: "",
@@ -38,10 +28,30 @@ function CreateListingView({ onDone }) {
     customCategory: "",
     price: "",
     description: "",
-    tags: "",
     location: "",
     imageUrl: ""
   });
+
+  // The Required Skills field now works like a tag list instead of one
+  // comma-separated string. `skills` holds the added skills as an array, and
+  // `newSkill` holds whatever the user is currently typing in the input box.
+  const [skills, setSkills] = useState([]);
+  const [newSkill, setNewSkill] = useState("");
+
+  // Add the text in the input as a new skill tag. Trims spaces, ignores empty
+  // input, and skips duplicates so the same skill can't be added twice.
+  const addSkill = () => {
+    const trimmed = newSkill.trim();
+    if (!trimmed) return;
+    if (skills.includes(trimmed)) return;
+    setSkills((prev) => [...prev, trimmed]);
+    setNewSkill("");
+  };
+
+  // Remove a skill tag when its "x" is clicked.
+  const removeSkill = (skillToRemove) => {
+    setSkills((prev) => prev.filter((skill) => skill !== skillToRemove));
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -103,7 +113,7 @@ function CreateListingView({ onDone }) {
       custom_category: form.category === "OTHER" ? form.customCategory : null,
       price: Number(form.price),
       description: form.description,
-      skills_required: parseSkills(form.tags),
+      skills_required: skills,
       location: form.location,
       image_url: form.imageUrl || null,
     };
@@ -247,12 +257,45 @@ function CreateListingView({ onDone }) {
 
         <div>
           <label className="form-label">Required Skills</label>
-          <input
-            className="form-input"
-            value={form.tags}
-            onChange={(e) => setForm({ ...form, tags: e.target.value })}
-            placeholder="Separate each skill with a comma, e.g. English Speaking, Childcare"
-          />
+          {/* Show each added skill as a removable tag. */}
+          <div className="skills-row">
+            {skills.map((skill) => (
+              <span key={skill} className="modal-skill-tag">
+                {skill}
+                <button
+                  type="button"
+                  className="skill-remove-btn"
+                  onClick={() => removeSkill(skill)}
+                >
+                  x
+                </button>
+              </span>
+            ))}
+          </div>
+          {/* Input + Add button. Pressing Enter adds the skill too. */}
+          <div className="skill-add-row">
+            <input
+              className="form-input"
+              value={newSkill}
+              onChange={(e) => setNewSkill(e.target.value)}
+              onKeyDown={(e) => {
+                // Add the skill when the user presses Enter/Return.
+                // preventDefault stops any accidental form submission.
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addSkill();
+                }
+              }}
+              placeholder="e.g. English Speaking"
+            />
+            <button
+              type="button"
+              className="price-suggest-btn"
+              onClick={addSkill}
+            >
+              Add
+            </button>
+          </div>
         </div>
 
         <div>

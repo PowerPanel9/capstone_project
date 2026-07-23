@@ -4,22 +4,19 @@ import { MapPin, ChevronLeft, Briefcase, Check } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
 import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
 import { getUserById } from "../../api/users";
+import { getListings } from "../../api/listings";
 import { getReviewsForUser } from "../../api/reviews";
-import { getListingsByUser } from "../../api/listings";
-import { fullName, initials } from "../../utils/user";
+import { fullName } from "../../utils/user";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
-// Reuse the profile page's styles so this looks like the user's own profile.
+// Reuse the same styles as the logged-in user's profile so this read-only
+// profile looks identical to it.
 import "../UserProfileView/UserProfileView.css";
-import "./PublicProfileView.css";
 
-// Experience is stored per-profile in localStorage by UserProfileView, using
-// this key prefix. We read (never write) it here so a user's experiences show
-// on their public profile too.
-const EXPERIENCES_STORAGE_PREFIX = "userProfileExperiences";
-
-// Read-only profile for viewing ANOTHER user (e.g. a listing's poster).
-// Mirrors UserProfileView's tabs (All / Listings / Experience) exactly, minus
-// any edit/add/toggle controls.
+// Read-only profile for viewing ANOTHER user (e.g. a provider found in search
+// or a listing's poster). It mirrors the logged-in user's profile layout
+// (banner, avatar, bio, skills, listings, review stats) but WITHOUT the
+// client/provider toggle, the Edit Profile button, or the Add Experience
+// feature — those only make sense on your own profile.
 function PublicProfileView({ currentUser }) {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -31,8 +28,17 @@ function PublicProfileView({ currentUser }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [listings, setListings] = useState([]);
+  const EXPERIENCES_STORAGE_PREFIX = "userProfileExperiences";
+
+  const [userListings, setUserListings] = useState([]);
+  const [isLoadingListings, setIsLoadingListings] = useState(false);
+  const [listingsError, setListingsError] = useState("");
+
+  // Experiences are read-only here. They are saved in the profile OWNER's
+  // browser (localStorage), so a viewer only sees them when looking at the
+  // same browser that created them. A backend (AWS S3) will replace this later.
   const [experiences, setExperiences] = useState([]);
+
   const [showReviews, setShowReviews] = useState(false);
   const [reviewCount, setReviewCount] = useState(0);
   const [avgRating, setAvgRating] = useState(null);
@@ -52,29 +58,58 @@ function PublicProfileView({ currentUser }) {
     return () => { ignore = true; };
   }, [userId]);
 
-  // Load this user's listings.
+  // Load this user's listings. The listings API has no "by user" filter, so we
+  // page through the feed and keep only the ones this user posted (same
+  // approach the logged-in profile uses).
   useEffect(() => {
-    if (!userId) return;
     let ignore = false;
-    getListingsByUser(userId)
-      .then((data) => { if (!ignore) setListings(Array.isArray(data) ? data : []); })
-      .catch((err) => console.error("Failed to load user's listings:", err));
+
+    const loadUserListings = async () => {
+      if (!userId) {
+        if (!ignore) setUserListings([]);
+        return;
+      }
+
+      try {
+        setIsLoadingListings(true);
+        setListingsError("");
+
+        const combinedListings = [];
+        let page = 1;
+        let hasMore = true;
+        const PAGE_LIMIT = 50;
+        const MAX_PAGES = 20; // safety guard
+
+        while (hasMore && page <= MAX_PAGES) {
+          const data = await getListings({ page, limit: PAGE_LIMIT });
+          const pageListings = Array.isArray(data.listings) ? data.listings : [];
+          combinedListings.push(...pageListings);
+          hasMore = Boolean(data.hasMore);
+          page += 1;
+        }
+
+        const theirs = combinedListings.filter((listing) => {
+          const ownerId = listing?.userId ?? listing?.user?.id;
+          return Number(ownerId) === Number(userId);
+        });
+
+        if (!ignore) setUserListings(theirs);
+      } catch (err) {
+        if (!ignore) {
+          setListingsError("Failed to load listings.");
+          setUserListings([]);
+        }
+      } finally {
+        if (!ignore) setIsLoadingListings(false);
+      }
+    };
+
+    loadUserListings();
     return () => { ignore = true; };
   }, [userId]);
 
-  // Load this user's saved experiences from localStorage (read-only).
-  useEffect(() => {
-    if (!userId) return;
-    try {
-      const raw = localStorage.getItem(`${EXPERIENCES_STORAGE_PREFIX}_${userId}`);
-      const parsed = raw ? JSON.parse(raw) : [];
-      setExperiences(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      setExperiences([]);
-    }
-  }, [userId]);
-
-  // Load review stats (count + average).
+  // Load review stats (count + average). Re-runs when the panel closes so a
+  // newly-posted review updates the numbers.
   useEffect(() => {
     if (!userId) return;
     let ignore = false;
@@ -93,20 +128,27 @@ function PublicProfileView({ currentUser }) {
     return () => { ignore = true; };
   }, [userId, showReviews]);
 
-  if (isLoading) return <p className="feed-status">Loading profile…</p>;
-  if (error) return <p className="feed-status feed-error">{error}</p>;
-  if (!user) return <p className="feed-status feed-error">User not found</p>;
+  // Read this user's saved experiences from localStorage (owner's browser only).
+  useEffect(() => {
+    if (!userId) return;
+    const storageKey = `${EXPERIENCES_STORAGE_PREFIX}:${userId}`;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      const parsed = raw ? JSON.parse(raw) : [];
+      setExperiences(Array.isArray(parsed) ? parsed : []);
+    } catch (_error) {
+      setExperiences([]);
+    }
+  }, [userId]);
 
-  const revieweeId = Number(userId);
-  const skills = Array.isArray(user.skills) ? user.skills : [];
-  const profilePicture = typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";
-  const bannerImageUrl = typeof user.imageUrl === "string" ? user.imageUrl.trim() : "";
-  const bannerStyle = bannerImageUrl ? { backgroundImage: `url("${bannerImageUrl}")` } : undefined;
-
-  const openListingDetails = (id) => navigate(`/listing/${id}`);
+  const openListingDetails = (listingId) => {
+    if (!listingId) return;
+    navigate(`/listing/${listingId}`);
+  };
 
   // Renders one listing card with its status badge. This is the PUBLIC view, so
-  // grayed rules: IN_PROGRESS and COMPLETED are grayed out.
+  // listings that are IN_PROGRESS or COMPLETED show grayed out (no longer
+  // taking applicants).
   const renderListingCard = (listing) => {
     const grayed = isListingGrayed(listing.status, { isOwnerView: false });
     return (
@@ -138,9 +180,22 @@ function PublicProfileView({ currentUser }) {
     );
   };
 
+  if (isLoading) return <p className="feed-status">Loading profile…</p>;
+  if (error) return <p className="feed-status feed-error">{error}</p>;
+  if (!user) return <p className="feed-status feed-error">User not found</p>;
+
+  const revieweeId = Number(userId);
+  const skills = Array.isArray(user.skills) ? user.skills : [];
+  const profilePicture = typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";
+  const bannerImageUrl = typeof user.imageUrl === "string" ? user.imageUrl.trim() : "";
+  const bannerStyle = bannerImageUrl ? { backgroundImage: `url("${bannerImageUrl}")` } : undefined;
+  const profileInitials = `${(user.firstName?.[0] || "").toUpperCase()}${(user.lastName?.[0] || "").toUpperCase()}`;
+  const displayLocation =
+    user.city && user.state ? `${user.city}, ${user.state}` : (user.location || "Location");
+
   return (
     <div className="profile-wrap">
-      <button className="public-back-btn" onClick={() => navigate(-1)}>
+      <button className="back-btn" onClick={() => navigate(-1)}>
         <ChevronLeft size={16} />
         Back
       </button>
@@ -158,12 +213,11 @@ function PublicProfileView({ currentUser }) {
                     : undefined
                 }
               >
-                {!profilePicture && initials(user)}
+                {!profilePicture && profileInitials}
               </div>
             </div>
-            {/* No edit / mode-toggle buttons: this is a read-only public view. */}
+            {/* No toggle or Edit button here — this is someone else's profile. */}
           </div>
-
           <div className="profile-name-row">
             <h1 className="profile-name">{fullName(user)}</h1>
             {/* Lets clients see the provider has Stripe payouts enabled. */}
@@ -174,19 +228,17 @@ function PublicProfileView({ currentUser }) {
               </span>
             )}
           </div>
-          {user.location && (
-            <div className="profile-sub">
-              <MapPin size={13} />
-              {user.location}
-            </div>
-          )}
-
+          <div className="profile-sub">
+            <MapPin size={13} />
+            {displayLocation} · Provider
+          </div>
           <div className="stats-row">
             {[
-              [listings.length, "Listings"],
+              [userListings.length, "Listings"],
               [reviewCount, "Reviews"],
               [avgRating ? `${avgRating} ★` : "0", "Rating"],
             ].map(([num, label]) => {
+              // Only the Rating stat opens the reviews modal.
               const clickable = label === "Rating";
               return (
                 <div
@@ -222,7 +274,7 @@ function PublicProfileView({ currentUser }) {
               <div className="info-card-title">Bio</div>
               <div className="info-card-content">
                 <p style={{ fontSize: 14, color: "#4B5563" }}>
-                  {user.bio || "This user hasn't added a bio yet."}
+                  {user.bio || "No bio yet"}
                 </p>
               </div>
             </div>
@@ -230,7 +282,9 @@ function PublicProfileView({ currentUser }) {
               <div className="info-card-title">Skills</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {skills.length > 0 ? (
-                  skills.map((skill) => <span key={skill} className="tag">{skill}</span>)
+                  skills.map((skill) => (
+                    <span key={skill} className="tag">{skill}</span>
+                  ))
                 ) : (
                   <p style={{ fontSize: 13, color: "#9CA3AF" }}>No skills added yet</p>
                 )}
@@ -239,8 +293,16 @@ function PublicProfileView({ currentUser }) {
           </div>
 
           <div style={{ fontWeight: 700, color: "#4B5563", fontSize: 14 }}>Listings</div>
-          {listings.length > 0 ? (
-            listings.slice(0, 2).map((listing) => renderListingCard(listing))
+          {isLoadingListings ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+              Loading listings...
+            </div>
+          ) : listingsError ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#b91c1c", fontSize: 13 }}>
+              {listingsError}
+            </div>
+          ) : userListings.length > 0 ? (
+            userListings.slice(0, 2).map((listing) => renderListingCard(listing))
           ) : (
             <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
               No listings yet
@@ -251,8 +313,16 @@ function PublicProfileView({ currentUser }) {
 
       {activeTab === "Listings" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {listings.length > 0 ? (
-            listings.map((listing) => renderListingCard(listing))
+          {isLoadingListings ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+              Loading listings...
+            </div>
+          ) : listingsError ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#b91c1c", fontSize: 13 }}>
+              {listingsError}
+            </div>
+          ) : userListings.length > 0 ? (
+            userListings.map((listing) => renderListingCard(listing))
           ) : (
             <div style={{
               display: "flex",
@@ -260,7 +330,7 @@ function PublicProfileView({ currentUser }) {
               alignItems: "center",
               padding: "40px 20px",
               color: "#9CA3AF",
-              textAlign: "center",
+              textAlign: "center"
             }}>
               <Briefcase size={32} style={{ marginBottom: 12 }} />
               <p style={{ fontSize: 14, fontWeight: 600 }}>No listings yet</p>
@@ -298,7 +368,7 @@ function PublicProfileView({ currentUser }) {
                   <div key={experience.id} className="experience-card">
                     <h3 className="experience-title">{experience.jobTitle}</h3>
                     <p className="experience-description">{experience.description}</p>
-                    {experience.images.length > 0 && (
+                    {Array.isArray(experience.images) && experience.images.length > 0 && (
                       <div className="experience-images">
                         {experience.images.map((imageSrc, index) => (
                           <img key={`${experience.id}-${index}`} src={imageSrc} alt={`${experience.jobTitle} ${index + 1}`} />
@@ -309,14 +379,16 @@ function PublicProfileView({ currentUser }) {
                 ))
               ) : (
                 <div className="experience-empty">
-                  No experiences to show.
+                  No experiences to show yet.
                 </div>
               )}
             </div>
+            {/* No "Add Experience" button — this is a read-only profile. */}
           </div>
         </div>
       )}
 
+      {/* Reviews modal — opens only when the Rating stat is clicked. */}
       {showReviews && (
         <ReviewsPanel
           revieweeId={revieweeId}

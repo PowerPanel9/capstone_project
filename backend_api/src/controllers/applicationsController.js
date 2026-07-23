@@ -7,6 +7,9 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// The AI ranking logic lives in its own service file. We just call it here.
+const { rankApplicants } = require("../services/applicantRankingService");
+
 const VALID_STATUSES = ["PENDING", "ACCEPTED", "REJECTED"];
 
 // POST /api/applications
@@ -136,6 +139,37 @@ async function getApplicationsForListing(req, res) {
   }
 }
 
+// GET /api/applications/listing/:listing_id/ranked
+// Same as above, but the applicants come back AI-ranked (best fit first),
+// each with a rank number and a short reason. Only the listing owner may see them.
+async function getRankedApplicationsForListing(req, res) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const listingId = Number(req.params.listing_id);
+
+    const listing = await prisma.listing.findUnique({ where: { id: listingId } });
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+
+    // Only the listing owner can rank who applied to their listing.
+    if (listing.userId !== req.user.userId) {
+      return res.status(401).json({ error: "Not authorized" });
+    }
+
+    // The service does the AI work and already handles its own fallback
+    // (aiRanked: false) if the AI is unavailable, so we just pass its result on.
+    const result = await rankApplicants(listingId);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("getRankedApplicationsForListing error:", error.message);
+    return res.status(500).json({ error: "Something went wrong" });
+  }
+}
+
 // PUT /api/applications/:id
 // Accept or reject an application. Only the listing owner may do this.
 async function updateApplicationStatus(req, res) {
@@ -222,6 +256,7 @@ module.exports = {
   getMyApplications,
   getReceivedApplications,
   getApplicationsForListing,
+  getRankedApplicationsForListing,
   updateApplicationStatus,
   withdrawApplication,
 };

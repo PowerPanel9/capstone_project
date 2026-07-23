@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Sparkles, Send, RotateCcw } from 'lucide-react';
 import { sendAgentMessage } from '../../api/agent';
 import './AIAgentModal.css';
@@ -6,7 +6,10 @@ import './AIAgentModal.css';
 // Session storage key for persisting conversation
 const CHAT_STORAGE_KEY = 'sidehustle_chat_session';
 
-function AIAgentModal({ onClose, initialMessage = "" }) {
+// `docked` renders the chat in place (e.g. in the home page side panel) instead
+// of as a centered popup: no dark overlay and no close button, since it lives
+// on the page rather than floating on top of it.
+function AIAgentModal({ onClose, initialMessage = "", docked = false }) {
   // Load messages from sessionStorage on mount, or use default welcome message
   const loadMessages = () => {
     const stored = sessionStorage.getItem(CHAT_STORAGE_KEY);
@@ -32,10 +35,35 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
   // message and stop the user from sending a second request mid-flight.
   const [loading, setLoading] = useState(false);
 
+  // A direct handle to the text input so we can focus it ourselves.
+  const inputRef = useRef(null);
+
+  // An empty marker at the bottom of the message list. We scroll it into view
+  // to keep the newest message visible.
+  const messagesEndRef = useRef(null);
+
   // Save messages to sessionStorage whenever they change
   useEffect(() => {
     sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
   }, [messages]);
+
+  // Auto-scroll to the newest message. This runs whenever a message is added
+  // or the "Thinking…" bubble appears/disappears, so the latest text is always
+  // in view without the user scrolling manually.
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loading]);
+
+  // Keep the cursor ready in the input. This runs when the modal opens and
+  // again each time `loading` turns false (right after the AI replies), so the
+  // user can start typing their next message without clicking the box again.
+  useEffect(() => {
+    if (!loading && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [loading]);
 
   // Clear conversation and start fresh
   const clearConversation = () => {
@@ -82,9 +110,10 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
     }
   };
 
-  return (
-    <div className="modal-bg">
-      <div className="ai-modal">
+  // The chat panel itself. The same markup is used whether it's docked in the
+  // page or floating in a popup; only the wrapper around it changes below.
+  const chatPanel = (
+      <div className={`ai-modal ${docked ? "ai-modal-docked" : ""}`}>
         <div className="ai-modal-header">
           <div className="ai-modal-icon">
             <Sparkles size={17} />
@@ -98,15 +127,19 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
           </div>
           <button
             className="close-btn"
-            style={{ marginLeft: "auto", marginRight: "8px" }}
+            style={{ marginLeft: "auto", marginRight: docked ? "0" : "8px" }}
             onClick={clearConversation}
             title="Clear conversation"
           >
             <RotateCcw size={15} />
           </button>
-          <button className="close-btn" onClick={onClose}>
-            <X size={15} />
-          </button>
+          {/* Close button. In the popup it dismisses the modal; when docked it
+              closes the side panel. Only shown if an onClose handler exists. */}
+          {onClose && (
+            <button className="close-btn" onClick={onClose}>
+              <X size={15} />
+            </button>
+          )}
         </div>
 
         <div className="ai-messages">
@@ -130,6 +163,9 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
               <div className="ai-bubble ai">Thinking…</div>
             </div>
           )}
+
+          {/* Empty marker we scroll to so the newest message stays in view. */}
+          <div ref={messagesEndRef} />
         </div>
 
         {messages.length === 1 && !loading && (
@@ -149,13 +185,13 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
         <div className="ai-input-bar">
           <div className="ai-input-inner">
             <input
+              ref={inputRef}
               className="ai-text-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
               placeholder="Ask SideHustle AI anything..."
               disabled={loading}
-              autoFocus
             />
             <button
               className="ai-send-btn"
@@ -167,6 +203,24 @@ function AIAgentModal({ onClose, initialMessage = "" }) {
           </div>
         </div>
       </div>
+  );
+
+  // Docked: render the panel on its own; the side column positions it.
+  // Popup: wrap it in the dark full-screen overlay as before.
+  if (docked) {
+    return chatPanel;
+  }
+
+  // Clicking the dark backdrop (but not the panel itself) closes the popup.
+  // The `e.target === e.currentTarget` check makes sure we only close when the
+  // click lands on the backdrop, not when it bubbles up from inside the chat.
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget && onClose) onClose();
+  };
+
+  return (
+    <div className="modal-bg" onClick={handleBackdropClick}>
+      {chatPanel}
     </div>
   );
 }
