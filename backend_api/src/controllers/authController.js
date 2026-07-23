@@ -8,7 +8,7 @@ const SALT_ROUNDS = 10;
 const MIN_PASSWORD_LENGTH = 8;
 
 const register = async (req, res) => {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, password, role } = req.body;
     if (!firstName || !lastName || !email || !password) {
         return res.status(400).json({ error: "First Name, Last Name, email, username, and password are required" });
       }
@@ -42,7 +42,10 @@ const register = async (req, res) => {
                 firstName: normalizedFirstName,
                 lastName: normalizedLastName,
                 email: normalizedEmail,
-                password: hashedPassword
+                password: hashedPassword,
+                // Save the chosen role. Falls back to CLIENT if the frontend
+                // hasn't sent one yet (safe default until the role picker ships).
+                role: role || 'CLIENT'
             }
         });
 
@@ -118,6 +121,7 @@ const makeUserPublic = (user) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        role: user.role, // Ardelia uses this to route the user and drive the view toggle
     };
 };
 

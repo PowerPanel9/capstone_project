@@ -641,7 +641,8 @@
 }
 
 .profile-modal input,
-.profile-modal textarea {
+.profile-modal textarea,
+.profile-modal select {
   width: 100%;
   margin: 6px 0 12px;
   padding: 10px 12px;
@@ -654,7 +655,8 @@
 }
 
 .profile-modal input:focus,
-.profile-modal textarea:focus {
+.profile-modal textarea:focus,
+.profile-modal select:focus {
   outline: none;
   border-color: var(--primary, #7B8FC8);
   box-shadow: 0 0 0 3px rgba(123, 143, 200, 0.14);
