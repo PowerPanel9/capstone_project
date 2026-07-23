@@ -18,7 +18,12 @@ const { handleStripeWebhook } = require("./controllers/webhookController");
 const app = express();
 const PORT = process.env.PORT || 3000;
 // Middleware
-app.use(cors());
+// In production, restrict CORS to our own frontend. In dev (no FRONTEND_URL),
+// stay open so localhost works. This protects the payment API from other sites.
+const corsOptions = process.env.FRONTEND_URL
+  ? { origin: process.env.FRONTEND_URL, credentials: true }
+  : {};
+app.use(cors(corsOptions));
 app.use(morgan("dev"));
 
 // Stripe webhook MUST be registered with the RAW body and BEFORE express.json(),
