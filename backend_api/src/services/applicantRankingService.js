@@ -168,8 +168,15 @@ async function getAiRanking(listing, applicants) {
 You are given a job listing and the list of people who applied to it.
 Rank the applicants from best fit to worst fit for THIS specific job.
 
-Base your ranking on how well each applicant's skills, location, bio, and
-ratings match what the job needs.
+Weigh the factors in this priority order (most important first):
+1. SKILLS — how well the applicant's skills match the job's required skills and
+   category. This is by far the most important factor.
+2. RATINGS — a higher average rating and more reviews is better.
+3. BIO — relevant experience described in their bio.
+4. LOCATION — only a minor tie-breaker. If two applicants are in the same city
+   or metro area (e.g. both in the San Francisco Bay Area), treat their
+   locations as effectively equal and do NOT prefer one over the other on
+   distance. A better skills match ALWAYS beats being slightly closer.
 
 Respond with ONLY a JSON array, no extra text, in this exact shape:
 [{ "providerId": number, "rank": number, "reason": "one short sentence" }]
@@ -178,7 +185,8 @@ Rules:
 - rank 1 is the best fit.
 - Include every applicant exactly once.
 - Only use providerId values from the applicants given to you.
-- Keep each reason to one plain sentence a client can quickly read.`;
+- Keep each reason to one plain sentence a client can quickly read, and mention
+  the applicant's skills fit as the main reason for their rank.`;
 
   // Give the AI the job details and the applicants as readable JSON.
   const userPrompt = `JOB LISTING:
