@@ -84,9 +84,8 @@ function HomeView({ listings, experiences = [], showExperiences = false, bookmar
       )}
 
       {showExperiences ? (
-        // Client mode: show a grid of posted experiences. Each card shows the
-        // first image, the job title, and who posted it. Clicking a card opens
-        // that experience's detail page.
+        // Client mode: show posted experiences as social-style cards with the
+        // poster info on top, then the cover image and title.
         <div className="experience-grid">
           {safeExperiences.length === 0 ? (
             <p className="feed-status">No experiences yet</p>
@@ -97,19 +96,52 @@ function HomeView({ listings, experiences = [], showExperiences = false, bookmar
                   ? experience.images[0]
                   : "";
 
+              const poster = experience.user || null;
+              const firstName = poster?.firstName || "";
+              const lastName = poster?.lastName || "";
+              const posterName = `${firstName} ${lastName}`.trim() || "Unknown user";
+              const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "U";
+              const profilePicture = poster?.profilePicture || "";
+
               return (
-                <button
-                  type="button"
-                  className="experience-grid-card"
-                  key={experience.id}
-                  onClick={() => navigate(`/experiences/${experience.id}`)}
-                >
-                  <div
-                    className="experience-grid-image"
-                    style={cover ? { backgroundImage: `url("${cover}")` } : undefined}
-                  />
-                  <div className="experience-grid-title">{experience.jobTitle}</div>
-                </button>
+                <article className="experience-grid-card" key={experience.id}>
+                  <button
+                    type="button"
+                    className="experience-grid-poster"
+                    onClick={() => poster?.id && navigate(`/providers/${poster.id}`)}
+                    disabled={!poster?.id}
+                  >
+                    {profilePicture ? (
+                      <img
+                        src={profilePicture}
+                        alt={`${posterName} profile`}
+                        className="experience-grid-avatar"
+                      />
+                    ) : (
+                      <div className="experience-grid-avatar-fallback">{initials}</div>
+                    )}
+                    <span className="experience-grid-poster-name">{posterName}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="experience-grid-image-button"
+                    onClick={() => navigate(`/experiences/${experience.id}`)}
+                  >
+                    <div
+                      className="experience-grid-image"
+                      style={cover ? { backgroundImage: `url("${cover}")` } : undefined}
+                    />
+                  </button>
+
+                  <button
+                    type="button"
+                    className="experience-grid-title"
+                    onClick={() => navigate(`/experiences/${experience.id}`)}
+                  >
+                    {experience.jobTitle}
+                  </button>
+                </article>
               );
             })
           )}

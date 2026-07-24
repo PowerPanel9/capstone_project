@@ -41,7 +41,7 @@ function ExperienceDetailView() {
 
   const poster = experience.user || {};
   const posterName =
-    `${poster.firstName || ""} ${poster.lastName || ""}`.trim() || "Unknown";
+    `${poster.jobTitle || ""}`.trim() || "Unknown";
   const images = Array.isArray(experience.images) ? experience.images : [];
 
   return (
@@ -57,7 +57,7 @@ function ExperienceDetailView() {
       <button
         type="button"
         className="experience-detail-poster"
-        onClick={() => poster.id && navigate(`/users/${poster.id}`)}
+        onClick={() => poster.id && navigate(`/providers/${poster.id}`)}
       >
         Posted by {posterName}
       </button>
