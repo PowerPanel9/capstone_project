@@ -24,7 +24,7 @@ import AuthFailure from './components/AuthFailure';
 import ConnectReturn from './components/ConnectOnboarding/ConnectReturn';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getExperiences } from './api/experiences';
-import { getProviders } from './api/users';
+import { getProviders, updateUser } from './api/users';
 import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
@@ -116,18 +116,41 @@ function App() {
   // Toggle between client and provider mode.
   // A BOTH user has both views, so the toggle simply flips between them.
   // A single-role user (CLIENT-only or PROVIDER-only) doesn't have the other
-  // view yet, so instead of silently switching we send them to onboarding to
-  // sign up for the other role.
-  const toggleUserMode = () => {
-    if (currentUser?.role === 'BOTH') {
+  // view yet. Clicking the button means "sign up for the other role too", so
+  // we upgrade them to BOTH — that's what makes the "Switch view" button show.
+  const toggleUserMode = async () => {
+    const role = currentUser?.role;
+
+    // Already BOTH: just flip between the two views they already have.
+    if (role === 'BOTH') {
       const newMode = userMode === 'client' ? 'provider' : 'client';
       setUserMode(newMode);
       localStorage.setItem('sideHustleUserMode', newMode);
       return;
     }
-    // NOTE: /onboarding/role is Zainab's onboarding wizard (PR 2). Until that
-    // route is added it falls through to the catch-all and returns home.
-    navigate('/onboarding/role');
+
+    // Single-role user adding the other role. Save role = BOTH first so every
+    // page below (which reads currentUser.role) treats them as having both.
+    try {
+      const updated = await updateUser(currentUser.id, { role: 'BOTH' });
+      handleUserUpdate(updated); // keep App state + localStorage in sync
+    } catch (err) {
+      console.error('Failed to add the second role:', err);
+      return; // leave them where they are if the save fails
+    }
+
+    if (role === 'PROVIDER') {
+      // A provider already finished profile setup, and the client side has no
+      // extra onboarding, so drop them straight into the client view.
+      setUserMode('client');
+      localStorage.setItem('sideHustleUserMode', 'client');
+      navigate('/home');
+    } else {
+      // A client is adding the provider side, which has extra questions
+      // (services + verification). Send them through provider onboarding; the
+      // final Welcome page lands them in the provider view.
+      navigate('/onboarding/services');
+    }
   };
 
   // Open the AI chat modal. An optional message prefills the input box (used by
