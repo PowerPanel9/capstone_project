@@ -146,12 +146,18 @@ const providerCardSelect = {
     skills: true,
 };
 
+const PROVIDER_CATEGORY_VALUES = [
+    "CLEANING", "TUTORING", "PLUMBING", "GARDENING", "BEAUTY",
+    "BABYSITTING", "MOVING", "HANDYMAN", "DELIVERY", "OTHER",
+];
+
 // Get a randomized list of providers for the client-mode home feed.
 // Only users whose role is PROVIDER or BOTH are returned (a CLIENT-only user
 // doesn't offer services, so they shouldn't show up here).
 // Optionally:
 //   ?excludeId=<id>       leaves the logged-in user out of the list.
 //   ?category=CLEANING    keeps only providers who selected that category.
+//   ?search=alex          matches provider name or skills text.
 const getProviders = async (req, res) => {
     try {
         // Start by requiring the user to actually be a provider.
@@ -176,6 +182,8 @@ const getProviders = async (req, res) => {
                 { skills: { has: normalizedCategory } },
             ];
         }
+
+        const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
 
         let users;
         try {
@@ -206,6 +214,24 @@ const getProviders = async (req, res) => {
                     imageUrl: true,
                     skills: true,
                 },
+            });
+        }
+
+        // Search by name OR by skill text (case-insensitive, partial match).
+        // Example: "plumb" matches "Plumbing"; "math" matches "Math Tutor".
+        if (search) {
+            const needle = search.toLowerCase();
+            const matchedCategories = PROVIDER_CATEGORY_VALUES.filter((value) =>
+                value.toLowerCase().includes(needle) || value.replace("_", " ").toLowerCase().includes(needle)
+            );
+            users = users.filter((user) => {
+                const fullName = `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase();
+                const nameMatch = fullName.includes(needle);
+                const skillMatch = Array.isArray(user.skills)
+                    && user.skills.some((skill) => String(skill || "").toLowerCase().includes(needle));
+                const categoryMatch = Array.isArray(user.categories)
+                    && user.categories.some((value) => matchedCategories.includes(String(value || "").toUpperCase()));
+                return nameMatch || skillMatch || categoryMatch;
             });
         }
 

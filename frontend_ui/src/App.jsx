@@ -600,7 +600,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
 
   // In client mode, once a category is picked we show the PROVIDERS who offer
   // that service (so a client can browse and contact them).
-  const showProviders = userMode === 'client' && Boolean(category);
+  const showProviders = userMode === 'client' && (Boolean(category) || Boolean(search));
 
   // In client mode with no category chosen, the home feed shows a grid of
   // EXPERIENCES people posted (in a random order), instead of listings.
@@ -617,7 +617,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
   // When browsing a category or searching, we show the plain (filtered) feed.
   const usePersonalized = userMode === 'provider' && isLanding;
 
-  // Client picked a category: load the providers who offer that service.
+  // Client picked a category or typed search text: load matching providers.
   // This is its own effect so it doesn't tangle with the listings/experiences
   // feed logic below. `currentUserId` is passed as excludeId so a client who is
   // also a provider (role BOTH) doesn't see themselves in the list.
@@ -626,7 +626,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
     let ignore = false;
     setIsLoadingProviders(true);
     setError(null);
-    getProviders({ category, excludeId: currentUserId })
+    getProviders({ category, search, excludeId: currentUserId })
       .then((list) => {
         if (!ignore) setProviders(list);
       })
@@ -638,7 +638,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
         if (!ignore) setIsLoadingProviders(false);
       });
     return () => { ignore = true; };
-  }, [showProviders, category, currentUserId]);
+  }, [showProviders, category, search, currentUserId]);
 
   // When the search or role changes, start over: clear listings and load page 1.
   useEffect(() => {
@@ -753,7 +753,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
       .finally(() => setIsLoadingMore(false));
   };
 
-  // Client picked a category: show the providers who offer that service.
+  // Client is browsing providers by category or by search text.
   if (showProviders) {
     return (
       <>
@@ -761,6 +761,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
         <ProvidersView
           providers={providers}
           category={category}
+          search={search}
           isLoading={isLoadingProviders}
         />
       </>

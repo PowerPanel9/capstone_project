@@ -19,9 +19,16 @@ function getInitials(firstName, lastName) {
 // A client gets here by clicking a category tile. Each card links to that
 // provider's public profile. This is a client-only screen, so it lives in its
 // own component instead of the shared HomeView feed.
-function ProvidersView({ providers = [], category, isLoading }) {
+function ProvidersView({ providers = [], category, search = '', isLoading }) {
   const navigate = useNavigate();
   const safeProviders = Array.isArray(providers) ? providers : [];
+  const hasSearch = typeof search === 'string' && search.trim().length > 0;
+  const heading = hasSearch
+    ? `Providers matching "${search.trim()}"`
+    : `${prettyCategory(category)} providers`;
+  const emptyMessage = hasSearch
+    ? "No providers match your search yet."
+    : "No providers offer this service yet.";
 
   return (
     <div className="providers-wrap">
@@ -32,13 +39,13 @@ function ProvidersView({ providers = [], category, isLoading }) {
       </button>
 
       <div className="feed-header">
-        <span className="feed-title">{prettyCategory(category)} providers</span>
+        <span className="feed-title">{heading}</span>
       </div>
 
       {isLoading && <p className="feed-status">Loading providers…</p>}
 
       {!isLoading && safeProviders.length === 0 && (
-        <p className="feed-status">No providers offer this service yet.</p>
+        <p className="feed-status">{emptyMessage}</p>
       )}
 
       <div className="providers-grid">
