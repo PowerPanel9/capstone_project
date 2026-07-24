@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, usePa
 import Sidebar from './components/Sidebar/Sidebar';
 import TopBar from './components/TopBar/TopBar';
 import HomeView from './components/HomeView/HomeView';
+import ProvidersView from './components/ProvidersView/ProvidersView';
 import ListingDetailView from './components/ListingDetailView/ListingDetailView';
 import MessagesView from './components/MessagesView/MessagesView';
 import UserProfileView from './components/UserProfileView/UserProfileView';
@@ -23,6 +24,7 @@ import AuthFailure from './components/AuthFailure';
 import ConnectReturn from './components/ConnectOnboarding/ConnectReturn';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getExperiences } from './api/experiences';
+import { getProviders } from './api/users';
 import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
@@ -107,11 +109,25 @@ function App() {
       .catch((err) => console.error("Failed to load bookmarks:", err));
   }, []);
 
-  // Toggle between client and provider mode
+  // Pick which view a user lands in based on the role they signed up as.
+  // CLIENT starts in the client view; PROVIDER and BOTH start in the provider view.
+  const modeForRole = (role) => (role === 'CLIENT' ? 'client' : 'provider');
+
+  // Toggle between client and provider mode.
+  // A BOTH user has both views, so the toggle simply flips between them.
+  // A single-role user (CLIENT-only or PROVIDER-only) doesn't have the other
+  // view yet, so instead of silently switching we send them to onboarding to
+  // sign up for the other role.
   const toggleUserMode = () => {
-    const newMode = userMode === 'client' ? 'provider' : 'client';
-    setUserMode(newMode);
-    localStorage.setItem('sideHustleUserMode', newMode);
+    if (currentUser?.role === 'BOTH') {
+      const newMode = userMode === 'client' ? 'provider' : 'client';
+      setUserMode(newMode);
+      localStorage.setItem('sideHustleUserMode', newMode);
+      return;
+    }
+    // NOTE: /onboarding/role is Zainab's onboarding wizard (PR 2). Until that
+    // route is added it falls through to the catch-all and returns home.
+    navigate('/onboarding/role');
   };
 
   // Open the AI chat modal. An optional message prefills the input box (used by
@@ -163,7 +179,20 @@ function App() {
     setIsAuthenticated(true);
     setCurrentUser(userData);
     setAuthMode(null);
-    navigate(isNewSignup ? '/onboarding/role' : '/home');
+
+    // A brand-new signup hasn't picked a role yet, so send them into the
+    // onboarding flow. Their view mode is set at the end of onboarding
+    // (see handleFinishOnboarding), once they've chosen a role.
+    if (isNewSignup) {
+      navigate('/onboarding/role');
+      return;
+    }
+
+    // A returning login already has a role, so land them in the matching view.
+    const mode = modeForRole(userData?.role);
+    setUserMode(mode);
+    localStorage.setItem('sideHustleUserMode', mode);
+    navigate('/home');
   };
 
   // Called by each onboarding page after it saves. The backend returns the
@@ -532,6 +561,8 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
   const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
   const [experiences, setExperiences] = useState([]); // experience cards for the client home feed
+  const [providers, setProviders] = useState([]); // providers shown when a client picks a category
+  const [isLoadingProviders, setIsLoadingProviders] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);   // first page / new search
@@ -543,10 +574,14 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
   const search = searchParams.get('search') || '';
   const category = searchParams.get('category') || '';
 
-  // In client mode the home feed shows a grid of EXPERIENCES people posted
-  // (in a random order), instead of listings.
+  // In client mode, once a category is picked we show the PROVIDERS who offer
+  // that service (so a client can browse and contact them).
+  const showProviders = userMode === 'client' && Boolean(category);
+
+  // In client mode with no category chosen, the home feed shows a grid of
+  // EXPERIENCES people posted (in a random order), instead of listings.
   // In provider mode we always show the normal listings feed.
-  const showExperiences = userMode === 'client';
+  const showExperiences = userMode === 'client' && !showProviders;
 
   // When the mode or search changes, load fresh results.
   // The landing page (no category chosen, no search) shows category tiles plus
@@ -558,8 +593,33 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
   // When browsing a category or searching, we show the plain (filtered) feed.
   const usePersonalized = userMode === 'provider' && isLanding;
 
+  // Client picked a category: load the providers who offer that service.
+  // This is its own effect so it doesn't tangle with the listings/experiences
+  // feed logic below. `currentUserId` is passed as excludeId so a client who is
+  // also a provider (role BOTH) doesn't see themselves in the list.
+  useEffect(() => {
+    if (!showProviders) return;
+    let ignore = false;
+    setIsLoadingProviders(true);
+    setError(null);
+    getProviders({ category, excludeId: currentUserId })
+      .then((list) => {
+        if (!ignore) setProviders(list);
+      })
+      .catch((err) => {
+        console.error("Failed to load providers:", err);
+        if (!ignore) setError("Could not load providers. Is the backend running?");
+      })
+      .finally(() => {
+        if (!ignore) setIsLoadingProviders(false);
+      });
+    return () => { ignore = true; };
+  }, [showProviders, category, currentUserId]);
+
   // When the search or role changes, start over: clear listings and load page 1.
   useEffect(() => {
+    // When showing providers, the effect above handles loading, so skip this one.
+    if (showProviders) return;
     let ignore = false;
     setIsLoading(true);
     setError(null);
@@ -644,7 +704,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
       });
 
     return () => { ignore = true; };
-  }, [search, category, showExperiences, usePersonalized, currentUserId]);
+  }, [search, category, showExperiences, usePersonalized, currentUserId, showProviders]);
 
   // Load the next page and append it to the list. Called when the user scrolls
   // to the bottom. Guarded so we don't fire while a load is already happening
@@ -664,6 +724,20 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
       .catch((err) => console.error("Failed to load more listings:", err))
       .finally(() => setIsLoadingMore(false));
   };
+
+  // Client picked a category: show the providers who offer that service.
+  if (showProviders) {
+    return (
+      <>
+        {error && <p className="feed-status feed-error">{error}</p>}
+        <ProvidersView
+          providers={providers}
+          category={category}
+          isLoading={isLoadingProviders}
+        />
+      </>
+    );
+  }
 
   return (
     <>

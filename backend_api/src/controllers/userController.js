@@ -145,16 +145,30 @@ const providerCardSelect = {
 };
 
 // Get a randomized list of providers for the client-mode home feed.
-// For now every user is treated as a provider. Later, when users can choose to
-// be a provider or a client, we'll filter on that flag here.
-// Optionally excludes the logged-in user via ?excludeId=<id>.
+// Only users whose role is PROVIDER or BOTH are returned (a CLIENT-only user
+// doesn't offer services, so they shouldn't show up here).
+// Optionally:
+//   ?excludeId=<id>       leaves the logged-in user out of the list.
+//   ?category=CLEANING    keeps only providers who list that skill/service.
 const getProviders = async (req, res) => {
     try {
+        // Start by requiring the user to actually be a provider.
+        const where = {
+            role: { in: ["PROVIDER", "BOTH"] },
+        };
+
+        // Leave the logged-in user out of their own results, if asked.
         const excludeId = Number(req.query.excludeId);
-        const where =
-            Number.isInteger(excludeId) && excludeId > 0
-                ? { id: { not: excludeId } }
-                : {};
+        if (Number.isInteger(excludeId) && excludeId > 0) {
+            where.id = { not: excludeId };
+        }
+
+        // When a category is chosen (from a category tile), keep only providers
+        // whose skills list includes that service. `has` checks the skills array.
+        const category = req.query.category;
+        if (typeof category === "string" && category.trim()) {
+            where.skills = { has: category.trim() };
+        }
 
         const users = await prisma.user.findMany({
             where,

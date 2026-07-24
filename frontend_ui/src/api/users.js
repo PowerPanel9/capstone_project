@@ -49,11 +49,13 @@ export async function getUserById(id) {
 }
 
 // GET /api/users/providers  -> a randomized list of providers for the
-// client-mode home feed. Pass excludeId to leave the logged-in user out.
+// client-mode home feed. Pass excludeId to leave the logged-in user out, and
+// category to only get providers who offer that service (e.g. "CLEANING").
 // Only returns safe public fields (id, name, profilePicture, skills).
-export async function getProviders(excludeId) {
+export async function getProviders({ excludeId, category } = {}) {
   const params = {};
   if (excludeId) params.excludeId = excludeId;
+  if (category) params.category = category;
   const response = await api.get("/api/users/providers", { params });
   return Array.isArray(response.data) ? response.data : [];
 }
