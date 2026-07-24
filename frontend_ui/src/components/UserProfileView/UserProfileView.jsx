@@ -139,6 +139,7 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     firstName: "User",
     lastName: "Name",
     email: "",
+    role: "CLIENT",
     profilePicture: "",
     imageUrl: "",
     bio: "User bio will be loaded from the backend.",
@@ -216,6 +217,7 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
           firstName: userProfile.firstName || "User",
           lastName: userProfile.lastName || "Name",
           email: userProfile.email || me.email || "",
+          role: userProfile.role || "CLIENT",
           imageUrl: userProfile.imageUrl || "",
           profilePicture: userProfile.profilePicture || "",
           bio: userProfile.bio || "",
@@ -951,8 +953,13 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
 
               {isActionsMenuOpen && (
                 <div className="actions-menu-dropdown" role="menu">
+                  {/* A BOTH user has both views, so this just switches between
+                      them. A single-role user doesn't have the other view yet,
+                      so the button invites them to sign up for that role. */}
                   <button type="button" className="actions-menu-item" role="menuitem" onClick={handleToggleModeClick}>
-                    Switch to {userMode === "client" ? "Provider" : "Client"} Mode
+                    {profile.role === "BOTH"
+                      ? `Switch to ${userMode === "client" ? "Provider" : "Client"} Mode`
+                      : `Sign up as a ${userMode === "client" ? "Provider" : "Client"}`}
                   </button>
                   <button type="button" className="actions-menu-item" role="menuitem" onClick={handleEditProfileClick}>
                     Edit Profile

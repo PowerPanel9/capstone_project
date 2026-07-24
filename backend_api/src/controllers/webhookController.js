@@ -18,13 +18,16 @@ async function handleStripeWebhook(req, res) {
   let event;
   try {
     if (webhookSecret) {
-      // Verify the event really came from Stripe (recommended).
+      // Verify the event really came from Stripe (required in production).
       event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret);
+    } else if (process.env.NODE_ENV === "production") {
+      // Never accept unverified webhooks in production — reject outright.
+      console.error("STRIPE_WEBHOOK_SECRET is not set in production. Rejecting webhook.");
+      return res.status(500).send("Webhook secret not configured");
     } else {
-      // No secret configured yet (e.g. very early local testing) — parse raw JSON.
-      // Add STRIPE_WEBHOOK_SECRET as soon as you can so events are verified.
+      // Local dev convenience only: no secret set, parse raw JSON unverified.
       event = JSON.parse(req.body);
-      console.warn("⚠️  STRIPE_WEBHOOK_SECRET not set — webhook signature NOT verified.");
+      console.warn("⚠️  STRIPE_WEBHOOK_SECRET not set — webhook signature NOT verified (dev only).");
     }
   } catch (err) {
     console.error("Webhook signature verification failed:", err.message);
