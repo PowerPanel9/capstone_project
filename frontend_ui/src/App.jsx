@@ -13,6 +13,11 @@ import ApplicationModal from './components/ApplicationModal/ApplicationModal';
 import AIAgentModal from './components/AIAgentModal/AIAgentModal';
 import LandingPage from './components/LandingPage/LandingPage';
 import AuthModal from './components/AuthModal/AuthModal';
+import RoleSelection from './components/Onboarding/RoleSelection';
+import ProfileSetup from './components/Onboarding/ProfileSetup';
+import ProviderServices from './components/Onboarding/ProviderServices';
+import ProviderBuild from './components/Onboarding/ProviderBuild';
+import Welcome from './components/Onboarding/Welcome';
 import AuthSuccess from './components/AuthSuccess';
 import AuthFailure from './components/AuthFailure';
 import ConnectReturn from './components/ConnectOnboarding/ConnectReturn';
@@ -149,13 +154,31 @@ function App() {
     }
   };
 
-  // Handle successful login/signup
-  const handleAuthSuccess = (userData) => {
+  // Handle successful login/signup.
+  // A brand-new signup has just been created with the default role, so we send
+  // them into the onboarding flow to pick a role and fill in their profile.
+  // A returning login already finished onboarding, so they go straight home.
+  const handleAuthSuccess = (userData, { isNewSignup = false } = {}) => {
     // AuthModal already saves to localStorage, just update state
     setIsAuthenticated(true);
     setCurrentUser(userData);
     setAuthMode(null);
-    navigate('/home');
+    navigate(isNewSignup ? '/onboarding/role' : '/home');
+  };
+
+  // Called by each onboarding page after it saves. The backend returns the
+  // updated user, and we keep both App state and localStorage in sync so the
+  // profile and later pages see the new values.
+  const handleUserUpdate = (updatedUser) => {
+    setCurrentUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
+  // Called from the final Welcome page. It sets the view mode ("client" or
+  // "provider") to match the role the user picked so they land in the right view.
+  const handleFinishOnboarding = (mode) => {
+    setUserMode(mode);
+    localStorage.setItem('sideHustleUserMode', mode);
   };
 
   // Handle logout
@@ -168,8 +191,10 @@ function App() {
     navigate('/');
   };
 
+  // Onboarding pages are full-screen wizards, so they don't get the sidebar/topbar.
+  const isOnboarding = location.pathname.startsWith('/onboarding');
   // Determine if we should show the main app layout (sidebar + topbar)
-  const showMainLayout = isAuthenticated && location.pathname !== '/';
+  const showMainLayout = isAuthenticated && location.pathname !== '/' && !isOnboarding;
   const isMessagesRoute = location.pathname === "/messages";
   const currentUserId = Number(currentUser?.id) || null;
 
@@ -413,6 +438,61 @@ function App() {
             />
           )}
         </div>
+      ) : isOnboarding ? (
+        // Onboarding wizard - full-screen, no sidebar/topbar. Only for logged-in
+        // users; anyone else is bounced to the landing page.
+        <Routes>
+          <Route
+            path="/onboarding/role"
+            element={
+              isAuthenticated ? (
+                <RoleSelection currentUser={currentUser} onUserUpdate={handleUserUpdate} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/onboarding/profile"
+            element={
+              isAuthenticated ? (
+                <ProfileSetup currentUser={currentUser} onUserUpdate={handleUserUpdate} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/onboarding/services"
+            element={
+              isAuthenticated ? (
+                <ProviderServices currentUser={currentUser} onUserUpdate={handleUserUpdate} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/onboarding/build"
+            element={
+              isAuthenticated ? (
+                <ProviderBuild currentUser={currentUser} onUserUpdate={handleUserUpdate} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/onboarding/welcome"
+            element={
+              isAuthenticated ? (
+                <Welcome currentUser={currentUser} onFinish={handleFinishOnboarding} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+        </Routes>
       ) : (
         // Landing page - shown when not authenticated
         <Routes>

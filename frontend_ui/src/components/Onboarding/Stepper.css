@@ -1,0 +1,28 @@
+/* The segmented progress bar. Bars sit in a centered row with the label. */
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 0 16px;
+}
+
+/* Upcoming steps are short grey bars. */
+.stepper-bar {
+  width: 12px;
+  height: 6px;
+  border-radius: 100px;
+  background: #e8e7e3;
+}
+
+/* Completed / current steps grow wider and get the accent colour (set inline). */
+.stepper-bar-done {
+  width: 40px;
+}
+
+.stepper-label {
+  margin-left: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5f5f5f;
+}

@@ -1,0 +1,193 @@
+/* Shared styles for the whole onboarding flow.
+   Colors come straight from the Figma design:
+     teal   #4ecdc4  -> client accent
+     purple #7c83c9  -> provider accent
+     text   #111 / #5f5f5f, borders #e8e7e3, footer bg #faf8f5 */
+
+/* The full-screen page: white background, column layout, footer pinned bottom. */
+.onboarding-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+/* ---- Top navigation bar ---- */
+.onboarding-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 80px;
+  border-bottom: 1px solid #e8e7e3;
+}
+
+.onboarding-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Small square logo badge with the "S". Its color follows the flow accent. */
+.onboarding-logo-mark {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.onboarding-logo-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111;
+}
+
+.onboarding-nav-track {
+  font-size: 14px;
+  font-weight: 600;
+  color: #5f5f5f;
+}
+
+/* The outlined "Support" pill on the right of the nav. */
+.onboarding-nav-btn {
+  padding: 10px 20px;
+  border: 1.5px solid #111;
+  border-radius: 100px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  cursor: pointer;
+}
+
+/* ---- Centered content column ---- */
+.onboarding-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 24px 64px;
+}
+
+/* Heading + subtitle block. */
+.onboarding-header {
+  max-width: 720px;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.onboarding-title {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+.onboarding-subtitle {
+  font-size: 17px;
+  line-height: 1.6;
+  color: #5f5f5f;
+}
+
+/* ---- Footer ---- */
+.onboarding-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 80px;
+  border-top: 1px solid #e8e7e3;
+  background: #faf8f5;
+}
+
+.onboarding-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #5f5f5f;
+}
+
+.onboarding-footer-mark {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.onboarding-footer-links {
+  display: flex;
+  gap: 28px;
+  font-size: 13px;
+  color: #5f5f5f;
+}
+
+/* ---- Buttons (shared by every step) ---- */
+/* Primary pill button. Its background color is set per page with an inline
+   style (teal for client, purple for provider) so it matches the accent. */
+.onboarding-primary-btn {
+  padding: 16px 48px;
+  border: none;
+  border-radius: 100px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.onboarding-primary-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.onboarding-primary-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Lighter outlined pill used for "Skip" and "Back". */
+.onboarding-secondary-btn {
+  padding: 16px 28px;
+  border: 1.5px solid #e8e7e3;
+  border-radius: 100px;
+  background: #fff;
+  color: #5f5f5f;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.onboarding-secondary-btn:hover {
+  background: #faf8f5;
+}
+
+/* Row that lays two buttons side by side (Skip + Continue, Back + Continue). */
+.onboarding-actions {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.onboarding-error {
+  margin-top: 16px;
+  color: #dc2626;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Small "you are secure" note under the role-selection button. */
+.onboarding-privacy {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #5f5f5f;
+  text-align: center;
+}

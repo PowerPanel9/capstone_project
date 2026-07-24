@@ -14,6 +14,24 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
+// Build the Authorization header from the saved login token.
+// Updating a profile is a protected action, so the backend needs this.
+function authHeader() {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// PUT /api/users/:id  -> update the logged-in user's own profile.
+// `fields` is an object with just the fields we want to change, e.g.
+// { role: "PROVIDER" } or { location, bio }. The backend only updates the
+// fields it receives, so each onboarding step can save a little at a time.
+export async function updateUser(id, fields) {
+  const response = await api.put(`/api/users/${id}`, fields, {
+    headers: authHeader(),
+  });
+  return response.data;
+}
+
 // GET /api/users/name/:name
 // Searches users (providers) by first or last name and returns the matching
 // list. The backend responds with an array, so we always hand back an array
