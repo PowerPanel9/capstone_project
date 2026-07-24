@@ -9,6 +9,7 @@ const userProfileSelect = {
     lastName: true,
     email: true,
     role: true,
+    categories: true,
     bio: true,
     skills: true,
     location: true,
@@ -141,6 +142,7 @@ const providerCardSelect = {
     lastName: true,
     profilePicture: true,
     imageUrl: true,
+    categories: true,
     skills: true,
 };
 
@@ -149,7 +151,7 @@ const providerCardSelect = {
 // doesn't offer services, so they shouldn't show up here).
 // Optionally:
 //   ?excludeId=<id>       leaves the logged-in user out of the list.
-//   ?category=CLEANING    keeps only providers who list that skill/service.
+//   ?category=CLEANING    keeps only providers who selected that category.
 const getProviders = async (req, res) => {
     try {
         // Start by requiring the user to actually be a provider.
@@ -164,16 +166,48 @@ const getProviders = async (req, res) => {
         }
 
         // When a category is chosen (from a category tile), keep only providers
-        // whose skills list includes that service. `has` checks the skills array.
+        // who selected that category during onboarding. Keep a skills fallback
+        // so older accounts still show up until they re-save onboarding.
         const category = req.query.category;
         if (typeof category === "string" && category.trim()) {
-            where.skills = { has: category.trim() };
+            const normalizedCategory = category.trim();
+            where.OR = [
+                { categories: { has: normalizedCategory } },
+                { skills: { has: normalizedCategory } },
+            ];
         }
 
-        const users = await prisma.user.findMany({
-            where,
-            select: providerCardSelect,
-        });
+        let users;
+        try {
+            users = await prisma.user.findMany({
+                where,
+                select: providerCardSelect,
+            });
+        } catch (queryError) {
+            if (!isUnknownPrismaFieldError(queryError)) throw queryError;
+            // Fallback for databases that have not run the categories migration:
+            // use the older skills-only filter and omit the categories field.
+            const legacyWhere = {
+                role: { in: ["PROVIDER", "BOTH"] },
+            };
+            if (Number.isInteger(excludeId) && excludeId > 0) {
+                legacyWhere.id = { not: excludeId };
+            }
+            if (typeof category === "string" && category.trim()) {
+                legacyWhere.skills = { has: category.trim() };
+            }
+            users = await prisma.user.findMany({
+                where: legacyWhere,
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    profilePicture: true,
+                    imageUrl: true,
+                    skills: true,
+                },
+            });
+        }
 
         // Shuffle so the feed shows different providers each time (Fisher–Yates).
         for (let i = users.length - 1; i > 0; i -= 1) {
@@ -299,6 +333,7 @@ const updateUser = async (req, res) => {
             imageUrl,
             bio,
             skills,
+            categories,
             contactEmail,
             phoneNumber,
             mailingAddress,
@@ -317,6 +352,19 @@ const updateUser = async (req, res) => {
         if (role !== undefined && !allowedRoles.includes(role)) {
             return res.status(400).json({ message: "Invalid role" });
         }
+        const allowedCategories = [
+            "CLEANING", "TUTORING", "PLUMBING", "GARDENING", "BEAUTY",
+            "BABYSITTING", "MOVING", "HANDYMAN", "DELIVERY", "OTHER",
+        ];
+        if (categories !== undefined) {
+            if (!Array.isArray(categories)) {
+                return res.status(400).json({ message: "categories must be an array" });
+            }
+            const invalidCategory = categories.find((value) => !allowedCategories.includes(value));
+            if (invalidCategory) {
+                return res.status(400).json({ message: `Invalid category: ${invalidCategory}` });
+            }
+        }
         const requestedAddress =
             typeof addressText === "string" && addressText.trim()
                 ? addressText.trim()
@@ -329,6 +377,7 @@ const updateUser = async (req, res) => {
             imageUrl,
             bio,
             skills,
+            categories,
             contactEmail: typeof contactEmail === "string" && contactEmail.trim() ? contactEmail.trim() : null,
             phoneNumber: typeof phoneNumber === "string" && phoneNumber.trim() ? phoneNumber.trim() : null,
             mailingAddress: typeof mailingAddress === "string" && mailingAddress.trim() ? mailingAddress.trim() : null,
@@ -378,6 +427,7 @@ const updateUser = async (req, res) => {
                 contactEmail: _contactEmail,
                 phoneNumber: _phoneNumber,
                 mailingAddress: _mailingAddress,
+                categories: _categories,
                 ...legacyData
             } = data;
             updatedUser = await prisma.user.update({

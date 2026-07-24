@@ -6,9 +6,13 @@ const prisma = new PrismaClient();
 
 const SALT_ROUNDS = 10;
 const MIN_PASSWORD_LENGTH = 8;
+const ALLOWED_CATEGORIES = [
+    "CLEANING", "TUTORING", "PLUMBING", "GARDENING", "BEAUTY",
+    "BABYSITTING", "MOVING", "HANDYMAN", "DELIVERY", "OTHER",
+];
 
 const register = async (req, res) => {
-    const { firstName, lastName, email, password, role } = req.body;
+    const { firstName, lastName, email, password, role, categories } = req.body;
     if (!firstName || !lastName || !email || !password) {
         return res.status(400).json({ error: "First Name, Last Name, email, username, and password are required" });
       }
@@ -21,6 +25,15 @@ const register = async (req, res) => {
     
       if (!process.env.JWT_SECRET) {
         return res.status(500).json({ error: "JWT_SECRET is not configured" });
+      }
+      if (categories !== undefined) {
+        if (!Array.isArray(categories)) {
+          return res.status(400).json({ error: "categories must be an array" });
+        }
+        const invalidCategory = categories.find((value) => !ALLOWED_CATEGORIES.includes(value));
+        if (invalidCategory) {
+          return res.status(400).json({ error: `Invalid category: ${invalidCategory}` });
+        }
       }
 
       try {
@@ -45,7 +58,8 @@ const register = async (req, res) => {
                 password: hashedPassword,
                 // Save the chosen role. Falls back to CLIENT if the frontend
                 // hasn't sent one yet (safe default until the role picker ships).
-                role: role || 'CLIENT'
+                role: role || 'CLIENT',
+                categories: Array.isArray(categories) ? categories : [],
             }
         });
 
@@ -122,6 +136,7 @@ const makeUserPublic = (user) => {
         lastName: user.lastName,
         email: user.email,
         role: user.role, // Ardelia uses this to route the user and drive the view toggle
+        categories: Array.isArray(user.categories) ? user.categories : [],
     };
 };
 

@@ -251,6 +251,51 @@
   color: var(--primary, #7B8FC8);
 }
 
+/* Client experience category tabs/chips (multi-select). */
+.experience-filters {
+  margin-bottom: 14px;
+}
+
+.experience-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.experience-filter-chip {
+  border: 1px solid #dbe4ff;
+  background: #fff;
+  color: #4b5563;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.experience-filter-chip.active {
+  background: #7b8fc8;
+  border-color: #7b8fc8;
+  color: #fff;
+}
+
+.experience-filter-clear {
+  margin-top: 8px;
+  border: none;
+  background: none;
+  color: #7b8fc8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.experience-filter-clear:hover {
+  text-decoration: underline;
+}
+
 /* Provider browse/search results (client mode). Circular avatar tiles laid out
    in a responsive grid: profile picture (or initials) on top, then the name,
    then up to 3 skills. */
@@ -261,17 +306,74 @@
   row-gap: 32px;
 }
 
-/* One experience card, Facebook Marketplace style: just the image with the
-   title in plain text below it — no card box or border. */
+/* One experience item: no card box, just image + text under it. */
 .experience-grid-card {
   display: flex;
   flex-direction: column;
   text-align: left;
-  background: none;
+  gap: 8px;
+  font-family: inherit;
+}
+
+/* Metadata shown under the poster image. */
+.experience-grid-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Poster row (avatar + name) at the top of the post card. */
+.experience-grid-poster {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
   border: none;
+  background: none;
   padding: 0;
   cursor: pointer;
   font-family: inherit;
+}
+
+.experience-grid-poster:disabled {
+  cursor: default;
+}
+
+.experience-grid-avatar,
+.experience-grid-avatar-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.experience-grid-avatar {
+  object-fit: cover;
+}
+
+.experience-grid-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e2340;
+  background: #eef2ff;
+  border: 1px solid #dbe4ff;
+}
+
+.experience-grid-poster-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.experience-grid-image-button {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
 }
 
 /* The cover image sits in a fixed-ratio box so every card lines up neatly. */
@@ -291,10 +393,20 @@
 }
 
 .experience-grid-title {
+  border: none;
+  background: none;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
   font-size: 14px;
   font-weight: 600;
   color: #1E2340;
-  margin-top: 8px;
+}
+
+.experience-grid-title:hover,
+.experience-grid-poster:hover .experience-grid-poster-name {
+  text-decoration: underline;
 }
 
 /* ===================================================================

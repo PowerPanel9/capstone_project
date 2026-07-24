@@ -78,6 +78,7 @@ model User {
   role             UserRole @default(CLIENT) // What the user signed up as: client, provider, or both
   createdAt        DateTime @default(now()) @map("created_at")
   bio              String? // Description of the user
+  categories       String[] @default([]) // Provider service categories picked during onboarding
   skills           String[] // List of skills for providers
   location         String? // Map / nearby-location feature (type TBD)
   resumeUrl        String?  @map("resume_url") // Optional link to resume
