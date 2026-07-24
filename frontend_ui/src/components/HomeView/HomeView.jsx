@@ -6,13 +6,44 @@ import CategoryGrid from '../CategoryGrid/CategoryGrid';
 import AIAgentModal from '../AIAgentModal/AIAgentModal';
 import './HomeView.css';
 
+const EXPERIENCE_CATEGORIES = [
+  { value: 'CLEANING', label: 'Cleaning' },
+  { value: 'TUTORING', label: 'Tutoring' },
+  { value: 'PLUMBING', label: 'Plumbing' },
+  { value: 'GARDENING', label: 'Gardening' },
+  { value: 'BEAUTY', label: 'Beauty' },
+  { value: 'BABYSITTING', label: 'Babysitting' },
+  { value: 'MOVING', label: 'Moving' },
+  { value: 'HANDYMAN', label: 'Handyman' },
+  { value: 'DELIVERY', label: 'Delivery' },
+  { value: 'OTHER', label: 'Other' },
+];
+
 // Turn a category enum value (e.g. "BABYSITTING") into a nice label ("Babysitting").
 function prettyCategory(value) {
   if (!value) return '';
   return value.charAt(0) + value.slice(1).toLowerCase();
 }
 
-function HomeView({ listings, experiences = [], showExperiences = false, bookmarks, onBookmark, userMode, onOpenAI, onLoadMore, hasMore, isLoading, isLoadingMore, usePersonalized, category, showCategories }) {
+function HomeView({
+  listings,
+  experiences = [],
+  showExperiences = false,
+  selectedExperienceCategories = [],
+  onToggleExperienceCategory,
+  onClearExperienceCategories,
+  bookmarks,
+  onBookmark,
+  userMode,
+  onOpenAI,
+  onLoadMore,
+  hasMore,
+  isLoading,
+  isLoadingMore,
+  usePersonalized,
+  category,
+  showCategories,
+}) {
   const navigate = useNavigate();
   const safeListings = Array.isArray(listings) ? listings : [];
   const safeExperiences = Array.isArray(experiences) ? experiences : [];
@@ -86,66 +117,98 @@ function HomeView({ listings, experiences = [], showExperiences = false, bookmar
       {showExperiences ? (
         // Client mode: show posted experiences as social-style cards with the
         // poster info on top, then the cover image and title.
-        <div className="experience-grid">
-          {safeExperiences.length === 0 ? (
-            <p className="feed-status">No experiences yet</p>
-          ) : (
-            safeExperiences.map((experience) => {
-              const cover =
-                Array.isArray(experience.images) && experience.images.length > 0
-                  ? experience.images[0]
-                  : "";
-
-              const poster = experience.user || null;
-              const firstName = poster?.firstName || "";
-              const lastName = poster?.lastName || "";
-              const posterName = `${firstName} ${lastName}`.trim() || "Unknown user";
-              const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "U";
-              const profilePicture = poster?.profilePicture || "";
-
-              return (
-                <article className="experience-grid-card" key={experience.id}>
+        <>
+          <div className="experience-filters">
+            <div className="experience-filters-heading">Filter experiences</div>
+            <div className="experience-filter-chips">
+              {EXPERIENCE_CATEGORIES.map((item) => {
+                const isActive = selectedExperienceCategories.includes(item.value);
+                return (
                   <button
+                    key={item.value}
                     type="button"
-                    className="experience-grid-poster"
-                    onClick={() => poster?.id && navigate(`/providers/${poster.id}`)}
-                    disabled={!poster?.id}
+                    className={`experience-filter-chip ${isActive ? 'active' : ''}`}
+                    onClick={() => onToggleExperienceCategory?.(item.value)}
                   >
-                    {profilePicture ? (
-                      <img
-                        src={profilePicture}
-                        alt={`${posterName} profile`}
-                        className="experience-grid-avatar"
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedExperienceCategories.length > 0 && (
+              <button
+                type="button"
+                className="experience-filter-clear"
+                onClick={() => onClearExperienceCategories?.()}
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+
+          <div className="experience-grid">
+            {safeExperiences.length === 0 ? (
+              <p className="feed-status">No experiences in selected categories yet</p>
+            ) : (
+              safeExperiences.map((experience) => {
+                const cover =
+                  Array.isArray(experience.images) && experience.images.length > 0
+                    ? experience.images[0]
+                    : "";
+
+                const poster = experience.user || null;
+                const firstName = poster?.firstName || "";
+                const lastName = poster?.lastName || "";
+                const posterName = `${firstName} ${lastName}`.trim() || "Unknown user";
+                const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "U";
+                const profilePicture = poster?.profilePicture || "";
+
+                return (
+                  <article className="experience-grid-card" key={experience.id}>
+                    <button
+                      type="button"
+                      className="experience-grid-image-button"
+                      onClick={() => navigate(`/experiences/${experience.id}`)}
+                    >
+                      <div
+                        className="experience-grid-image"
+                        style={cover ? { backgroundImage: `url("${cover}")` } : undefined}
                       />
-                    ) : (
-                      <div className="experience-grid-avatar-fallback">{initials}</div>
-                    )}
-                    <span className="experience-grid-poster-name">{posterName}</span>
-                  </button>
+                    </button>
 
-                  <button
-                    type="button"
-                    className="experience-grid-image-button"
-                    onClick={() => navigate(`/experiences/${experience.id}`)}
-                  >
-                    <div
-                      className="experience-grid-image"
-                      style={cover ? { backgroundImage: `url("${cover}")` } : undefined}
-                    />
-                  </button>
+                    <div className="experience-grid-meta">
+                      <button
+                        type="button"
+                        className="experience-grid-poster"
+                        onClick={() => poster?.id && navigate(`/users/${poster.id}`)}
+                        disabled={!poster?.id}
+                      >
+                        {profilePicture ? (
+                          <img
+                            src={profilePicture}
+                            alt={`${posterName} profile`}
+                            className="experience-grid-avatar"
+                          />
+                        ) : (
+                          <div className="experience-grid-avatar-fallback">{initials}</div>
+                        )}
+                        <span className="experience-grid-poster-name">{posterName}</span>
+                      </button>
 
-                  <button
-                    type="button"
-                    className="experience-grid-title"
-                    onClick={() => navigate(`/experiences/${experience.id}`)}
-                  >
-                    {experience.jobTitle}
-                  </button>
-                </article>
-              );
-            })
-          )}
-        </div>
+                      <button
+                        type="button"
+                        className="experience-grid-title"
+                        onClick={() => navigate(`/experiences/${experience.id}`)}
+                      >
+                        {experience.jobTitle}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })
+            )}
+          </div>
+        </>
       ) : (
         <>
           <div className="listing-feed">

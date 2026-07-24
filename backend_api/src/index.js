@@ -7,14 +7,32 @@ const userRoutes = require("./routes/userRoute");
 const messageRoutes = require("./routes/messageRoutes");
 const listingsRoutes = require("./routes/listingsRoutes");
 const bookmarksRoutes = require("./routes/bookmarksRoutes");
+const experienceRoutes = require("./routes/experienceRoute");
 const app = express();
 const PORT = process.env.PORT || 3000;
 // Middleware
-// In production, restrict CORS to our own frontend. In dev (no FRONTEND_URL),
-// stay open so localhost works. This protects the payment API from other sites.
-const corsOptions = process.env.FRONTEND_URL
-  ? { origin: process.env.FRONTEND_URL, credentials: true }
-  : {};
+// Allow both deployed frontend and local dev frontends.
+// This avoids CORS blocks when .env contains a production FRONTEND_URL
+// but we are running the backend locally.
+const rawFrontendUrl = process.env.FRONTEND_URL || "";
+const normalizedFrontendUrl = rawFrontendUrl.replace(/\/$/, "");
+const allowedOrigins = [
+  normalizedFrontendUrl,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5174",
+].filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow non-browser tools (no Origin header), e.g. curl/Postman.
+    if (!origin) return callback(null, true);
+    const isAllowed = allowedOrigins.includes(origin);
+    return callback(isAllowed ? null : new Error("Not allowed by CORS"), isAllowed);
+  },
+  credentials: true,
+};
 app.use(cors(corsOptions));
 app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
@@ -35,6 +53,7 @@ app.use("/messages", messageRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/listings", listingsRoutes);
 app.use("/api/bookmarks", bookmarksRoutes);
+app.use("/api/experiences", experienceRoutes);
 app.use("/api/users/name/:name", userRoutes);
 
 // Start the server

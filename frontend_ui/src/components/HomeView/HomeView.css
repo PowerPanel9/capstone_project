@@ -251,6 +251,58 @@
   color: var(--primary, #7B8FC8);
 }
 
+/* Client experience filters (supports selecting multiple categories). */
+.experience-filters {
+  margin-bottom: 14px;
+}
+
+.experience-filters-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e2340;
+  margin-bottom: 8px;
+}
+
+.experience-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.experience-filter-chip {
+  border: 1px solid #dbe4ff;
+  background: #fff;
+  color: #4b5563;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.experience-filter-chip.active {
+  background: #7b8fc8;
+  border-color: #7b8fc8;
+  color: #fff;
+}
+
+.experience-filter-clear {
+  margin-top: 8px;
+  border: none;
+  background: none;
+  color: #7b8fc8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.experience-filter-clear:hover {
+  text-decoration: underline;
+}
+
 /* Provider browse/search results (client mode). Circular avatar tiles laid out
    in a responsive grid: profile picture (or initials) on top, then the name,
    then up to 3 skills. */
@@ -261,18 +313,20 @@
   row-gap: 32px;
 }
 
-/* One experience card in a social-post style block. */
+/* One experience item: no card box, just image + text under it. */
 .experience-grid-card {
   display: flex;
   flex-direction: column;
   text-align: left;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 10px;
   gap: 8px;
   font-family: inherit;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* Metadata shown under the poster image. */
+.experience-grid-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 /* Poster row (avatar + name) at the top of the post card. */
@@ -302,7 +356,6 @@
 
 .experience-grid-avatar {
   object-fit: cover;
-  border: 1px solid #e5e7eb;
 }
 
 .experience-grid-avatar-fallback {
