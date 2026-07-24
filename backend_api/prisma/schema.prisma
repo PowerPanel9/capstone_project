@@ -52,6 +52,16 @@ enum ListingCategory {
   OTHER
 }
 
+// user.role — what the user signed up as.
+//   CLIENT   = only hires providers (posts listings)
+//   PROVIDER = only offers services (applies to listings)
+//   BOTH     = does both
+enum UserRole {
+  CLIENT
+  PROVIDER
+  BOTH
+}
+
 // ---------------------------------------------------------------------------
 // Models
 // ---------------------------------------------------------------------------
@@ -65,6 +75,7 @@ model User {
   email            String   @unique // Email of the user for sign in
   password         String? // Password (encrypted) - NULL for OAuth users
   authProvider     String   @default("local") @map("auth_provider") // "local" or "google"
+  role             UserRole @default(CLIENT) // What the user signed up as: client, provider, or both
   createdAt        DateTime @default(now()) @map("created_at")
   bio              String? // Description of the user
   skills           String[] // List of skills for providers
