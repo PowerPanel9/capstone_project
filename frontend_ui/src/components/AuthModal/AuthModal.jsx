@@ -49,8 +49,9 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Call success callback
-      onSuccess(data.user);
+      // Call success callback. Signups (not logins) go through onboarding,
+      // so tell App which one this was.
+      onSuccess(data.user, { isNewSignup: !isLogin });
     } catch (err) {
       setError(err.message);
     } finally {

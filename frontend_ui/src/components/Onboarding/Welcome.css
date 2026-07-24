@@ -1,0 +1,19 @@
+/* Centered confirmation content for the final welcome screen. */
+.welcome-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 24px;
+}
+
+/* Big circular checkmark badge; its colour is set inline to match the flow. */
+.welcome-check {
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  margin-bottom: 24px;
+}

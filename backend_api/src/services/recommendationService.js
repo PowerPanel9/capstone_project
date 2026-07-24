@@ -25,8 +25,8 @@ const MODEL = process.env.AI_MODEL;
 const BASE_URL = process.env.AI_BASE_URL;
 
 // How many open listings we consider / return. Keeping this small keeps the AI
-// prompt cheap and fast.
-const MAX_LISTINGS = 30;
+// prompt cheap and fast, and limits the recommended feed to a short list.
+const MAX_LISTINGS = 8;
 
 /**
  * Build a personalized, AI-ranked feed of open listings for a provider.
