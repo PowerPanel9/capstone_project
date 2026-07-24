@@ -561,6 +561,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
   const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
   const [experiences, setExperiences] = useState([]); // experience cards for the client home feed
+  const [selectedExperienceCategories, setSelectedExperienceCategories] = useState([]);
   const [providers, setProviders] = useState([]); // providers shown when a client picks a category
   const [isLoadingProviders, setIsLoadingProviders] = useState(false);
   const [page, setPage] = useState(1);
@@ -631,13 +632,17 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
     // this is a visual grid (text-only posts are hidden here). The full list
     // comes at once, so there are no extra pages to load.
     if (showExperiences) {
-      getExperiences({ category })
+      getExperiences()
         .then((list) => {
           if (ignore) return;
           const withImages = list.filter(
             (exp) => Array.isArray(exp.images) && exp.images.length > 0
           );
-          setExperiences(withImages);
+          const filteredExperiences =
+            selectedExperienceCategories.length > 0
+              ? withImages.filter((exp) => selectedExperienceCategories.includes(exp.category))
+              : withImages;
+          setExperiences(filteredExperiences);
           setHasMore(false);
         })
         .catch((err) => {
@@ -704,7 +709,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
       });
 
     return () => { ignore = true; };
-  }, [search, category, showExperiences, usePersonalized, currentUserId, showProviders]);
+  }, [search, category, showExperiences, usePersonalized, currentUserId, showProviders, selectedExperienceCategories]);
 
   // Load the next page and append it to the list. Called when the user scrolls
   // to the bottom. Guarded so we don't fire while a load is already happening
@@ -751,6 +756,15 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
         listings={listings}
         experiences={experiences}
         showExperiences={showExperiences}
+        selectedExperienceCategories={selectedExperienceCategories}
+        onToggleExperienceCategory={(categoryValue) => {
+          setSelectedExperienceCategories((prev) =>
+            prev.includes(categoryValue)
+              ? prev.filter((value) => value !== categoryValue)
+              : [...prev, categoryValue]
+          );
+        }}
+        onClearExperienceCategories={() => setSelectedExperienceCategories([])}
         bookmarks={bookmarks}
         onBookmark={onBookmark}
         userMode={userMode}

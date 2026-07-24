@@ -8,10 +8,32 @@
 const Stripe = require("stripe");
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  // Fail loudly at startup rather than getting confusing errors later.
+  // Warn at startup. The app can still run; only Stripe features are disabled.
   console.warn("⚠️  STRIPE_SECRET_KEY is not set — Stripe features will not work.");
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+function createMissingStripeProxy(path = "stripe") {
+  const fn = () => {
+    throw new Error(
+      `Stripe is not configured. Missing STRIPE_SECRET_KEY while calling ${path}.`
+    );
+  };
+
+  return new Proxy(fn, {
+    get(_target, prop) {
+      if (prop === "then") return undefined; // keep it from looking like a Promise
+      return createMissingStripeProxy(`${path}.${String(prop)}`);
+    },
+    apply() {
+      throw new Error(
+        `Stripe is not configured. Missing STRIPE_SECRET_KEY while calling ${path}().`
+      );
+    },
+  });
+}
+
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : createMissingStripeProxy();
 
 module.exports = stripe;

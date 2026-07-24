@@ -15,7 +15,7 @@ function Search({ userMode }) {
 
   // Show a different hint depending on which mode the user is in.
   const placeholder =
-    userMode === 'client' ? 'Search providers...' : 'Search listings...';
+    userMode === 'client' ? 'Search providers, skills, services...' : 'Search listings, services, clients...';
 
   // When the user types, update the URL. Empty text clears the search param.
   const handleSearchChange = (value) => {

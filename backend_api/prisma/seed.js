@@ -47,6 +47,22 @@ function seedEmail(poster) {
   return `${poster.firstName}.${poster.lastName}@seed.local`.toLowerCase();
 }
 
+// Keep provider categories in enum format (e.g. "CLEANING").
+function normalizeSeedCategories(categories, fallbackCategory) {
+  const cleaned = Array.isArray(categories)
+    ? categories
+        .filter((value) => typeof value === "string" && value.trim())
+        .map((value) => value.trim().toUpperCase())
+    : [];
+  if (cleaned.length > 0) return cleaned;
+  return [String(fallbackCategory || "OTHER").toUpperCase()];
+}
+
+function seedProfilePicture(firstName, lastName) {
+  const seed = encodeURIComponent(`${firstName || ""} ${lastName || ""}`.trim() || "User");
+  return `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}`;
+}
+
 async function main() {
   console.log("Seeding database...");
 
@@ -120,9 +136,11 @@ async function main() {
         password: userData.password,
         authProvider: userData.authProvider,
         role: userData.role,
+        categories: normalizeSeedCategories(userData.categories),
         bio: userData.bio,
         skills: userData.skills,
         location: userData.location,
+        profilePicture: userData.profilePicture || seedProfilePicture(userData.firstName, userData.lastName),
         imageUrl: userData.imageUrl,
         resumeUrl: userData.resumeUrl,
         certificationUrl: userData.certificationUrl,
@@ -164,8 +182,13 @@ async function main() {
           email: posterEmail,
           password: "seed-password",
           authProvider: "local",
+          role: "PROVIDER",
+          categories: normalizeSeedCategories(item.poster.categories, item.category),
           bio: derivedBio,
           skills: derivedSkills,
+          profilePicture:
+            item.poster.profilePicture ||
+            seedProfilePicture(item.poster.firstName, item.poster.lastName),
         },
       });
       createdProviders[posterEmail] = owner;
