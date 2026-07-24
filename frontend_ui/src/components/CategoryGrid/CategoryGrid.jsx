@@ -141,7 +141,9 @@ function CategoryGrid({ userMode }) {
 
   return (
     <div className="category-section">
-      <h2 className="category-heading">Browse by category</h2>
+      <h2 className="category-heading">
+        {isClient ? 'Browse providers by category' : 'Browse by category'}
+      </h2>
 
       {/* The carousel: a left arrow, the sliding row of tiles, a right arrow.
           When all tiles already fit (!showArrows) the arrows are made invisible

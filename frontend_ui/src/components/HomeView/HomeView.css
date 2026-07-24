@@ -251,16 +251,9 @@
   color: var(--primary, #7B8FC8);
 }
 
-/* Client experience filters (supports selecting multiple categories). */
+/* Client experience category tabs/chips (multi-select). */
 .experience-filters {
   margin-bottom: 14px;
-}
-
-.experience-filters-heading {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1e2340;
-  margin-bottom: 8px;
 }
 
 .experience-filter-chips {

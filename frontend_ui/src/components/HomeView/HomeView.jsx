@@ -48,9 +48,9 @@ function HomeView({
   const safeListings = Array.isArray(listings) ? listings : [];
   const safeExperiences = Array.isArray(experiences) ? experiences : [];
 
-  // Whether the docked AI chat panel on the right is open. Starts open; the
-  // panel's X closes it, and a floating button reopens it.
-  const [chatOpen, setChatOpen] = useState(true);
+  // Whether the docked AI chat panel on the right is open. Starts closed and
+  // opens only when the user taps the floating chat button.
+  const [chatOpen, setChatOpen] = useState(false);
 
   // The "sentinel" is an empty div at the very bottom of the feed. An
   // IntersectionObserver watches it: when it scrolls into view, we know the
@@ -119,7 +119,6 @@ function HomeView({
         // poster info on top, then the cover image and title.
         <>
           <div className="experience-filters">
-            <div className="experience-filters-heading">Filter experiences</div>
             <div className="experience-filter-chips">
               {EXPERIENCE_CATEGORIES.map((item) => {
                 const isActive = selectedExperienceCategories.includes(item.value);

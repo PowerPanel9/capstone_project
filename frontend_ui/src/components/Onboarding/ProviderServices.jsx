@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import Stepper from './Stepper';
 import OnboardingChrome from './OnboardingChrome';
+import { updateUser } from '../../api/users';
 import './Onboarding.css';
 import './ProviderServices.css';
 
@@ -27,14 +28,14 @@ const CATEGORIES = [
   { value: 'OTHER', label: 'Other' },
 ];
 
-function ProviderServices() {
+function ProviderServices({ currentUser, onUserUpdate }) {
   const navigate = useNavigate();
-  // We keep the selection only for the pill UI on this page. For now we do NOT
-  // save it: these are service CATEGORIES (used later to filter the client home
-  // page by category), not free-text skills, and there is no field for them yet.
-  // A dedicated `services` field will be added later; until then we don't write
-  // to `skills`, so the profile's Skills section stays clean.
-  const [selected, setSelected] = useState([]);
+  // Keep onboarding selection in sync with the current saved profile.
+  const [selected, setSelected] = useState(
+    Array.isArray(currentUser?.categories) ? currentUser.categories : []
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   // Add the category if it isn't picked yet, otherwise remove it.
   const toggleCategory = (value) => {
@@ -43,8 +44,22 @@ function ProviderServices() {
     );
   };
 
-  // Nothing is saved yet, so just move on to the next step.
-  const handleContinue = () => navigate('/onboarding/build');
+  // Save selected categories to the user profile, then continue.
+  const handleContinue = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError('');
+    try {
+      const updated = await updateUser(currentUser.id, { categories: selected });
+      onUserUpdate?.(updated);
+      navigate('/onboarding/build');
+    } catch (err) {
+      console.error('Failed to save provider categories:', err);
+      setError('Could not save your categories. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <OnboardingChrome accent={PURPLE} track="Service Provider Track">
@@ -89,10 +104,12 @@ function ProviderServices() {
             className="onboarding-primary-btn"
             style={{ background: PURPLE, flex: 1 }}
             onClick={handleContinue}
+            disabled={saving}
           >
-            Continue
+            {saving ? 'Saving…' : 'Continue'}
           </button>
         </div>
+        {error && <p className="onboarding-error">{error}</p>}
       </div>
     </OnboardingChrome>
   );
