@@ -27,6 +27,7 @@ const legacyUserProfileSelect = {
     firstName: true,
     lastName: true,
     email: true,
+    role: true,
     bio: true,
     skills: true,
     location: true,
@@ -306,8 +307,16 @@ const updateUser = async (req, res) => {
             latitude,
             longitude,
             resumeUrl,
-            certificationUrl
+            certificationUrl,
+            role
         } = req.body || {};
+
+        // The onboarding role picker sends the chosen role here. Only accept
+        // the values our UserRole enum allows so a bad value can't be saved.
+        const allowedRoles = ["CLIENT", "PROVIDER", "BOTH"];
+        if (role !== undefined && !allowedRoles.includes(role)) {
+            return res.status(400).json({ message: "Invalid role" });
+        }
         const requestedAddress =
             typeof addressText === "string" && addressText.trim()
                 ? addressText.trim()
@@ -326,7 +335,12 @@ const updateUser = async (req, res) => {
             location: undefined,
             resumeUrl,
             certificationUrl
-    
+
+        }
+        // Only change the role when the request actually sent one, so saving
+        // other fields (like bio) never overwrites the user's chosen role.
+        if (role !== undefined) {
+            data.role = role;
         }
         let derivedCity = "";
         let derivedState = "";

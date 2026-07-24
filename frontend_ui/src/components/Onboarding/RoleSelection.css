@@ -1,0 +1,187 @@
+/* Horizontal row of the three role cards (matches the Figma layout). */
+.role-cards {
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1100px;
+}
+
+/* Each card is a full-height button so the whole card is clickable. */
+.role-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: left;
+  padding: 32px;
+  border: 2px solid #e8e7e3;
+  border-radius: 24px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.role-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Card header: icon + badge on the left, radio on the right ---- */
+.role-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.role-card-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Coloured icon tile. Each theme tints its own background + icon colour. */
+.role-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+/* Small pill label under the icon ("Client", "Provider", etc.). */
+.role-badge {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 100px;
+}
+
+/* Radio indicator in the top-right corner of each card. */
+.role-radio {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e8e7e3;
+  border-radius: 12px;
+  background: transparent;
+}
+
+/* ---- Card body ---- */
+.role-card-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+.role-card-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #5f5f5f;
+}
+
+.role-benefits {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.role-benefits li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #111;
+}
+
+.role-check {
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Per-theme colours. The Client card is teal, Provider is purple, and Both is
+   a teal->purple blend. Each theme colours its icon tile, badge, and check.
+   --------------------------------------------------------------------------- */
+
+/* Client (teal) */
+.role-card-teal .role-icon {
+  background: #e6f7f5;
+  color: #4ecdc4;
+}
+.role-card-teal .role-badge {
+  background: #e6f7f5;
+  color: #4ecdc4;
+}
+.role-card-teal .role-check {
+  color: #4ecdc4;
+}
+
+/* Provider (purple) */
+.role-card-purple .role-icon {
+  background: #f3f1ff;
+  color: #7c83c9;
+}
+.role-card-purple .role-badge {
+  background: #f3f1ff;
+  color: #7c83c9;
+}
+.role-card-purple .role-check {
+  color: #7c83c9;
+}
+
+/* Both (teal -> purple blend) */
+.role-card-blend .role-icon {
+  background: linear-gradient(135deg, #e6f7f5, #f3f1ff);
+  color: #6a86c4;
+}
+.role-card-blend .role-badge {
+  background: linear-gradient(135deg, #e6f7f5, #f3f1ff);
+  color: #6a86c4;
+}
+.role-card-blend .role-check {
+  color: #6a86c4;
+}
+
+/* ---- Selected state: border + radio pick up the card's accent ---- */
+.role-card-teal.role-card-active {
+  border-color: #4ecdc4;
+  box-shadow: 0 8px 12px rgba(78, 205, 196, 0.15);
+}
+.role-card-teal.role-card-active .role-radio-on {
+  border-color: #4ecdc4;
+  background: #4ecdc4;
+  box-shadow: inset 0 0 0 4px #fff;
+}
+
+.role-card-purple.role-card-active {
+  border-color: #7c83c9;
+  box-shadow: 0 8px 12px rgba(124, 131, 201, 0.18);
+}
+.role-card-purple.role-card-active .role-radio-on {
+  border-color: #7c83c9;
+  background: #7c83c9;
+  box-shadow: inset 0 0 0 4px #fff;
+}
+
+/* The blend card uses a gradient border via a doubled background trick. */
+.role-card-blend.role-card-active {
+  border-color: transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, #4ecdc4, #7c83c9) border-box;
+  box-shadow: 0 8px 12px rgba(106, 134, 196, 0.16);
+}
+.role-card-blend.role-card-active .role-radio-on {
+  border-color: transparent;
+  background: linear-gradient(135deg, #4ecdc4, #7c83c9);
+  box-shadow: inset 0 0 0 4px #fff;
+}
+
+/* Stack the cards on narrow screens so nothing is squished. */
+@media (max-width: 900px) {
+  .role-cards {
+    flex-direction: column;
+  }
+}
