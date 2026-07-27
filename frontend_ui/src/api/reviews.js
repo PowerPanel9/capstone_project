@@ -44,6 +44,16 @@ export async function createReview({ stars, title, description, imageUrl, review
   return response.data;
 }
 
+// GET /api/reviews/can-review/:userId
+// Ask the backend whether the logged-in user is allowed to review this user
+// (only true after a completed, paid job together). Returns true/false.
+export async function canReviewUser(userId) {
+  const response = await api.get(`/api/reviews/can-review/${userId}`, {
+    headers: authHeader(),
+  });
+  return response.data.canReview;
+}
+
 // DELETE /api/reviews/:id  -> remove one of your own reviews
 export async function deleteReview(reviewId) {
   const response = await api.delete(`/api/reviews/${reviewId}`, {

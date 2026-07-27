@@ -150,7 +150,9 @@ model Bookmark {
   createdAt    DateTime @default(now()) @map("created_at")
 
   // Relations
-  listing Listing @relation(fields: [listingId], references: [id])
+  // A bookmark is meaningless without its listing, so remove it when the
+  // listing is deleted.
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id])
 
   @@unique([userId, listingId]) // A user can bookmark a given listing only once
@@ -186,7 +188,9 @@ model Message {
   // Relations
   sender    User     @relation("MessagesSent", fields: [userIdFrom], references: [id])
   recipient User     @relation("MessagesReceived", fields: [userIdTo], references: [id])
-  listing   Listing? @relation(fields: [listingId], references: [id])
+  // A message only OPTIONALLY refers to a listing, so if that listing is
+  // deleted we keep the message and just clear the link (don't delete the chat).
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
 
   @@map("message")
 }
@@ -201,8 +205,9 @@ model Application {
   createdAt  DateTime          @default(now()) @map("created_at")
 
   // Relations
+  // An application belongs to a listing, so delete it when the listing is gone.
   provider User    @relation(fields: [providerId], references: [id])
-  listing  Listing @relation(fields: [listingId], references: [id])
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   payments Payment[]
 
   @@unique([providerId, listingId]) // Prevent applying to the same listing twice
@@ -230,8 +235,11 @@ model Payment {
   updatedAt             DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  listing     Listing      @relation(fields: [listingId], references: [id])
-  application Application?  @relation(fields: [applicationId], references: [id])
+  // Delete the payment when its listing is deleted. The application link is
+  // optional and applications also cascade, so clear that link instead of
+  // blocking on it.
+  listing     Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  application Application?  @relation(fields: [applicationId], references: [id], onDelete: SetNull)
   client      User          @relation("PaymentsMade", fields: [clientId], references: [id])
   provider    User          @relation("PaymentsReceived", fields: [providerId], references: [id])
 

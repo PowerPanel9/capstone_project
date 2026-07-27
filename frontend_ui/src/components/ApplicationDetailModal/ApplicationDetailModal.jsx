@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Phone, User, Check, Sparkles } from 'lucide-react';
+import { X, Phone, User, Check, Sparkles, CheckCircle } from 'lucide-react';
 import { updateApplicationStatus } from '../../api/applications';
-import { generatePaymentInvoice, getPaymentForListing } from '../../api/payments';
+import { updateListing } from '../../api/listings';
+import { generatePaymentInvoice, getPaymentForListing, releasePayment } from '../../api/payments';
 import PaymentModal from '../PaymentModal/PaymentModal';
 import './ApplicationDetailModal.css';
 
@@ -19,7 +20,9 @@ const STATUS_META = {
 // May also include AI ranking info when opened from the AI-sorted list:
 // { aiRank: number, aiReason: string }
 // `onStatusChange(id, newStatus)` is called after a successful accept/reject.
-function ApplicationDetailModal({ application, onClose, onStatusChange }) {
+// `onCompleted(listingId)` is called after the job is marked completed, so the
+// parent can grey out the listing.
+function ApplicationDetailModal({ application, onClose, onStatusChange, onCompleted }) {
   const navigate = useNavigate();
   const [status, setStatus] = useState(application.status);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -28,6 +31,10 @@ function ApplicationDetailModal({ application, onClose, onStatusChange }) {
   const [paid, setPaid] = useState(false);
   const [paidPaymentId, setPaidPaymentId] = useState(null);
   const [isGettingReceipt, setIsGettingReceipt] = useState(false);
+  // Tracks the listing's completion state inside the modal so the UI can switch
+  // from "Mark as Completed" to a "completed" confirmation without a reload.
+  const [isCompleted, setIsCompleted] = useState(application.listingStatus === "COMPLETED");
+  const [isCompleting, setIsCompleting] = useState(false);
 
   // On open, check if this listing already has a completed payment. If so, mark
   // it paid so the "View receipt" button persists across sessions (not just
@@ -59,6 +66,35 @@ function ApplicationDetailModal({ application, onClose, onStatusChange }) {
       setError("Could not generate the receipt.");
     } finally {
       setIsGettingReceipt(false);
+    }
+  };
+
+  // Mark the job completed. This flips the listing to COMPLETED and releases the
+  // held payment to the provider (the money the client paid is held until now).
+  const handleMarkCompleted = async () => {
+    if (!application.listingId) return;
+    setError(null);
+    try {
+      setIsCompleting(true);
+      await updateListing(application.listingId, { status: "COMPLETED" });
+
+      // Release the held funds to the provider. Don't undo completion if this
+      // fails — just log it; the payout can be retried later.
+      try {
+        if (paidPaymentId) {
+          await releasePayment(paidPaymentId);
+        }
+      } catch (payErr) {
+        console.error("Job completed, but releasing payment failed:", payErr);
+      }
+
+      setIsCompleted(true);
+      if (onCompleted) onCompleted(application.listingId);
+    } catch (err) {
+      console.error("Failed to mark job completed:", err);
+      setError(err.response?.data?.error || "Could not mark the job completed.");
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -168,15 +204,34 @@ function ApplicationDetailModal({ application, onClose, onStatusChange }) {
             {status === "ACCEPTED" && (
               paid ? (
                 <>
-                  <div className="app-detail-paid"><Check size={13} /> Payment sent and held until you mark the job completed.</div>
-                  <button
-                    className="app-detail-profile-btn"
-                    onClick={handleGetReceipt}
-                    disabled={isGettingReceipt}
-                    style={{ marginTop: 10 }}
-                  >
-                    {isGettingReceipt ? "Preparing receipt…" : "View receipt"}
-                  </button>
+                  {isCompleted ? (
+                    <div className="app-detail-paid">
+                      <CheckCircle size={13} /> This job is completed. Payment released to the provider.
+                    </div>
+                  ) : (
+                    <div className="app-detail-paid">
+                      <Check size={13} /> Payment sent and held until you mark the job completed.
+                    </div>
+                  )}
+                  {/* Actions stacked vertically so they don't collide. */}
+                  <div className="app-detail-stack">
+                    {!isCompleted && (
+                      <button
+                        className="app-btn app-btn-accept"
+                        onClick={handleMarkCompleted}
+                        disabled={isCompleting}
+                      >
+                        {isCompleting ? "Completing…" : "Mark as Completed"}
+                      </button>
+                    )}
+                    <button
+                      className="app-btn app-btn-outline"
+                      onClick={handleGetReceipt}
+                      disabled={isGettingReceipt}
+                    >
+                      {isGettingReceipt ? "Preparing receipt…" : "View receipt"}
+                    </button>
+                  </div>
                 </>
               ) : (
                 <button

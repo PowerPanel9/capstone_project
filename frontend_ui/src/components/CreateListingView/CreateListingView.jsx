@@ -24,7 +24,7 @@ const CATEGORY_OPTIONS = [
 function CreateListingView({ onDone }) {
   const [form, setForm] = useState({
     title: "",
-    category: "CLEANING",
+    category: "",
     customCategory: "",
     price: "",
     description: "",
@@ -102,6 +102,10 @@ function CreateListingView({ onDone }) {
       setError("Please fill in the title, rate, description, and location.");
       return;
     }
+    if (!form.category) {
+      setError("Please choose a category.");
+      return;
+    }
     if (form.category === "OTHER" && !form.customCategory) {
       setError("Please enter a custom category.");
       return;
@@ -166,6 +170,7 @@ function CreateListingView({ onDone }) {
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             >
+              <option value="" disabled>Choose a category</option>
               {CATEGORY_OPTIONS.map((cat) => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
               ))}
