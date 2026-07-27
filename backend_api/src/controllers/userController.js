@@ -48,6 +48,32 @@ function isUnknownPrismaFieldError(error) {
     );
 }
 
+// Full US state names -> 2-letter code. Used to keep the displayed state
+// consistent (always "CA", never "California"), no matter which path produced
+// it (a fresh geocode on save vs. re-parsing the stored address on refresh).
+const US_STATE_NAMES_TO_CODE = {
+    alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
+    colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
+    hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
+    kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
+    massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO",
+    montana: "MT", nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ",
+    "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND",
+    ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
+    "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
+    vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
+    wyoming: "WY",
+};
+
+// Turn a state value into its 2-letter code. An already-abbreviated value
+// (e.g. "CA") is returned as-is; a full name (e.g. "California") is looked up.
+function normalizeStateToCode(stateValue) {
+    if (!stateValue || typeof stateValue !== "string") return "";
+    const trimmed = stateValue.trim();
+    if (/^[A-Za-z]{2}$/.test(trimmed)) return trimmed.toUpperCase();
+    return US_STATE_NAMES_TO_CODE[trimmed.toLowerCase()] || trimmed;
+}
+
 function extractCityStateFromLocation(locationValue) {
     if (!locationValue || typeof locationValue !== "string") {
         return { city: "", state: "" };
@@ -58,19 +84,6 @@ function extractCityStateFromLocation(locationValue) {
         .map((part) => part.trim())
         .filter(Boolean);
 
-    const US_STATE_NAMES_TO_CODE = {
-        alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
-        colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
-        hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
-        kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
-        massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO",
-        montana: "MT", nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ",
-        "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND",
-        ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
-        "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
-        vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
-        wyoming: "WY",
-    };
     const streetLikePattern =
         /\b(street|st|avenue|ave|boulevard|blvd|road|rd|drive|dr|lane|ln|way|court|ct|place|pl)\b/i;
     const nonCityPattern =
@@ -420,14 +433,32 @@ const updateUser = async (req, res) => {
         let derivedCity = "";
         let derivedState = "";
         if (requestedAddress) {
-            try {
-                const { locationText, city, state } = await forwardGeocode(requestedAddress);
-                data.location = locationText;
-                derivedCity = city || "";
-                derivedState = state || "";
-            } catch (geocodeError) {
-                // Keep profile updates working even if geocoding is unavailable.
-                data.location = requestedAddress;
+            // Only re-geocode when the address text actually changed. The
+            // profile form re-sends the currently loaded location on every
+            // save (even ones that only change, say, a skill), and re-running
+            // the SAME address through LocationIQ can come back with a
+            // slightly different formatted string (e.g. an extra neighborhood
+            // name). That made the displayed city/state drift on every save
+            // that didn't even touch location. Skipping the geocode when
+            // nothing changed keeps the stored address (and its city/state)
+            // stable.
+            const existingUser = await prisma.user.findUnique({
+                where: { id: authUserId },
+                select: { location: true },
+            });
+
+            if (requestedAddress !== existingUser?.location) {
+                try {
+                    const { locationText, city, state } = await forwardGeocode(requestedAddress);
+                    data.location = locationText;
+                    derivedCity = city || "";
+                    // Always store the 2-letter code so the profile shows "CA", not
+                    // "California" (LocationIQ may return the full name here).
+                    derivedState = normalizeStateToCode(state);
+                } catch (geocodeError) {
+                    // Keep profile updates working even if geocoding is unavailable.
+                    data.location = requestedAddress;
+                }
             }
         }
 
