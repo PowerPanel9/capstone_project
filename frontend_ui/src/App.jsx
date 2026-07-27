@@ -29,7 +29,8 @@ import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
 import { getMyApplications } from './api/applications';
-import { getUsers as getMessageUsers } from './api/messages';
+import { getUsers as getMessageUsers, getUnreadCount } from './api/messages';
+import { connectSocket, disconnectSocket, getSocket } from './api/socket';
 import { Bookmark } from 'lucide-react';
 import './App.css';
 
@@ -64,6 +65,10 @@ function App() {
   const [bookmarkIds, setBookmarkIds] = useState({});
   const [userMode, setUserMode] = useState("provider");
   const [authMode, setAuthMode] = useState(null);
+  // Total unread messages across all conversations, shown as a badge on the
+  // "Messages" sidebar link. Kept in sync by the "new_message" socket event
+  // and by re-fetching whenever a conversation is opened/read.
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -86,6 +91,27 @@ function App() {
     // Mark auth check as complete
     setAuthLoading(false);
   }, []);
+
+  // Connect the socket whenever we become authenticated, and disconnect it
+  // when we log out, so we only ever listen for OUR messages.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    connectSocket();
+    getUnreadCount().then(setUnreadMessageCount).catch(() => {});
+
+    const socket = getSocket();
+    // A new message bumps the total unread badge. If it's about the
+    // conversation currently open, MessagesView marks it read on its own.
+    const handleNewMessage = () => {
+      setUnreadMessageCount((prev) => prev + 1);
+    };
+    socket?.on("new_message", handleNewMessage);
+
+    return () => {
+      socket?.off("new_message", handleNewMessage);
+    };
+  }, [isAuthenticated]);
 
   // Load saved mode from localStorage on mount
   useEffect(() => {
@@ -238,8 +264,10 @@ function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     sessionStorage.removeItem('sidehustle_chat_session'); // Clear chat history on logout
+    disconnectSocket();
     setIsAuthenticated(false);
     setCurrentUser(null);
+    setUnreadMessageCount(0);
     navigate('/');
   };
 
@@ -302,6 +330,7 @@ function App() {
               userMode={userMode}
               onOpenAI={openAI}
               onLogout={handleLogout}
+              unreadMessageCount={unreadMessageCount}
             />
           </aside>
 
@@ -449,6 +478,7 @@ function App() {
                           setMessagesComposerOpen(false);
                           setMessagesPeopleSearch("");
                         }}
+                        onUnreadCountChange={setUnreadMessageCount}
                       />
                     ) : (
                       <Navigate to="/" replace />

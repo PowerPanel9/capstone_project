@@ -5,7 +5,7 @@ import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import './Sidebar.css';
 
-function Sidebar({ currentUser, userMode, onOpenAI, onLogout }) {
+function Sidebar({ currentUser, userMode, onOpenAI, onLogout, unreadMessageCount = 0 }) {
   // Small popup that opens when the user clicks their info row at the bottom.
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
@@ -46,6 +46,11 @@ function Sidebar({ currentUser, userMode, onOpenAI, onLogout }) {
           >
             <Icon size={17} />
             {label}
+            {label === "Messages" && unreadMessageCount > 0 && (
+              <span className="nav-unread-badge">
+                {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

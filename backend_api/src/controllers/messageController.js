@@ -74,11 +74,20 @@ const sendMessage = async (req, res) => {
         content: true,
         imageUrl: true,
         createdAt: true,
+        readAt: true,
+        sender: {
+          select: { id: true, firstName: true, lastName: true, imageUrl: true },
+        },
         listing: {
           select: { id: true, title: true },
         },
       },
     });
+
+    // Tell the recipient's browser right away, so their inbox can bump this
+    // conversation to the top and show an unread dot without needing to reload.
+    const io = req.app.get("io");
+    io?.to(`user:${recipientId}`).emit("new_message", message);
 
     return res.status(201).json(message);
   } catch (error) {
@@ -159,6 +168,7 @@ const getInbox = async (req, res) => {
         content: true,
         imageUrl: true,
         createdAt: true,
+        readAt: true,
         sender: {
           select: { id: true, firstName: true, lastName: true, imageUrl: true },
         },
@@ -172,6 +182,9 @@ const getInbox = async (req, res) => {
 
     for (const message of allMessages) {
       const partnerId = message.userIdFrom === currentUserId ? message.userIdTo : message.userIdFrom;
+      // A message counts as unread if it was sent TO us and we haven't read it yet.
+      const isUnreadForMe = message.userIdTo === currentUserId && !message.readAt;
+
       if (!latestByPartner.has(partnerId)) {
         const partner = message.userIdFrom === currentUserId ? message.recipient : message.sender;
         latestByPartner.set(partnerId, {
@@ -184,7 +197,12 @@ const getInbox = async (req, res) => {
             imageUrl: message.imageUrl,
             createdAt: message.createdAt,
           },
+          unreadCount: 0,
         });
+      }
+
+      if (isUnreadForMe) {
+        latestByPartner.get(partnerId).unreadCount += 1;
       }
     }
 
@@ -195,8 +213,58 @@ const getInbox = async (req, res) => {
   }
 };
 
+const markConversationRead = async (req, res) => {
+  try {
+    const currentUserId = req.user?.userId;
+    const otherUserId = toPositiveInt(req.params?.otherUserId);
+
+    if (!Number.isInteger(currentUserId) || currentUserId <= 0) {
+      return res.status(401).json({ error: "Unauthorized user" });
+    }
+
+    if (!otherUserId) {
+      return res.status(400).json({ error: "otherUserId must be a positive integer" });
+    }
+
+    // Mark every message the other user sent us in this conversation as read.
+    await prisma.message.updateMany({
+      where: {
+        userIdFrom: otherUserId,
+        userIdTo: currentUserId,
+        readAt: null,
+      },
+      data: { readAt: new Date() },
+    });
+
+    return res.status(200).json({ message: "Conversation marked as read" });
+  } catch (error) {
+    console.error("markConversationRead error:", error);
+    return res.status(500).json({ error: "Error marking conversation as read" });
+  }
+};
+
+const getUnreadCount = async (req, res) => {
+  try {
+    const currentUserId = req.user?.userId;
+    if (!Number.isInteger(currentUserId) || currentUserId <= 0) {
+      return res.status(401).json({ error: "Unauthorized user" });
+    }
+
+    const count = await prisma.message.count({
+      where: { userIdTo: currentUserId, readAt: null },
+    });
+
+    return res.status(200).json({ count });
+  } catch (error) {
+    console.error("getUnreadCount error:", error);
+    return res.status(500).json({ error: "Error fetching unread count" });
+  }
+};
+
 module.exports = {
   sendMessage,
   getConversationWithUser,
   getInbox,
+  markConversationRead,
+  getUnreadCount,
 };

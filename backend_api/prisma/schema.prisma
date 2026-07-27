@@ -182,6 +182,7 @@ model Message {
   imageUrl   String?  @map("image_url") // Optional attached picture
   listingId  Int?     @map("listing_id") // Optional listing this message is about (FK -> listing)
   createdAt  DateTime @default(now()) @map("created_at")
+  readAt     DateTime? @map("read_at") // When the recipient read this message; null = unread
 
   // Relations
   sender    User     @relation("MessagesSent", fields: [userIdFrom], references: [id])
