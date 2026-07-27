@@ -70,8 +70,26 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
         return;
       }
 
-      // Sign Up: don't create the account yet. First make a 6-digit code,
-      // email it to the address they typed, and switch to the verify step.
+      // Sign Up: first ask the backend if this email is already taken, BEFORE
+      // we bother emailing a code. This stops duplicates early and lets us point
+      // Google users to the right button.
+      const checkResponse = await fetch(
+        `${API_BASE_URL}/api/auth/check-email?email=${encodeURIComponent(formData.email)}`
+      );
+      const checkData = await checkResponse.json();
+
+      if (checkData.exists) {
+        setError(
+          checkData.isGoogle
+            ? "This email is registered with Google. Please use 'Continue with Google' to log in."
+            : "An account with this email already exists. Please log in instead."
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Email is free. Now make a 6-digit code, email it to the address they
+      // typed, and switch to the verify step.
       // Math.floor(Math.random() * 900000) + 100000 => always 6 digits.
       const code = String(Math.floor(Math.random() * 900000) + 100000);
       setSentCode(code);
