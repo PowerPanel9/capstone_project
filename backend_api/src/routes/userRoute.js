@@ -8,6 +8,7 @@ const {
     getUserById,
     getUserByName,
     updateUser,
+    getAddressOptions,
 } = require('../controllers/userController');
 
 // Get all users
@@ -16,6 +17,10 @@ router.get('/', getUsers);
 // Get a randomized list of providers for the client-mode home feed.
 // Must be declared BEFORE "/:id" so "providers" is not read as an id.
 router.get('/providers', getProviders);
+
+// Get address suggestions for the location dropdown.
+// Also declared BEFORE "/:id" so "address-suggestions" is not read as an id.
+router.get('/address-suggestions', getAddressOptions);
 
 // Get a user by id
 router.get('/:id', getUserById);
