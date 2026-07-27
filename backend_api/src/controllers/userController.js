@@ -1,6 +1,6 @@
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
-const { forwardGeocode, reverseGeocode } = require('../utils/geocoder');
+const { forwardGeocode, reverseGeocode, getAddressSuggestions } = require('../utils/geocoder');
 const stripe = require('../utils/stripe');
 
 const userProfileSelect = {
@@ -480,10 +480,33 @@ const updateUser = async (req, res) => {
     }
 };
 
+// Return a short list of address suggestions for what the user typed.
+// The frontend calls this while the user types so it can show a dropdown of
+// real, valid addresses to pick from. We keep the LocationIQ key on the server
+// (never send it to the browser), so the frontend asks us instead of LocationIQ.
+const getAddressOptions = async (req, res) => {
+    try {
+        const query = typeof req.query.q === "string" ? req.query.q.trim() : "";
+
+        // LocationIQ needs at least a couple of characters to return useful
+        // matches. For very short input we just return an empty list.
+        if (query.length < 3) {
+            return res.status(200).json([]);
+        }
+
+        const suggestions = await getAddressSuggestions(query);
+        res.status(200).json(suggestions);
+    } catch (error) {
+        console.error("getAddressOptions error:", error.message);
+        res.status(500).json({ message: "Could not fetch address suggestions" });
+    }
+};
+
 module.exports = {
     getUsers,
     getProviders,
     getUserById,
     getUserByName,
     updateUser,
+    getAddressOptions,
 };
