@@ -60,8 +60,19 @@ function toDisplayName(value) {
     .join(" ");
 }
 
-function UserProfileView({ userMode, onToggleMode, onLogout }) {
+function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMessageListing }) {
   const navigate = useNavigate();
+
+  // Open a direct-message conversation with another user. This mirrors the
+  // "Message" button on the listing detail page: we lift the target user (and
+  // optionally the related listing) up to App state, then navigate to the
+  // messages page, which auto-opens the conversation.
+  const handleMessageUser = (user, listing) => {
+    if (!user?.id) return;
+    onMessageUser?.(user);
+    if (listing?.id) onMessageListing?.(listing);
+    navigate("/messages");
+  };
   const [activeTab, setActiveTab] = useState("All");
   const tabs =
     userMode === "provider"
@@ -843,6 +854,8 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
             price: a.listing?.price,
             category: a.listing?.customCategory || a.listing?.category,
             clientId: a.listing?.user?.id,
+            clientFirstName: a.listing?.user?.firstName ?? "",
+            clientLastName: a.listing?.user?.lastName ?? "",
             clientName: `${a.listing?.user?.firstName ?? ""} ${a.listing?.user?.lastName ?? ""}`.trim(),
           }))
         )
@@ -857,6 +870,8 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
           apps.map((a) => ({
             id: a.id,
             providerId: a.provider?.id,
+            providerFirstName: a.provider?.firstName ?? "",
+            providerLastName: a.provider?.lastName ?? "",
             providerName: `${a.provider?.firstName ?? ""} ${a.provider?.lastName ?? ""}`.trim(),
             listingId: a.listingId ?? a.listing?.id,
             listingTitle: a.listing?.title ?? "Listing",
@@ -1744,6 +1759,19 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
         <ApplicationDetailModal
           application={selectedApplication}
           onClose={() => setSelectedApplication(null)}
+          onMessage={() => {
+            // Close this modal, then open a conversation with the provider.
+            const app = selectedApplication;
+            setSelectedApplication(null);
+            handleMessageUser(
+              {
+                id: app.providerId,
+                firstName: app.providerFirstName,
+                lastName: app.providerLastName,
+              },
+              app.listingId ? { id: app.listingId, title: app.listingTitle } : null
+            );
+          }}
           onStatusChange={(id, newStatus) => {
             // Update the card in place, and refetch so both tabs stay in sync.
             setIncomingApplications((prev) =>
@@ -1770,6 +1798,19 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
         <ProviderApplicationModal
           application={selectedMyApplication}
           onClose={() => setSelectedMyApplication(null)}
+          onMessage={() => {
+            // Close this modal, then open a conversation with the client.
+            const app = selectedMyApplication;
+            setSelectedMyApplication(null);
+            handleMessageUser(
+              {
+                id: app.clientId,
+                firstName: app.clientFirstName,
+                lastName: app.clientLastName,
+              },
+              app.listingId ? { id: app.listingId, title: app.title } : null
+            );
+          }}
           onWithdrawn={(id) => {
             // Remove the withdrawn application from the list and close the modal.
             setApplications((prev) => prev.filter((a) => a.id !== id));

@@ -162,6 +162,20 @@
   margin: 0;
 }
 
+/* Lay the profile + message buttons side by side with space between them. */
+.app-detail-profile-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Each button shares the row evenly; the container handles bottom spacing. */
+.app-detail-profile-actions .app-detail-profile-btn {
+  flex: 1;
+  justify-content: center;
+  margin-bottom: 0;
+}
+
 .app-detail-profile-btn {
   display: inline-flex;
   align-items: center;

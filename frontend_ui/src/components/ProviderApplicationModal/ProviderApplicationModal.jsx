@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, MapPin, DollarSign, Tag, User, ExternalLink, Star } from 'lucide-react';
+import { X, MapPin, DollarSign, Tag, User, ExternalLink, Star, MessageCircle } from 'lucide-react';
 import { withdrawApplication } from '../../api/applications';
 // Reuse the client-side modal styles (.app-detail-*, .app-status, .app-btn),
 // then layer a few provider-specific tweaks on top.
@@ -27,7 +27,7 @@ const STATUS_META = {
 //   onClose         - close the modal
 //   onWithdrawn(id) - called after the application is successfully withdrawn
 //   onLeaveReview(clientId) - open the reviews panel for the client
-function ProviderApplicationModal({ application, onClose, onWithdrawn, onLeaveReview }) {
+function ProviderApplicationModal({ application, onClose, onWithdrawn, onLeaveReview, onMessage }) {
   const navigate = useNavigate();
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [error, setError] = useState(null);
@@ -131,7 +131,7 @@ function ProviderApplicationModal({ application, onClose, onWithdrawn, onLeaveRe
               className="app-detail-profile-btn pam-action"
               onClick={() => navigate(`/listing/${application.listingId}`)}
             >
-              <ExternalLink size={14} />
+              <ExternalLink size={18} />
               View Listing
             </button>
           )}
@@ -140,8 +140,17 @@ function ProviderApplicationModal({ application, onClose, onWithdrawn, onLeaveRe
               className="app-detail-profile-btn pam-action"
               onClick={() => navigate(`/users/${application.clientId}`)}
             >
-              <User size={14} />
+              <User size={18} />
               View Client Profile
+            </button>
+          )}
+          {application.clientId && onMessage && (
+            <button
+              className="app-detail-profile-btn pam-action"
+              onClick={onMessage}
+            >
+              <MessageCircle size={18} />
+              Message Client
             </button>
           )}
         </div>

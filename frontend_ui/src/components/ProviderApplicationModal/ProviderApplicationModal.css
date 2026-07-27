@@ -33,6 +33,11 @@
   margin-bottom: 12px;
 }
 
+/* Keep the icons from shrinking when the button text wraps to two lines. */
+.pam-action svg {
+  flex-shrink: 0;
+}
+
 /* Review prompt shown once the job is completed. */
 .pam-review {
   border-top: 1px solid #EEF0F6;

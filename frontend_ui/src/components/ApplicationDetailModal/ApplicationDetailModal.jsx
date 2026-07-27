@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Phone, User, Check, Sparkles, CheckCircle } from 'lucide-react';
+import { X, Phone, User, Check, Sparkles, CheckCircle, MessageCircle } from 'lucide-react';
 import { updateApplicationStatus } from '../../api/applications';
 import { updateListing } from '../../api/listings';
 import { generatePaymentInvoice, getPaymentForListing, releasePayment } from '../../api/payments';
@@ -22,7 +22,7 @@ const STATUS_META = {
 // `onStatusChange(id, newStatus)` is called after a successful accept/reject.
 // `onCompleted(listingId)` is called after the job is marked completed, so the
 // parent can grey out the listing.
-function ApplicationDetailModal({ application, onClose, onStatusChange, onCompleted }) {
+function ApplicationDetailModal({ application, onClose, onStatusChange, onCompleted, onMessage }) {
   const navigate = useNavigate();
   const [status, setStatus] = useState(application.status);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -165,15 +165,24 @@ function ApplicationDetailModal({ application, onClose, onStatusChange, onComple
           </p>
         </div>
 
-        {/* Link to their public profile */}
+        {/* Link to their public profile + direct message */}
         {application.providerId && (
-          <button
-            className="app-detail-profile-btn"
-            onClick={() => navigate(`/users/${application.providerId}`)}
-          >
-            <User size={14} />
-            View applicant's profile
-          </button>
+          <div className="app-detail-profile-actions">
+            <button
+              className="app-detail-profile-btn"
+              onClick={() => navigate(`/users/${application.providerId}`)}
+            >
+              <User size={14} />
+              View applicant's profile
+            </button>
+
+            {onMessage && (
+              <button className="app-detail-profile-btn" onClick={onMessage}>
+                <MessageCircle size={14} />
+                Message {application.providerName || "applicant"}
+              </button>
+            )}
+          </div>
         )}
 
         {error && <div className="app-detail-error">{error}</div>}

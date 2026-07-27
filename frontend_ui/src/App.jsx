@@ -402,6 +402,8 @@ function App() {
                         userMode={userMode}
                         onToggleMode={toggleUserMode}
                         onLogout={handleLogout}
+                        onMessageUser={setMessagesStartUser}
+                        onMessageListing={setMessagesStartListing}
                       />
                     ) : (
                       <Navigate to="/" replace />
