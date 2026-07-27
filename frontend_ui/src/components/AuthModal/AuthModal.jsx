@@ -76,13 +76,6 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
       const code = String(Math.floor(Math.random() * 900000) + 100000);
       setSentCode(code);
 
-      // TEMP DEBUG: check exactly what env values the browser loaded
-      console.log('EmailJS IDs:', {
-        service: import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        template: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
-      });
-
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
@@ -97,8 +90,6 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
 
       setStep('verify');
     } catch (err) {
-      // TEMP DEBUG: show the full EmailJS error so we can see the real reason
-      console.log('EmailJS ERROR — status:', err.status, 'text:', err.text, err);
       // EmailJS errors put the message on err.text; fall back to err.message.
       setError(err.text || err.message || 'Could not send verification email');
     } finally {

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, DollarSign, Loader } from 'lucide-react';
 // NOTE: when restoring the preserved image-upload UI below, add `Upload` back
 // to the lucide-react import above (it's used by the upload dropbox).
-import { createListing } from '../../api/listings';
+import { createListing, updateListing } from '../../api/listings';
 import { getPriceRecommendations } from '../../api/prices';
 import './CreateListingView.css';
 
@@ -21,21 +21,28 @@ const CATEGORY_OPTIONS = [
   { value: "OTHER", label: "Other" },
 ];
 
-function CreateListingView({ onDone }) {
+// This one component powers BOTH creating a new listing and editing an existing
+// one. When `listingId` + `initialData` are passed in (edit mode), the form
+// starts pre-filled and saving calls the update API instead of the create API.
+function CreateListingView({ onDone, listingId, initialData }) {
+  // Are we editing an existing listing, or creating a brand new one?
+  const isEditing = Boolean(listingId);
+
   const [form, setForm] = useState({
-    title: "",
-    category: "",
-    customCategory: "",
-    price: "",
-    description: "",
-    location: "",
-    imageUrl: ""
+    title: initialData?.title || "",
+    category: initialData?.category || "",
+    customCategory: initialData?.customCategory || "",
+    price: initialData?.price != null ? String(initialData.price) : "",
+    description: initialData?.description || "",
+    location: initialData?.location || "",
+    imageUrl: initialData?.imageUrl || ""
   });
 
   // The Required Skills field now works like a tag list instead of one
   // comma-separated string. `skills` holds the added skills as an array, and
   // `newSkill` holds whatever the user is currently typing in the input box.
-  const [skills, setSkills] = useState([]);
+  // In edit mode we start with the listing's existing skills.
+  const [skills, setSkills] = useState(initialData?.skillsRequired || []);
   const [newSkill, setNewSkill] = useState("");
 
   // Add the text in the input as a new skill tag. Trims spaces, ignores empty
@@ -124,15 +131,20 @@ function CreateListingView({ onDone }) {
 
     try {
       setIsSubmitting(true);
-      await createListing(newListing);
-      onDone(); // go back to the feed on success
-    } catch (err) {
-      console.error("Failed to create listing:", err);
-      // A 401 here means the user isn't logged in (no valid token).
-      if (err.response?.status === 401) {
-        setError("Please log in to post a listing.");
+      // Edit mode updates the existing listing; create mode makes a new one.
+      if (isEditing) {
+        await updateListing(listingId, newListing);
       } else {
-        setError(err.response?.data?.error || "Could not create listing. Please try again.");
+        await createListing(newListing);
+      }
+      onDone(); // go back on success
+    } catch (err) {
+      console.error("Failed to save listing:", err);
+      // A 401 here means the user isn't logged in, or isn't the owner.
+      if (err.response?.status === 401) {
+        setError("You must be the owner and logged in to save this listing.");
+      } else {
+        setError(err.response?.data?.error || "Could not save listing. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -143,8 +155,12 @@ function CreateListingView({ onDone }) {
     <div className="create-wrap">
       <div className="create-header">
         <div>
-          <div className="create-title">Create a Listing</div>
-          <div className="create-sub">Find the perfect talent for your project</div>
+          <div className="create-title">{isEditing ? "Edit Listing" : "Create a Listing"}</div>
+          <div className="create-sub">
+            {isEditing
+              ? "Update the details of your listing"
+              : "Find the perfect talent for your project"}
+          </div>
         </div>
         <button className="close-btn" onClick={onDone}>
           <X size={17} />
@@ -346,7 +362,9 @@ function CreateListingView({ onDone }) {
         {error && <div className="auth-error">{error}</div>}
 
         <button className="submit-btn" onClick={handleSubmit} disabled={isSubmitting}>
-          {isSubmitting ? "Posting…" : "Post Listing"}
+          {isSubmitting
+            ? (isEditing ? "Saving…" : "Posting…")
+            : (isEditing ? "Save Changes" : "Post Listing")}
         </button>
       </div>
     </div>
