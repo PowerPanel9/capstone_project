@@ -645,21 +645,20 @@
 .profile-modal select {
   width: 100%;
   margin: 6px 0 12px;
-  padding: 10px 12px;
-  border: 1px solid #D1D5DB;
-  border-radius: 10px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 16px;
   font-size: 14px;
   font-family: inherit;
   color: #1E2340;
-  background: #fff;
+  background: #F3F4F6;
 }
 
 .profile-modal input:focus,
 .profile-modal textarea:focus,
 .profile-modal select:focus {
   outline: none;
-  border-color: var(--primary, #7B8FC8);
-  box-shadow: 0 0 0 3px rgba(123, 143, 200, 0.14);
+  box-shadow: 0 0 0 2px var(--primary-light, #AABAE8);
 }
 
 .profile-modal textarea {

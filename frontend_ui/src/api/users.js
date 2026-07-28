@@ -48,14 +48,26 @@ export async function getUserById(id) {
   return response.data;
 }
 
+// GET /api/users/address-suggestions?q=...  -> a short list of real address
+// options that match what the user has typed. Used by the location dropdown so
+// the user can only pick a valid address. Returns an array of
+// { label, latitude, longitude }.
+export async function getAddressSuggestions(query) {
+  const response = await api.get("/api/users/address-suggestions", {
+    params: { q: query },
+  });
+  return Array.isArray(response.data) ? response.data : [];
+}
+
 // GET /api/users/providers  -> a randomized list of providers for the
 // client-mode home feed. Pass excludeId to leave the logged-in user out, and
 // category to only get providers who offer that service (e.g. "CLEANING").
 // Only returns safe public fields (id, name, profilePicture, skills).
-export async function getProviders({ excludeId, category } = {}) {
+export async function getProviders({ excludeId, category, search } = {}) {
   const params = {};
   if (excludeId) params.excludeId = excludeId;
   if (category) params.category = category;
+  if (search) params.search = search;
   const response = await api.get("/api/users/providers", { params });
   return Array.isArray(response.data) ? response.data : [];
 }

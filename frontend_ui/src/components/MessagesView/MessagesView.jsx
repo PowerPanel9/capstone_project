@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageSquare, Search, Send, X, ArrowLeft } from "lucide-react";
-import { getConversation, getInbox, sendMessage } from "../../api/messages";
+import { getConversation, getInbox, sendMessage, markConversationRead, getUnreadCount } from "../../api/messages";
+import { getSocket } from "../../api/socket";
 import './MessagesView.css';
 
-function MessagesView({ startConversationUser, startListing, onStartConversationHandled }) {
+function MessagesView({ startConversationUser, startListing, onStartConversationHandled, onUnreadCountChange }) {
   const [inbox, setInbox] = useState([]);
   const [conversationSearch, setConversationSearch] = useState("");
   const [selectedPartner, setSelectedPartner] = useState(null);
@@ -16,6 +17,10 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
   // It attaches to the next message the user sends, then clears.
   const [attachedListing, setAttachedListing] = useState(null);
   const navigate = useNavigate();
+  // Sits after the last message; scrolling it into view is what keeps the
+  // chat anchored to the newest message instead of leaving the user stuck
+  // wherever they last scrolled.
+  const bottomRef = useRef(null);
 
   const currentUserId = useMemo(() => {
     try {
@@ -58,6 +63,8 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
   const toName = (user) =>
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Unknown";
 
+  const selectedPartnerId = selectedPartner?.id;
+
   const loadConversation = async (user) => {
     if (!user?.id) return;
     setSelectedPartner(user);
@@ -66,6 +73,17 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
       const data = await getConversation(user.id);
       setSelectedPartner(data.otherUser || user);
       setMessages(data.messages);
+
+      // Opening a conversation reads everything in it, so clear its unread
+      // dot and let the sidebar badge drop by however many we just read.
+      setInbox((prev) =>
+        prev.map((row) =>
+          row?.partner?.id === user.id ? { ...row, unreadCount: 0 } : row
+        )
+      );
+      await markConversationRead(user.id);
+      const freshCount = await getUnreadCount();
+      onUnreadCountChange?.(freshCount);
     } catch (error) {
       console.error("Failed to load conversation:", error);
       setMessages([]);
@@ -74,6 +92,49 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
     }
   };
 
+  // Listen for messages pushed live from the server (socket.io). This is
+  // what makes a new message bump its conversation to the top of the list
+  // and show an unread dot without the user having to reload the page.
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNewMessage = (message) => {
+      const partnerId = message.userIdFrom;
+      const isOpenConversation = selectedPartnerId === partnerId;
+
+      if (isOpenConversation) {
+        setMessages((prev) => [...prev, message]);
+        // We're already looking at this conversation, so it counts as read.
+        // App.jsx's own socket listener already bumped the sidebar total by 1
+        // for this event, so we correct it back down with the real count
+        // instead of adjusting it a second time here.
+        markConversationRead(partnerId).then(() =>
+          getUnreadCount().then((count) => onUnreadCountChange?.(count))
+        );
+      }
+      // If the conversation isn't open, App.jsx's socket listener already
+      // bumped the sidebar total for this event — nothing more to do here.
+
+      setInbox((prev) => {
+        const existing = prev.find((row) => row?.partner?.id === partnerId);
+        const partner = existing?.partner || message.sender;
+        const remaining = prev.filter((row) => row?.partner?.id !== partnerId);
+        return [
+          {
+            partner,
+            lastMessage: message,
+            unreadCount: isOpenConversation ? 0 : (existing?.unreadCount || 0) + 1,
+          },
+          ...remaining,
+        ];
+      });
+    };
+
+    socket.on("new_message", handleNewMessage);
+    return () => socket.off("new_message", handleNewMessage);
+  }, [selectedPartnerId, onUnreadCountChange]);
+
   useEffect(() => {
     if (!startConversationUser?.id) return;
     loadConversation(startConversationUser);
@@ -81,6 +142,17 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
     if (startListing?.id) setAttachedListing(startListing);
     onStartConversationHandled?.();
   }, [startConversationUser]);
+
+  // Jump to the bottom whenever the visible message list changes: opening a
+  // conversation, sending, or receiving one live. `isLoadingConversation` is
+  // also a dependency because messages get set WHILE it's still true (the
+  // "Loading conversation..." placeholder is showing instead of the actual
+  // list), so bottomRef isn't mounted yet at that point — this re-runs once
+  // loading finishes and the real message list (and bottomRef) is on screen.
+  useEffect(() => {
+    if (isLoadingConversation) return;
+    bottomRef.current?.scrollIntoView({ block: "end" });
+  }, [messages, isLoadingConversation]);
 
   const handleSend = async () => {
     const text = draft.trim();
@@ -103,6 +175,7 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
           {
             partner: selectedPartner,
             lastMessage: created,
+            unreadCount: 0,
           },
           ...remaining,
         ];
@@ -114,8 +187,6 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
       if (listingId) setAttachedListing(attachedListing);
     }
   };
-
-  const selectedPartnerId = selectedPartner?.id;
 
   return (
     // `has-selection` lets the CSS show one pane at a time on mobile: the list
@@ -169,7 +240,15 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
                         : ""}
                     </span>
                   </div>
-                  <p className="conv-msg">{conv?.lastMessage?.content || "No messages yet"}</p>
+                  <div className="conv-bottom">
+                    <p className="conv-msg">{conv?.lastMessage?.content || "No messages yet"}</p>
+                    {/* Colored dot with the unread count for this chat. */}
+                    {conv?.unreadCount > 0 && (
+                      <span className="conv-unread-inline">
+                        {conv.unreadCount > 99 ? "99+" : conv.unreadCount}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </button>
             ))
@@ -232,6 +311,7 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
                   );
                 })
               )}
+              <div ref={bottomRef} />
             </div>
             <div className="chat-input-bar">
               {/* Chip showing the listing that will attach to the next message.

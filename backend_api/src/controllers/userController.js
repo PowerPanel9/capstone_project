@@ -1,6 +1,6 @@
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
-const { forwardGeocode, reverseGeocode } = require('../utils/geocoder');
+const { forwardGeocode, reverseGeocode, getAddressSuggestions } = require('../utils/geocoder');
 const stripe = require('../utils/stripe');
 
 const userProfileSelect = {
@@ -49,6 +49,32 @@ function isUnknownPrismaFieldError(error) {
     );
 }
 
+// Full US state names -> 2-letter code. Used to keep the displayed state
+// consistent (always "CA", never "California"), no matter which path produced
+// it (a fresh geocode on save vs. re-parsing the stored address on refresh).
+const US_STATE_NAMES_TO_CODE = {
+    alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
+    colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
+    hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
+    kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
+    massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO",
+    montana: "MT", nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ",
+    "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND",
+    ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
+    "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
+    vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
+    wyoming: "WY",
+};
+
+// Turn a state value into its 2-letter code. An already-abbreviated value
+// (e.g. "CA") is returned as-is; a full name (e.g. "California") is looked up.
+function normalizeStateToCode(stateValue) {
+    if (!stateValue || typeof stateValue !== "string") return "";
+    const trimmed = stateValue.trim();
+    if (/^[A-Za-z]{2}$/.test(trimmed)) return trimmed.toUpperCase();
+    return US_STATE_NAMES_TO_CODE[trimmed.toLowerCase()] || trimmed;
+}
+
 function extractCityStateFromLocation(locationValue) {
     if (!locationValue || typeof locationValue !== "string") {
         return { city: "", state: "" };
@@ -59,19 +85,6 @@ function extractCityStateFromLocation(locationValue) {
         .map((part) => part.trim())
         .filter(Boolean);
 
-    const US_STATE_NAMES_TO_CODE = {
-        alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
-        colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
-        hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
-        kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
-        massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO",
-        montana: "MT", nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ",
-        "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND",
-        ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
-        "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
-        vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
-        wyoming: "WY",
-    };
     const streetLikePattern =
         /\b(street|st|avenue|ave|boulevard|blvd|road|rd|drive|dr|lane|ln|way|court|ct|place|pl)\b/i;
     const nonCityPattern =
@@ -147,12 +160,18 @@ const providerCardSelect = {
     skills: true,
 };
 
+const PROVIDER_CATEGORY_VALUES = [
+    "CLEANING", "TUTORING", "PLUMBING", "GARDENING", "BEAUTY",
+    "BABYSITTING", "MOVING", "HANDYMAN", "DELIVERY", "OTHER",
+];
+
 // Get a randomized list of providers for the client-mode home feed.
 // Only users whose role is PROVIDER or BOTH are returned (a CLIENT-only user
 // doesn't offer services, so they shouldn't show up here).
 // Optionally:
 //   ?excludeId=<id>       leaves the logged-in user out of the list.
 //   ?category=CLEANING    keeps only providers who selected that category.
+//   ?search=alex          matches provider name or skills text.
 const getProviders = async (req, res) => {
     try {
         // Start by requiring the user to actually be a provider.
@@ -177,6 +196,8 @@ const getProviders = async (req, res) => {
                 { skills: { has: normalizedCategory } },
             ];
         }
+
+        const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
 
         let users;
         try {
@@ -207,6 +228,24 @@ const getProviders = async (req, res) => {
                     imageUrl: true,
                     skills: true,
                 },
+            });
+        }
+
+        // Search by name OR by skill text (case-insensitive, partial match).
+        // Example: "plumb" matches "Plumbing"; "math" matches "Math Tutor".
+        if (search) {
+            const needle = search.toLowerCase();
+            const matchedCategories = PROVIDER_CATEGORY_VALUES.filter((value) =>
+                value.toLowerCase().includes(needle) || value.replace("_", " ").toLowerCase().includes(needle)
+            );
+            users = users.filter((user) => {
+                const fullName = `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase();
+                const nameMatch = fullName.includes(needle);
+                const skillMatch = Array.isArray(user.skills)
+                    && user.skills.some((skill) => String(skill || "").toLowerCase().includes(needle));
+                const categoryMatch = Array.isArray(user.categories)
+                    && user.categories.some((value) => matchedCategories.includes(String(value || "").toUpperCase()));
+                return nameMatch || skillMatch || categoryMatch;
             });
         }
 
@@ -395,14 +434,32 @@ const updateUser = async (req, res) => {
         let derivedCity = "";
         let derivedState = "";
         if (requestedAddress) {
-            try {
-                const { locationText, city, state } = await forwardGeocode(requestedAddress);
-                data.location = locationText;
-                derivedCity = city || "";
-                derivedState = state || "";
-            } catch (geocodeError) {
-                // Keep profile updates working even if geocoding is unavailable.
-                data.location = requestedAddress;
+            // Only re-geocode when the address text actually changed. The
+            // profile form re-sends the currently loaded location on every
+            // save (even ones that only change, say, a skill), and re-running
+            // the SAME address through LocationIQ can come back with a
+            // slightly different formatted string (e.g. an extra neighborhood
+            // name). That made the displayed city/state drift on every save
+            // that didn't even touch location. Skipping the geocode when
+            // nothing changed keeps the stored address (and its city/state)
+            // stable.
+            const existingUser = await prisma.user.findUnique({
+                where: { id: authUserId },
+                select: { location: true },
+            });
+
+            if (requestedAddress !== existingUser?.location) {
+                try {
+                    const { locationText, city, state } = await forwardGeocode(requestedAddress);
+                    data.location = locationText;
+                    derivedCity = city || "";
+                    // Always store the 2-letter code so the profile shows "CA", not
+                    // "California" (LocationIQ may return the full name here).
+                    derivedState = normalizeStateToCode(state);
+                } catch (geocodeError) {
+                    // Keep profile updates working even if geocoding is unavailable.
+                    data.location = requestedAddress;
+                }
             }
         }
 
@@ -458,10 +515,33 @@ const updateUser = async (req, res) => {
     }
 };
 
+// Return a short list of address suggestions for what the user typed.
+// The frontend calls this while the user types so it can show a dropdown of
+// real, valid addresses to pick from. We keep the LocationIQ key on the server
+// (never send it to the browser), so the frontend asks us instead of LocationIQ.
+const getAddressOptions = async (req, res) => {
+    try {
+        const query = typeof req.query.q === "string" ? req.query.q.trim() : "";
+
+        // LocationIQ needs at least a couple of characters to return useful
+        // matches. For very short input we just return an empty list.
+        if (query.length < 3) {
+            return res.status(200).json([]);
+        }
+
+        const suggestions = await getAddressSuggestions(query);
+        res.status(200).json(suggestions);
+    } catch (error) {
+        console.error("getAddressOptions error:", error.message);
+        res.status(500).json({ message: "Could not fetch address suggestions" });
+    }
+};
+
 module.exports = {
     getUsers,
     getProviders,
     getUserById,
     getUserByName,
     updateUser,
+    getAddressOptions,
 };

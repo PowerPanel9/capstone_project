@@ -1,0 +1,100 @@
+/* AddressAutocomplete: styles for the location input + its dropdown.
+   These are self-contained so the component looks right both in the
+   onboarding step and inside the Edit Profile modal. */
+
+.address-autocomplete {
+  position: relative;
+  width: 100%;
+}
+
+/* Modal variant: the field uses the modal's plain input styling. We give the
+   wrapper the same spacing the other modal fields have, and remove the input's
+   own margin so the dropdown lines up right under the input (not below its
+   margin gap). */
+.profile-modal .address-autocomplete {
+  margin: 6px 0 12px;
+}
+
+.profile-modal .address-autocomplete input {
+  margin: 0;
+}
+
+/* Input row with the map-pin icon inside on the left. */
+.address-autocomplete .ob-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1.5px solid #e8e7e3;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.address-autocomplete .ob-input-wrap:focus-within {
+  border-color: #b7b6b1;
+}
+
+.address-autocomplete .ob-input-icon {
+  color: #5f5f5f;
+  flex-shrink: 0;
+}
+
+.address-autocomplete .ob-input-wrap input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  font-family: inherit;
+  color: #111;
+  background: transparent;
+}
+
+/* The dropdown list of address options. It floats over the content below. */
+.address-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: #fff;
+  border: 1.5px solid #e8e7e3;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.address-suggestion-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.address-suggestion-btn:hover {
+  background: #f3f2ef;
+}
+
+/* The small "Searching…" hint shown while we wait for results. */
+.address-suggestion-hint {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* Shown inside the dropdown when the suggestions request fails. */
+.address-suggestion-error {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #b91c1c;
+}

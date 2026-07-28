@@ -29,7 +29,8 @@ import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
 import { getMyApplications } from './api/applications';
-import { getUsers as getMessageUsers } from './api/messages';
+import { getUsers as getMessageUsers, getUnreadCount } from './api/messages';
+import { connectSocket, disconnectSocket, getSocket } from './api/socket';
 import { Bookmark } from 'lucide-react';
 import './App.css';
 
@@ -64,6 +65,10 @@ function App() {
   const [bookmarkIds, setBookmarkIds] = useState({});
   const [userMode, setUserMode] = useState("provider");
   const [authMode, setAuthMode] = useState(null);
+  // Total unread messages across all conversations, shown as a badge on the
+  // "Messages" sidebar link. Kept in sync by the "new_message" socket event
+  // and by re-fetching whenever a conversation is opened/read.
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -86,6 +91,27 @@ function App() {
     // Mark auth check as complete
     setAuthLoading(false);
   }, []);
+
+  // Connect the socket whenever we become authenticated, and disconnect it
+  // when we log out, so we only ever listen for OUR messages.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    connectSocket();
+    getUnreadCount().then(setUnreadMessageCount).catch(() => {});
+
+    const socket = getSocket();
+    // A new message bumps the total unread badge. If it's about the
+    // conversation currently open, MessagesView marks it read on its own.
+    const handleNewMessage = () => {
+      setUnreadMessageCount((prev) => prev + 1);
+    };
+    socket?.on("new_message", handleNewMessage);
+
+    return () => {
+      socket?.off("new_message", handleNewMessage);
+    };
+  }, [isAuthenticated]);
 
   // Load saved mode from localStorage on mount
   useEffect(() => {
@@ -238,8 +264,10 @@ function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     sessionStorage.removeItem('sidehustle_chat_session'); // Clear chat history on logout
+    disconnectSocket();
     setIsAuthenticated(false);
     setCurrentUser(null);
+    setUnreadMessageCount(0);
     navigate('/');
   };
 
@@ -302,6 +330,7 @@ function App() {
               userMode={userMode}
               onOpenAI={openAI}
               onLogout={handleLogout}
+              unreadMessageCount={unreadMessageCount}
             />
           </aside>
 
@@ -462,6 +491,7 @@ function App() {
                           setMessagesComposerOpen(false);
                           setMessagesPeopleSearch("");
                         }}
+                        onUnreadCountChange={setUnreadMessageCount}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -613,7 +643,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
 
   // In client mode, once a category is picked we show the PROVIDERS who offer
   // that service (so a client can browse and contact them).
-  const showProviders = userMode === 'client' && Boolean(category);
+  const showProviders = userMode === 'client' && (Boolean(category) || Boolean(search));
 
   // In client mode with no category chosen, the home feed shows a grid of
   // EXPERIENCES people posted (in a random order), instead of listings.
@@ -630,7 +660,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
   // When browsing a category or searching, we show the plain (filtered) feed.
   const usePersonalized = userMode === 'provider' && isLanding;
 
-  // Client picked a category: load the providers who offer that service.
+  // Client picked a category or typed search text: load matching providers.
   // This is its own effect so it doesn't tangle with the listings/experiences
   // feed logic below. `currentUserId` is passed as excludeId so a client who is
   // also a provider (role BOTH) doesn't see themselves in the list.
@@ -639,7 +669,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
     let ignore = false;
     setIsLoadingProviders(true);
     setError(null);
-    getProviders({ category, excludeId: currentUserId })
+    getProviders({ category, search, excludeId: currentUserId })
       .then((list) => {
         if (!ignore) setProviders(list);
       })
@@ -651,7 +681,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
         if (!ignore) setIsLoadingProviders(false);
       });
     return () => { ignore = true; };
-  }, [showProviders, category, currentUserId]);
+  }, [showProviders, category, search, currentUserId]);
 
   // When the search or role changes, start over: clear listings and load page 1.
   useEffect(() => {
@@ -766,7 +796,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
       .finally(() => setIsLoadingMore(false));
   };
 
-  // Client picked a category: show the providers who offer that service.
+  // Client is browsing providers by category or by search text.
   if (showProviders) {
     return (
       <>
@@ -774,6 +804,7 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
         <ProvidersView
           providers={providers}
           category={category}
+          search={search}
           isLoading={isLoadingProviders}
         />
       </>

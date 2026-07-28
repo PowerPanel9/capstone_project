@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Briefcase, FileText, ChevronDown, Check } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
+import AddressAutocomplete from "../AddressAutocomplete/AddressAutocomplete";
 import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
 import ConnectOnboarding from "../ConnectOnboarding/ConnectOnboarding";
 import { getOnboardingStatus } from "../../api/connect";
@@ -100,6 +101,13 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
   const [certificationError, setCertificationError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  // Whether the location currently in the edit form is a valid address.
+  // Location is optional, so an EMPTY box counts as valid. A non-empty value is
+  // only valid once the user picks it from the address dropdown.
+  const [isLocationValid, setIsLocationValid] = useState(true);
+  // Whether to SHOW the "pick a valid address" message. We only turn this on
+  // when the user tries to save with an invalid address, not while they type.
+  const [showLocationError, setShowLocationError] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [userListings, setUserListings] = useState([]);
@@ -330,8 +338,13 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
     });
     setNewSkill("");
     setSaveError("");
+    // The location already saved on the profile was geocoded before, so treat
+    // it as valid when the modal first opens. It only becomes "invalid" if the
+    // user edits it without picking a new option from the dropdown.
+    setIsLocationValid(true);
+    setShowLocationError(false);
     setIsEditModalOpen(true);
-    
+
   };
 
   const closeEditModal = () => {
@@ -577,6 +590,13 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
   };
 
   const handleSaveProfile = async () => {
+    // Check the address only when the user actually tries to save. If it's not
+    // valid, show the message under the box and stop here (don't submit).
+    if (!isLocationValid) {
+      setShowLocationError(true);
+      return;
+    }
+
     try {
       if (!profile.id) {
         throw new Error("Profile id not found");
@@ -1591,7 +1611,26 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
             </div>
 
             <label className="modal-label" htmlFor="profile-location">Location</label>
-            <input id="profile-location" name="location" value={formData.location} onChange={handleFieldChange} />
+            <AddressAutocomplete
+              inputId="profile-location"
+              variant="modal"
+              value={formData.location}
+              placeholder="Start typing your address…"
+              onChange={(nextText, picked) => {
+                setFormData((prev) => ({ ...prev, location: nextText }));
+                // Empty is allowed (location is optional). A non-empty value is
+                // only valid once the user picks it from the dropdown.
+                const nextValid = nextText.trim() === "" || picked;
+                setIsLocationValid(nextValid);
+                // Once the value becomes valid again, clear any error we showed.
+                if (nextValid) setShowLocationError(false);
+              }}
+            />
+            {showLocationError && (
+              <p className="error-text">
+                Please select a valid address from the dropdown.
+              </p>
+            )}
 
             <label className="modal-label" htmlFor="profile-bio">Bio</label>
             <textarea id="profile-bio" name="bio" value={formData.bio} onChange={handleFieldChange} rows={4} />
