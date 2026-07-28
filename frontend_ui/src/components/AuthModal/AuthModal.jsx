@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 import './AuthModal.css';
 
 function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
@@ -18,7 +19,40 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Email-verification state (only used during Sign Up).
+  // We move to the "verify" step after emailing a code, then check what
+  // the user types before we actually create their account.
+  const [step, setStep] = useState('form'); // 'form' | 'verify'
+  const [sentCode, setSentCode] = useState(''); // the code we emailed
+  const [enteredCode, setEnteredCode] = useState(''); // what the user types back
+
   const isLogin = mode === 'login';
+
+  // Calls the backend to actually create the account (or log in) and hands
+  // the token/user back up to App. Shared by login and by verified signups.
+  const finishAuth = async (endpoint, body, isNewSignup) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Something went wrong');
+    }
+
+    // Store token in localStorage
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    // Call success callback. Signups (not logins) go through onboarding,
+    // so tell App which one this was.
+    onSuccess(data.user, { isNewSignup });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,32 +60,75 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
     setLoading(true);
 
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const body = isLogin
-        ? { email: formData.email, password: formData.password }
-        : formData;
-
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
+      // Login: create session right away, no email verification needed.
+      if (isLogin) {
+        await finishAuth(
+          '/api/auth/login',
+          { email: formData.email, password: formData.password },
+          false
+        );
+        return;
       }
 
-      // Store token in localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Sign Up: first ask the backend if this email is already taken, BEFORE
+      // we bother emailing a code. This stops duplicates early and lets us point
+      // Google users to the right button.
+      const checkResponse = await fetch(
+        `${API_BASE_URL}/api/auth/check-email?email=${encodeURIComponent(formData.email)}`
+      );
+      const checkData = await checkResponse.json();
 
-      // Call success callback. Signups (not logins) go through onboarding,
-      // so tell App which one this was.
-      onSuccess(data.user, { isNewSignup: !isLogin });
+      if (checkData.exists) {
+        setError(
+          checkData.isGoogle
+            ? "This email is registered with Google. Please use 'Continue with Google' to log in."
+            : "An account with this email already exists. Please log in instead."
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Email is free. Now make a 6-digit code, email it to the address they
+      // typed, and switch to the verify step.
+      // Math.floor(Math.random() * 900000) + 100000 => always 6 digits.
+      const code = String(Math.floor(Math.random() * 900000) + 100000);
+      setSentCode(code);
+
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          // These names must match the {{blanks}} in the EmailJS template.
+          to_email: formData.email,
+          to_name: formData.firstName,
+          code: code,
+        },
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
+
+      setStep('verify');
+    } catch (err) {
+      // EmailJS errors put the message on err.text; fall back to err.message.
+      setError(err.text || err.message || 'Could not send verification email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Second step of Sign Up: check the typed code, then create the account.
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    // The code the user typed must match the one we emailed.
+    if (enteredCode.trim() !== sentCode) {
+      setError('That code is incorrect. Please check your email and try again.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await finishAuth('/api/auth/register', formData, true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -74,10 +151,62 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
         </button>
 
         <div className="auth-modal-header">
-          <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-          <p>{isLogin ? 'Log in to continue' : 'Sign up to get started'}</p>
+          <h2>
+            {step === 'verify'
+              ? 'Verify Your Email'
+              : isLogin
+                ? 'Welcome Back'
+                : 'Create Account'}
+          </h2>
+          <p>
+            {step === 'verify'
+              ? `We emailed a 6-digit code to ${formData.email}`
+              : isLogin
+                ? 'Log in to continue'
+                : 'Sign up to get started'}
+          </p>
         </div>
 
+        {step === 'verify' ? (
+          <form onSubmit={handleVerify} className="auth-form">
+            <div className="form-group">
+              <label>Verification Code</label>
+              <input
+                type="text"
+                name="code"
+                value={enteredCode}
+                onChange={(e) => setEnteredCode(e.target.value)}
+                required
+                placeholder="123456"
+                inputMode="numeric"
+                maxLength={6}
+              />
+              <small className="form-hint">
+                Check your inbox (and spam folder) for the code.
+              </small>
+            </div>
+
+            {error && <div className="auth-error">{error}</div>}
+
+            <button type="submit" className="auth-submit-btn" disabled={loading}>
+              {loading ? 'Verifying...' : 'Verify & Create Account'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setStep('form');
+                setEnteredCode('');
+                setError('');
+              }}
+              className="auth-switch-btn"
+              style={{ marginTop: '12px' }}
+            >
+              ← Back
+            </button>
+          </form>
+        ) : (
+        <>
         <form onSubmit={handleSubmit} className="auth-form">
           {!isLogin && (
             <div className="form-row">
@@ -165,6 +294,8 @@ function AuthModal({ mode, onClose, onSuccess, onSwitchMode }) {
             {isLogin ? 'Sign Up' : 'Log In'}
           </button>
         </div>
+        </>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const http = require("http");
+const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoute");
 const messageRoutes = require("./routes/messageRoutes");
@@ -18,6 +21,7 @@ const paymentsRoutes = require("./routes/paymentsRoutes");
 const { handleStripeWebhook } = require("./controllers/webhookController");
 const app = express();
 const PORT = process.env.PORT || 3000;
+const uploadRoutes = require("./routes/uploadRoutes");
 // Middleware
 // Allow both deployed frontend and local dev frontends.
 // This avoids CORS blocks when .env contains a production FRONTEND_URL
@@ -75,8 +79,45 @@ app.use("/api/experiences", experienceRoutes);
 app.use("/api/connect", connectRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/users/name/:name", userRoutes);
+app.use("/api/upload", uploadRoutes);
+
+// Socket.IO lets us push events (like "new_message") to the browser the
+// moment something happens, instead of the frontend having to keep asking
+// the server "anything new?" (polling). It needs the same http server that
+// Express uses, so we create that server manually here instead of using
+// app.listen() directly.
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: corsOptions,
+});
+
+// Every connecting socket must prove who they are with the same JWT used
+// for regular API requests. Once verified, we put their socket in a
+// "room" named after their user id, so we can later send a message to
+// exactly that user with io.to(`user:<id>`).emit(...).
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) return next(new Error("Missing auth token"));
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    socket.userId = payload.userId;
+    next();
+  } catch (error) {
+    next(new Error("Invalid or expired token"));
+  }
+});
+
+io.on("connection", (socket) => {
+  socket.join(`user:${socket.userId}`);
+});
+
+// Other files (like messageController.js) need access to `io` so they can
+// emit events when, for example, a new message is sent. Express's app
+// object is passed around already, so storing it there is the simplest way
+// to share it without a separate module just for this.
+app.set("io", io);
 
 // Start the server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });

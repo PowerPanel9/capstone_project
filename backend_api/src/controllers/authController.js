@@ -71,6 +71,35 @@ const register = async (req, res) => {
       }
 };
 
+// GET /api/auth/check-email?email=...
+// Lightweight lookup the signup form calls BEFORE emailing a verification code.
+// It tells the frontend whether an email is already taken, and if so whether
+// that account is a Google (OAuth) account, so we can show the right message
+// and avoid emailing a code for an account that can't be created.
+const checkEmail = async (req, res) => {
+    const { email } = req.query;
+    if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+    }
+
+    try {
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await prisma.user.findUnique({
+            where: { email: normalizedEmail },
+        });
+
+        // exists = is this email already registered?
+        // isGoogle = was that account created via Google (no password)?
+        return res.status(200).json({
+            exists: Boolean(user),
+            isGoogle: Boolean(user && !user.password),
+        });
+    } catch (error) {
+        console.error("checkEmail error:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
+
 const login = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -89,6 +118,15 @@ const login = async (req, res) => {
 
         if (!user) {
             return res.status(401).json({error: "Invalid credentials"});
+        }
+
+        // Google (OAuth) users are created with no password, so there is
+        // nothing to compare against. Tell them to use the Google button
+        // instead of letting bcrypt.compare crash with a 500 error.
+        if (!user.password) {
+            return res.status(401).json({
+                error: "This email is registered with Google. Please use 'Continue with Google' to log in.",
+            });
         }
 
         const validPassword = await bcrypt.compare(password, user.password);
@@ -219,4 +257,4 @@ const googleCallback = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getMe, logout, googleLogin, googleCallback };
+module.exports = { register, login, checkEmail, getMe, logout, googleLogin, googleCallback };

@@ -43,3 +43,18 @@ export async function getUsers() {
   const response = await api.get("/users");
   return Array.isArray(response.data) ? response.data : [];
 }
+
+export async function markConversationRead(otherUserId) {
+  await api.put(
+    `/api/messages/conversations/${otherUserId}/read`,
+    {},
+    { headers: authHeaders() }
+  );
+}
+
+export async function getUnreadCount() {
+  const response = await api.get("/api/messages/unread-count", {
+    headers: authHeaders(),
+  });
+  return Number(response.data?.count) || 0;
+}

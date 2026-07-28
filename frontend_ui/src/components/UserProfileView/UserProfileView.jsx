@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Briefcase, FileText, ChevronDown, Check } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
+import AddressAutocomplete from "../AddressAutocomplete/AddressAutocomplete";
 import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
 import ConnectOnboarding from "../ConnectOnboarding/ConnectOnboarding";
 import { getOnboardingStatus } from "../../api/connect";
-import { getListingsByUser, updateListing } from "../../api/listings";
-import { getPaymentForListing, releasePayment } from "../../api/payments";
+import { getListingsByUser } from "../../api/listings";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 import { formatCityState } from "../../utils/location";
 import { getReviewsForUser } from "../../api/reviews";
@@ -18,11 +18,12 @@ import {
   getRankedApplicationsForListing,
 } from "../../api/applications";
 import ApplicationDetailModal from "../ApplicationDetailModal/ApplicationDetailModal";
+import ProviderApplicationModal from "../ProviderApplicationModal/ProviderApplicationModal";
 // Brings in .app-status / .status-* badge styles used on the application cards.
 import "../ApplicationDetailModal/ApplicationDetailModal.css";
 
 // Friendly label for an application status.
-const STATUS_LABELS = { PENDING: "Pending", ACCEPTED: "Accepted", REJECTED: "Rejected" };
+const STATUS_LABELS = { PENDING: "Pending", ACCEPTED: "Accepted", REJECTED: "Rejected", PAID: "Paid" };
 import "./UserProfileView.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -61,8 +62,19 @@ function toDisplayName(value) {
     .join(" ");
 }
 
-function UserProfileView({ userMode, onToggleMode, onLogout }) {
+function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMessageListing }) {
   const navigate = useNavigate();
+
+  // Open a direct-message conversation with another user. This mirrors the
+  // "Message" button on the listing detail page: we lift the target user (and
+  // optionally the related listing) up to App state, then navigate to the
+  // messages page, which auto-opens the conversation.
+  const handleMessageUser = (user, listing) => {
+    if (!user?.id) return;
+    onMessageUser?.(user);
+    if (listing?.id) onMessageListing?.(listing);
+    navigate("/messages");
+  };
   const [activeTab, setActiveTab] = useState("All");
   const tabs =
     userMode === "provider"
@@ -86,6 +98,13 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
   const [certificationError, setCertificationError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  // Whether the location currently in the edit form is a valid address.
+  // Location is optional, so an EMPTY box counts as valid. A non-empty value is
+  // only valid once the user picks it from the address dropdown.
+  const [isLocationValid, setIsLocationValid] = useState(true);
+  // Whether to SHOW the "pick a valid address" message. We only turn this on
+  // when the user tries to save with an invalid address, not while they type.
+  const [showLocationError, setShowLocationError] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [userListings, setUserListings] = useState([]);
@@ -101,7 +120,7 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
   const actionsMenuRef = useRef(null);
   const [experienceForm, setExperienceForm] = useState({
     jobTitle: "",
-    category: "CLEANING",
+    category: "",
     customCategory: "",
     description: "",
     images: [],
@@ -319,8 +338,13 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     });
     setNewSkill("");
     setSaveError("");
+    // The location already saved on the profile was geocoded before, so treat
+    // it as valid when the modal first opens. It only becomes "invalid" if the
+    // user edits it without picking a new option from the dropdown.
+    setIsLocationValid(true);
+    setShowLocationError(false);
     setIsEditModalOpen(true);
-    
+
   };
 
   const closeEditModal = () => {
@@ -375,7 +399,7 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     setExperienceSaveError("");
     setExperienceForm({
       jobTitle: "",
-      category: "CLEANING",
+      category: "",
       customCategory: "",
       description: "",
       images: [],
@@ -441,6 +465,11 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
       return;
     }
 
+    if (!experienceForm.category) {
+      setExperienceSaveError("Please choose a category.");
+      return;
+    }
+
     // When "Other" is picked, require the free-text category (same as listings).
     if (experienceForm.category === "OTHER" && !customCategory) {
       setExperienceSaveError("Please enter a custom category.");
@@ -479,32 +508,6 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     navigate(`/listing/${listingId}`, { state: { from: "profile" } });
   };
 
-  // Mark an in-progress listing as COMPLETED (owner only). Completing the job
-  // also RELEASES the held payment to the provider (the money the client paid
-  // is held until the job is done).
-  const markListingCompleted = async (listingId) => {
-    try {
-      await updateListing(listingId, { status: "COMPLETED" });
-      setUserListings((prev) =>
-        prev.map((l) => (l.id === listingId ? { ...l, status: "COMPLETED" } : l))
-      );
-
-      // If a payment was made and is still HELD, release it to the provider.
-      try {
-        const payment = await getPaymentForListing(listingId);
-        if (payment && payment.status === "HELD") {
-          await releasePayment(payment.id);
-        }
-      } catch (payErr) {
-        // Don't undo the completion if release fails — just log it. The client
-        // can retry payout later if needed.
-        console.error("Listing marked completed, but releasing payment failed:", payErr);
-      }
-    } catch (err) {
-      console.error("Failed to mark listing completed:", err);
-    }
-  };
-
   // Renders one of the current user's listing cards (PRIVATE / owner view).
   // Owner rules: gray ONLY when COMPLETED. Shows a "Mark as Completed" button
   // while the listing is IN_PROGRESS.
@@ -534,17 +537,9 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
           <span className={`listing-status listing-status-${(listing.status || "OPEN").toLowerCase()}`}>
             {listingStatusLabel(listing.status)}
           </span>
-          {listing.status === "IN_PROGRESS" && (
-            <button
-              className="mark-done-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                markListingCompleted(listing.id);
-              }}
-            >
-              Mark as Completed
-            </button>
-          )}
+          {/* "Mark as Completed" now lives in the application modal (open the
+              accepted applicant from the Applications tab). The listing card just
+              reflects the status here. */}
         </div>
       </div>
     );
@@ -566,6 +561,13 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
   };
 
   const handleSaveProfile = async () => {
+    // Check the address only when the user actually tries to save. If it's not
+    // valid, show the message under the box and stop here (don't submit).
+    if (!isLocationValid) {
+      setShowLocationError(true);
+      return;
+    }
+
     try {
       if (!profile.id) {
         throw new Error("Profile id not found");
@@ -811,6 +813,12 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
   // The application a client clicked to view in detail (client view).
   const [selectedApplication, setSelectedApplication] = useState(null);
 
+  // The application a PROVIDER clicked to view in detail (provider view).
+  const [selectedMyApplication, setSelectedMyApplication] = useState(null);
+  // When the provider leaves a review for a client, this holds the client's id
+  // so ReviewsPanel points at them (instead of the profile owner).
+  const [reviewTargetId, setReviewTargetId] = useState(null);
+
   // How each listing group is sorted. Keyed by listingId; defaults to "recent".
   // Values: "recent" | "ai" | "alpha".
   const [sortModes, setSortModes] = useState({});
@@ -824,7 +832,23 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     getMyApplications()
       .then((apps) =>
         setApplications(
-          apps.map((a) => ({ id: a.id, title: a.listing?.title ?? "Listing", status: a.status }))
+          // Keep the full listing + client details the API already returns, so
+          // the provider's application modal can show them without another call.
+          apps.map((a) => ({
+            id: a.id,
+            title: a.listing?.title ?? "Listing",
+            status: a.status,
+            message: a.message,
+            listingId: a.listingId ?? a.listing?.id,
+            listingStatus: a.listing?.status,
+            location: a.listing?.location,
+            price: a.listing?.price,
+            category: a.listing?.customCategory || a.listing?.category,
+            clientId: a.listing?.user?.id,
+            clientFirstName: a.listing?.user?.firstName ?? "",
+            clientLastName: a.listing?.user?.lastName ?? "",
+            clientName: `${a.listing?.user?.firstName ?? ""} ${a.listing?.user?.lastName ?? ""}`.trim(),
+          }))
         )
       )
       .catch((err) => console.error("Failed to load your applications:", err));
@@ -837,9 +861,12 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
           apps.map((a) => ({
             id: a.id,
             providerId: a.provider?.id,
+            providerFirstName: a.provider?.firstName ?? "",
+            providerLastName: a.provider?.lastName ?? "",
             providerName: `${a.provider?.firstName ?? ""} ${a.provider?.lastName ?? ""}`.trim(),
             listingId: a.listingId ?? a.listing?.id,
             listingTitle: a.listing?.title ?? "Listing",
+            listingStatus: a.listing?.status,
             phone: a.phone,
             message: a.message,
             status: a.status,
@@ -1279,14 +1306,37 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
           </div>
           {applications.length > 0 ? (
             applications.map((app) => (
-              <div key={app.id} className="mini-card">
+              <div
+                key={app.id}
+                className="mini-card"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedMyApplication(app)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setSelectedMyApplication(app);
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 <ProfilePicture initials="AP" size="xs" />
                 <div className="mini-info">
                   <div className="mini-title">{app.title}</div>
                 </div>
-                <span className={`app-status status-${(app.status || "PENDING").toLowerCase()}`}>
-                  {STATUS_LABELS[app.status] ?? "Pending"}
-                </span>
+                {(() => {
+                  // Show "Paid" once the client has paid and completed the job
+                  // (listing COMPLETED); otherwise show the normal status.
+                  const displayStatus =
+                    app.listingStatus === "COMPLETED" && app.status === "ACCEPTED"
+                      ? "PAID"
+                      : app.status;
+                  return (
+                    <span className={`app-status status-${(displayStatus || "PENDING").toLowerCase()}`}>
+                      {STATUS_LABELS[displayStatus] ?? "Pending"}
+                    </span>
+                  );
+                })()}
               </div>
             ))
           ) : (
@@ -1464,7 +1514,26 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
             </div>
 
             <label className="modal-label" htmlFor="profile-location">Location</label>
-            <input id="profile-location" name="location" value={formData.location} onChange={handleFieldChange} />
+            <AddressAutocomplete
+              inputId="profile-location"
+              variant="modal"
+              value={formData.location}
+              placeholder="Start typing your address…"
+              onChange={(nextText, picked) => {
+                setFormData((prev) => ({ ...prev, location: nextText }));
+                // Empty is allowed (location is optional). A non-empty value is
+                // only valid once the user picks it from the dropdown.
+                const nextValid = nextText.trim() === "" || picked;
+                setIsLocationValid(nextValid);
+                // Once the value becomes valid again, clear any error we showed.
+                if (nextValid) setShowLocationError(false);
+              }}
+            />
+            {showLocationError && (
+              <p className="error-text">
+                Please select a valid address from the dropdown.
+              </p>
+            )}
 
             <label className="modal-label" htmlFor="profile-bio">Bio</label>
             <textarea id="profile-bio" name="bio" value={formData.bio} onChange={handleFieldChange} rows={4} />
@@ -1564,6 +1633,7 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               value={experienceForm.category}
               onChange={handleExperienceFieldChange}
             >
+              <option value="" disabled>Choose a category</option>
               {CATEGORY_OPTIONS.map((cat) => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
               ))}
@@ -1675,6 +1745,19 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
         <ApplicationDetailModal
           application={selectedApplication}
           onClose={() => setSelectedApplication(null)}
+          onMessage={() => {
+            // Close this modal, then open a conversation with the provider.
+            const app = selectedApplication;
+            setSelectedApplication(null);
+            handleMessageUser(
+              {
+                id: app.providerId,
+                firstName: app.providerFirstName,
+                lastName: app.providerLastName,
+              },
+              app.listingId ? { id: app.listingId, title: app.listingTitle } : null
+            );
+          }}
           onStatusChange={(id, newStatus) => {
             // Update the card in place, and refetch so both tabs stay in sync.
             setIncomingApplications((prev) =>
@@ -1685,6 +1768,55 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
             );
             setApplicationsRefresh((n) => n + 1);
           }}
+          onCompleted={(listingId) => {
+            // Grey out the listing on the profile once its job is completed.
+            setUserListings((prev) =>
+              prev.map((l) => (l.id === listingId ? { ...l, status: "COMPLETED" } : l))
+            );
+            setApplicationsRefresh((n) => n + 1);
+          }}
+        />
+      )}
+
+      {/* Provider clicks a job they applied to -> detailed view with links to
+          the listing and the client, plus withdraw / leave-a-review actions. */}
+      {selectedMyApplication && (
+        <ProviderApplicationModal
+          application={selectedMyApplication}
+          onClose={() => setSelectedMyApplication(null)}
+          onMessage={() => {
+            // Close this modal, then open a conversation with the client.
+            const app = selectedMyApplication;
+            setSelectedMyApplication(null);
+            handleMessageUser(
+              {
+                id: app.clientId,
+                firstName: app.clientFirstName,
+                lastName: app.clientLastName,
+              },
+              app.listingId ? { id: app.listingId, title: app.title } : null
+            );
+          }}
+          onWithdrawn={(id) => {
+            // Remove the withdrawn application from the list and close the modal.
+            setApplications((prev) => prev.filter((a) => a.id !== id));
+            setSelectedMyApplication(null);
+            setApplicationsRefresh((n) => n + 1);
+          }}
+          onLeaveReview={(clientId) => {
+            // Close this modal and open the reviews panel pointed at the client.
+            setSelectedMyApplication(null);
+            setReviewTargetId(clientId);
+          }}
+        />
+      )}
+
+      {/* Reviews panel opened from the provider modal, targeting the client. */}
+      {reviewTargetId && (
+        <ReviewsPanel
+          revieweeId={reviewTargetId}
+          currentUser={currentUser}
+          onClose={() => setReviewTargetId(null)}
         />
       )}
     </div>

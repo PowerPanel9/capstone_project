@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import StarRating from '../StarRating/StarRating';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
-import { getReviewsForUser, createReview } from '../../api/reviews';
+import { getReviewsForUser, createReview, canReviewUser } from '../../api/reviews';
 import { fullName, initials } from '../../utils/user';
 import './ReviewsPanel.css';
 
@@ -22,6 +22,11 @@ function ReviewsPanel({ revieweeId, currentUser, onClose }) {
   const [newBody, setNewBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+
+  // Whether the logged-in user is allowed to review this person. Starts false
+  // and is only turned on after the backend confirms they've worked together
+  // (a completed, paid job). Keeps the review form hidden until then.
+  const [canLeaveReview, setCanLeaveReview] = useState(false);
 
   // Load this user's reviews from the backend when the panel opens.
   useEffect(() => {
@@ -51,8 +56,31 @@ function ReviewsPanel({ revieweeId, currentUser, onClose }) {
     ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1)
     : "0";
 
-  // Can't review yourself, and must be logged in.
-  const canReview = currentUser && currentUser.id !== revieweeId;
+  // Basic rule: must be logged in and not viewing your own profile.
+  const isEligibleUser = currentUser && currentUser.id !== revieweeId;
+
+  // Ask the backend whether these two have worked together (paid job). Only
+  // then do we show the review form. Runs when the viewer or profile changes.
+  useEffect(() => {
+    let ignore = false;
+
+    if (!isEligibleUser) {
+      setCanLeaveReview(false);
+      return;
+    }
+
+    canReviewUser(revieweeId)
+      .then((allowed) => { if (!ignore) setCanLeaveReview(allowed); })
+      .catch((err) => {
+        console.error("Failed to check review eligibility:", err?.message);
+        if (!ignore) setCanLeaveReview(false);
+      });
+
+    return () => { ignore = true; };
+  }, [isEligibleUser, revieweeId]);
+
+  // Show the form only when the user is eligible AND has worked with this person.
+  const canReview = isEligibleUser && canLeaveReview;
 
   const isFormValid = newRating && newTitle.trim() && newBody.trim();
 
@@ -186,6 +214,16 @@ function ReviewsPanel({ revieweeId, currentUser, onClose }) {
             >
               {isSubmitting ? "Posting…" : "Post Review"}
             </button>
+          </div>
+        )}
+
+        {/* Logged-in and viewing someone else, but haven't worked together yet:
+            explain why the review form isn't available instead of showing nothing. */}
+        {isEligibleUser && !canLeaveReview && (
+          <div className="review-form">
+            <p className="review-form-hint">
+              You can review this person after a completed job together.
+            </p>
           </div>
         )}
       </div>

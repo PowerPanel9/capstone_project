@@ -1,7 +1,9 @@
 // ProviderServices: Step 3 of the provider/both flow.
 // The user picks the services they provide from a grid of category pills. This
-// is a MULTI-select, so we keep chosen values in an array and save it as the
-// `skills` field using the enum casing (e.g. "CLEANING").
+// is a MULTI-select, so we keep chosen values in an array and save it to the
+// `categories` field using the enum casing (e.g. "CLEANING"). These categories
+// are what clients filter by on the home page to find matching providers — they
+// are separate from free-text `skills`, which the user adds on their profile.
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';

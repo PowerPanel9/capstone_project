@@ -1,6 +1,6 @@
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
-const { forwardGeocode, reverseGeocode } = require('../utils/geocoder');
+const { forwardGeocode, reverseGeocode, getAddressSuggestions } = require('../utils/geocoder');
 const stripe = require('../utils/stripe');
 
 const userProfileSelect = {
@@ -29,6 +29,7 @@ const legacyUserProfileSelect = {
     lastName: true,
     email: true,
     role: true,
+    categories: true,
     bio: true,
     skills: true,
     location: true,
@@ -48,6 +49,32 @@ function isUnknownPrismaFieldError(error) {
     );
 }
 
+// Full US state names -> 2-letter code. Used to keep the displayed state
+// consistent (always "CA", never "California"), no matter which path produced
+// it (a fresh geocode on save vs. re-parsing the stored address on refresh).
+const US_STATE_NAMES_TO_CODE = {
+    alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
+    colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
+    hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
+    kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
+    massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO",
+    montana: "MT", nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ",
+    "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND",
+    ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
+    "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
+    vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
+    wyoming: "WY",
+};
+
+// Turn a state value into its 2-letter code. An already-abbreviated value
+// (e.g. "CA") is returned as-is; a full name (e.g. "California") is looked up.
+function normalizeStateToCode(stateValue) {
+    if (!stateValue || typeof stateValue !== "string") return "";
+    const trimmed = stateValue.trim();
+    if (/^[A-Za-z]{2}$/.test(trimmed)) return trimmed.toUpperCase();
+    return US_STATE_NAMES_TO_CODE[trimmed.toLowerCase()] || trimmed;
+}
+
 function extractCityStateFromLocation(locationValue) {
     if (!locationValue || typeof locationValue !== "string") {
         return { city: "", state: "" };
@@ -58,19 +85,6 @@ function extractCityStateFromLocation(locationValue) {
         .map((part) => part.trim())
         .filter(Boolean);
 
-    const US_STATE_NAMES_TO_CODE = {
-        alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
-        colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
-        hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
-        kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
-        massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO",
-        montana: "MT", nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ",
-        "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND",
-        ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
-        "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
-        vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
-        wyoming: "WY",
-    };
     const streetLikePattern =
         /\b(street|st|avenue|ave|boulevard|blvd|road|rd|drive|dr|lane|ln|way|court|ct|place|pl)\b/i;
     const nonCityPattern =
@@ -420,14 +434,32 @@ const updateUser = async (req, res) => {
         let derivedCity = "";
         let derivedState = "";
         if (requestedAddress) {
-            try {
-                const { locationText, city, state } = await forwardGeocode(requestedAddress);
-                data.location = locationText;
-                derivedCity = city || "";
-                derivedState = state || "";
-            } catch (geocodeError) {
-                // Keep profile updates working even if geocoding is unavailable.
-                data.location = requestedAddress;
+            // Only re-geocode when the address text actually changed. The
+            // profile form re-sends the currently loaded location on every
+            // save (even ones that only change, say, a skill), and re-running
+            // the SAME address through LocationIQ can come back with a
+            // slightly different formatted string (e.g. an extra neighborhood
+            // name). That made the displayed city/state drift on every save
+            // that didn't even touch location. Skipping the geocode when
+            // nothing changed keeps the stored address (and its city/state)
+            // stable.
+            const existingUser = await prisma.user.findUnique({
+                where: { id: authUserId },
+                select: { location: true },
+            });
+
+            if (requestedAddress !== existingUser?.location) {
+                try {
+                    const { locationText, city, state } = await forwardGeocode(requestedAddress);
+                    data.location = locationText;
+                    derivedCity = city || "";
+                    // Always store the 2-letter code so the profile shows "CA", not
+                    // "California" (LocationIQ may return the full name here).
+                    derivedState = normalizeStateToCode(state);
+                } catch (geocodeError) {
+                    // Keep profile updates working even if geocoding is unavailable.
+                    data.location = requestedAddress;
+                }
             }
         }
 
@@ -449,11 +481,14 @@ const updateUser = async (req, res) => {
             });
         } catch (updateError) {
             if (!isUnknownPrismaFieldError(updateError)) throw updateError;
+            // Only strip the fields that may not exist in older databases
+            // (the contact fields). `categories` DOES exist once the
+            // add_user_categories migration has run, so we keep it here — that
+            // is what the onboarding services step saves.
             const {
                 contactEmail: _contactEmail,
                 phoneNumber: _phoneNumber,
                 mailingAddress: _mailingAddress,
-                categories: _categories,
                 ...legacyData
             } = data;
             updatedUser = await prisma.user.update({
@@ -480,10 +515,33 @@ const updateUser = async (req, res) => {
     }
 };
 
+// Return a short list of address suggestions for what the user typed.
+// The frontend calls this while the user types so it can show a dropdown of
+// real, valid addresses to pick from. We keep the LocationIQ key on the server
+// (never send it to the browser), so the frontend asks us instead of LocationIQ.
+const getAddressOptions = async (req, res) => {
+    try {
+        const query = typeof req.query.q === "string" ? req.query.q.trim() : "";
+
+        // LocationIQ needs at least a couple of characters to return useful
+        // matches. For very short input we just return an empty list.
+        if (query.length < 3) {
+            return res.status(200).json([]);
+        }
+
+        const suggestions = await getAddressSuggestions(query);
+        res.status(200).json(suggestions);
+    } catch (error) {
+        console.error("getAddressOptions error:", error.message);
+        res.status(500).json({ message: "Could not fetch address suggestions" });
+    }
+};
+
 module.exports = {
     getUsers,
     getProviders,
     getUserById,
     getUserByName,
     updateUser,
+    getAddressOptions,
 };

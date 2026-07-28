@@ -29,7 +29,8 @@ import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
 import { getMyApplications } from './api/applications';
-import { getUsers as getMessageUsers } from './api/messages';
+import { getUsers as getMessageUsers, getUnreadCount } from './api/messages';
+import { connectSocket, disconnectSocket, getSocket } from './api/socket';
 import { Bookmark } from 'lucide-react';
 import './App.css';
 
@@ -64,6 +65,10 @@ function App() {
   const [bookmarkIds, setBookmarkIds] = useState({});
   const [userMode, setUserMode] = useState("provider");
   const [authMode, setAuthMode] = useState(null);
+  // Total unread messages across all conversations, shown as a badge on the
+  // "Messages" sidebar link. Kept in sync by the "new_message" socket event
+  // and by re-fetching whenever a conversation is opened/read.
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -86,6 +91,27 @@ function App() {
     // Mark auth check as complete
     setAuthLoading(false);
   }, []);
+
+  // Connect the socket whenever we become authenticated, and disconnect it
+  // when we log out, so we only ever listen for OUR messages.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    connectSocket();
+    getUnreadCount().then(setUnreadMessageCount).catch(() => {});
+
+    const socket = getSocket();
+    // A new message bumps the total unread badge. If it's about the
+    // conversation currently open, MessagesView marks it read on its own.
+    const handleNewMessage = () => {
+      setUnreadMessageCount((prev) => prev + 1);
+    };
+    socket?.on("new_message", handleNewMessage);
+
+    return () => {
+      socket?.off("new_message", handleNewMessage);
+    };
+  }, [isAuthenticated]);
 
   // Load saved mode from localStorage on mount
   useEffect(() => {
@@ -238,8 +264,10 @@ function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     sessionStorage.removeItem('sidehustle_chat_session'); // Clear chat history on logout
+    disconnectSocket();
     setIsAuthenticated(false);
     setCurrentUser(null);
+    setUnreadMessageCount(0);
     navigate('/');
   };
 
@@ -302,6 +330,7 @@ function App() {
               userMode={userMode}
               onOpenAI={openAI}
               onLogout={handleLogout}
+              unreadMessageCount={unreadMessageCount}
             />
           </aside>
 
@@ -384,6 +413,17 @@ function App() {
                 />
 
                 <Route
+                  path="/listing/:id/edit"
+                  element={
+                    isAuthenticated ? (
+                      <EditListingPage />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                <Route
                   path="/user/profile"
                   element={
                     isAuthenticated ? (
@@ -391,6 +431,8 @@ function App() {
                         userMode={userMode}
                         onToggleMode={toggleUserMode}
                         onLogout={handleLogout}
+                        onMessageUser={setMessagesStartUser}
+                        onMessageListing={setMessagesStartListing}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -449,6 +491,7 @@ function App() {
                           setMessagesComposerOpen(false);
                           setMessagesPeopleSearch("");
                         }}
+                        onUnreadCountChange={setUnreadMessageCount}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -872,6 +915,11 @@ function ListingDetailPage({ userMode, appliedListingIds = [], onApply, onMessag
     }
   };
 
+  // Owner clicked "Edit" — send them to the edit page for this listing.
+  const handleEdit = () => {
+    navigate(`/listing/${id}/edit`);
+  };
+
   // Open a conversation with the client who posted this listing. We hand the
   // listing's owner up to App (which stores it as messagesStartUser) and then
   // navigate to Messages, where that conversation opens automatically.
@@ -901,6 +949,7 @@ function ListingDetailPage({ userMode, appliedListingIds = [], onApply, onMessag
       onBack={() => navigate(-1)}
       onApply={() => onApply(listing)}
       onDelete={handleDelete}
+      onEdit={handleEdit}
       onMessage={handleMessage}
     />
   );
@@ -910,6 +959,44 @@ function ListingDetailPage({ userMode, appliedListingIds = [], onApply, onMessag
 function CreateListingPage() {
   const navigate = useNavigate();
   return <CreateListingView onDone={() => navigate('/home')} />;
+}
+
+// Edit Listing Page Component
+// Loads the existing listing by its id, then reuses the CreateListingView form
+// in "edit mode" (pre-filled). The backend PUT route already blocks anyone who
+// isn't the owner, so we don't need to re-check ownership here.
+function EditListingPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [listing, setListing] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    getListingById(id)
+      .then((data) => setListing(data))
+      .catch((err) => {
+        console.error("Failed to load listing for editing:", err);
+        setError("Could not load this listing.");
+      })
+      .finally(() => setIsLoading(false));
+  }, [id]);
+
+  if (isLoading) return <p className="feed-status">Loading listing…</p>;
+  if (error) return <p className="feed-status feed-error">{error}</p>;
+  if (!listing) return <p className="feed-status feed-error">Listing not found</p>;
+
+  return (
+    <CreateListingView
+      listingId={id}
+      initialData={listing}
+      // Go back one step in history (to the detail page we came from) instead
+      // of pushing a NEW detail page on top. This removes the edit page from
+      // the history stack, so pressing "Back" on the detail page returns the
+      // user to where they originally were (e.g. the feed), not the editor.
+      onDone={() => navigate(-1)}
+    />
+  );
 }
 
 // Bookmarks Page Component

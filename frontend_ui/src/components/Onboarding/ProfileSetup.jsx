@@ -4,9 +4,9 @@
 // and "Continue" destination all switch based on the role picked on step 1.
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
 import Stepper from './Stepper';
 import OnboardingChrome from './OnboardingChrome';
+import AddressAutocomplete from '../AddressAutocomplete/AddressAutocomplete';
 import { updateUser } from '../../api/users';
 import './Onboarding.css';
 import './ProfileSetup.css';
@@ -20,6 +20,13 @@ function ProfileSetup({ currentUser, onUserUpdate }) {
   const [bio, setBio] = useState(currentUser?.bio || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // Location is optional here, so an empty box is valid. A non-empty value is
+  // only valid once the user picks an address from the dropdown. A location
+  // loaded from an existing profile counts as valid to start.
+  const [isLocationValid, setIsLocationValid] = useState(true);
+  // Whether to SHOW the "pick a valid address" message. We only turn this on
+  // when the user clicks Continue with an invalid address, not while they type.
+  const [showLocationError, setShowLocationError] = useState(false);
 
   // A provider or "both" user has a longer flow (5 steps) and a purple accent;
   // a client-only user has the shorter 3-step teal flow.
@@ -33,6 +40,12 @@ function ProfileSetup({ currentUser, onUserUpdate }) {
   // Save location + bio, then continue. Both fields are optional.
   const handleContinue = async () => {
     if (saving) return;
+    // Check the address only when the user clicks Continue. If it's not valid,
+    // show the message under the box and stop here (don't continue).
+    if (!isLocationValid) {
+      setShowLocationError(true);
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -73,16 +86,23 @@ function ProfileSetup({ currentUser, onUserUpdate }) {
             <label htmlFor="location">Where do you typically need tasks done?</label>
             <span className="ob-optional">Optional</span>
           </div>
-          <div className="ob-input-wrap">
-            <MapPin size={20} className="ob-input-icon" />
-            <input
-              id="location"
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g. Greenwood, Seattle, WA"
-            />
-          </div>
+          <AddressAutocomplete
+            inputId="location"
+            value={location}
+            placeholder="Start typing your address…"
+            onChange={(nextText, picked) => {
+              setLocation(nextText);
+              const nextValid = nextText.trim() === '' || picked;
+              setIsLocationValid(nextValid);
+              // Once the value becomes valid again, clear any error we showed.
+              if (nextValid) setShowLocationError(false);
+            }}
+          />
+          {showLocationError && (
+            <p className="onboarding-error">
+              Please select a valid address from the dropdown.
+            </p>
+          )}
         </div>
 
         {/* Bio textarea. */}
