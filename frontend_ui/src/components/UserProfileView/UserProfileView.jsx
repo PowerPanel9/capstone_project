@@ -11,6 +11,7 @@ import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 import { formatCityState } from "../../utils/location";
 import { getReviewsForUser } from "../../api/reviews";
 import { getExperiencesByUser, createExperience } from "../../api/experiences";
+import { uploadFile } from "../../api/upload";
 import {
   getMyApplications,
   getReceivedApplications,
@@ -77,14 +78,10 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
   // Controls whether the skill input is shown. Starts hidden so we only show
   // the "+ Add Skill" button until the user clicks it.
   const [isAddingSkill, setIsAddingSkill] = useState(false);
-  // Resume and certification inputs on the Experience tab. Each has its own
-  // "is the input open" flag, text value, saving flag, and error message.
-  const [isAddingResume, setIsAddingResume] = useState(false);
-  const [newResumeUrl, setNewResumeUrl] = useState("");
+  // Resume and certification uploads on the Experience tab. Each tracks whether
+  // a file is currently uploading and any error message to show.
   const [isSavingResume, setIsSavingResume] = useState(false);
   const [resumeError, setResumeError] = useState("");
-  const [isAddingCertification, setIsAddingCertification] = useState(false);
-  const [newCertificationUrl, setNewCertificationUrl] = useState("");
   const [isSavingCertification, setIsSavingCertification] = useState(false);
   const [certificationError, setCertificationError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -96,6 +93,9 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
   const [listingsError, setListingsError] = useState("");
   const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false);
   const [experienceSaveError, setExperienceSaveError] = useState("");
+  // True while experience images are being uploaded to S3, so we can show
+  // "Uploading…" and stop the user from saving before the URLs come back.
+  const [isUploadingExperienceImages, setIsUploadingExperienceImages] = useState(false);
   const [experiences, setExperiences] = useState([]);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef(null);
@@ -351,64 +351,20 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const MAX_UPLOAD_DIMENSION = 1200;
-  const MAX_BASE64_LENGTH = 900_000; // keep request payload safely below server limits
-
-  const compressImageToDataUrl = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("Could not read image file."));
-      reader.onload = () => {
-        const img = new Image();
-        img.onerror = () => reject(new Error("Could not process selected image."));
-        img.onload = () => {
-          const scale = Math.min(
-            1,
-            MAX_UPLOAD_DIMENSION / Math.max(img.width, img.height)
-          );
-          const targetWidth = Math.max(1, Math.round(img.width * scale));
-          const targetHeight = Math.max(1, Math.round(img.height * scale));
-
-          const canvas = document.createElement("canvas");
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            reject(new Error("Could not prepare image canvas."));
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-
-          // First try compressed JPEG, then fallback.
-          let output = canvas.toDataURL("image/jpeg", 0.75);
-          if (output.length > MAX_BASE64_LENGTH) {
-            output = canvas.toDataURL("image/jpeg", 0.6);
-          }
-          if (output.length > MAX_BASE64_LENGTH) {
-            reject(
-              new Error("Image is too large. Please choose a smaller image.")
-            );
-            return;
-          }
-
-          resolve(output);
-        };
-        img.src = String(reader.result || "");
-      };
-      reader.readAsDataURL(file);
-    });
-
   const handleSingleImageChange = (fieldName) => async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
       setSaveError("");
-      const compressedDataUrl = await compressImageToDataUrl(file);
+      // Step 1 of the two-step flow: send the file to S3 through our backend
+      // (POST /api/upload) and get back a public URL string.
+      // We store that URL in the form, so when the profile is saved the
+      // backend writes the URL into the database (imageUrl / profilePicture).
+      const fileUrl = await uploadFile(file);
       setFormData((prev) => ({
         ...prev,
-        [fieldName]: compressedDataUrl,
+        [fieldName]: fileUrl,
       }));
     } catch (error) {
       setSaveError(error.message || "Could not upload image.");
@@ -436,29 +392,38 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     setExperienceForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleExperienceImagesChange = (event) => {
+  // Upload the picked image files to S3 and ADD their URLs to the list.
+  // Because we append (not replace), the user can pick a few images now and
+  // pick more later in the same form, and all of them are kept.
+  const handleExperienceImagesChange = async (event) => {
     const files = Array.from(event.target.files || []);
-    if (!files.length) {
-      setExperienceForm((prev) => ({ ...prev, images: [] }));
-      return;
-    }
+    // Let the user pick the same file again later by clearing the input value.
+    event.target.value = "";
+    if (!files.length) return;
 
-    Promise.all(
-      files.map(
-        (file) =>
-          new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result || ""));
-            reader.onerror = () => resolve("");
-            reader.readAsDataURL(file);
-          })
-      )
-    ).then((imageDataUrls) => {
+    setExperienceSaveError("");
+    setIsUploadingExperienceImages(true);
+    try {
+      // Upload every chosen file to S3; each call returns that file's URL.
+      const urls = await Promise.all(files.map((file) => uploadFile(file)));
       setExperienceForm((prev) => ({
         ...prev,
-        images: imageDataUrls.filter(Boolean),
+        images: [...prev.images, ...urls.filter(Boolean)],
       }));
-    });
+    } catch (error) {
+      console.error("Failed to upload experience images:", error);
+      setExperienceSaveError("Could not upload one or more images. Please try again.");
+    } finally {
+      setIsUploadingExperienceImages(false);
+    }
+  };
+
+  // Remove a single already-added image from the form (by its position).
+  const removeExperienceImage = (indexToRemove) => {
+    setExperienceForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove),
+    }));
   };
 
   const handleSaveExperience = async () => {
@@ -479,6 +444,12 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     // When "Other" is picked, require the free-text category (same as listings).
     if (experienceForm.category === "OTHER" && !customCategory) {
       setExperienceSaveError("Please enter a custom category.");
+      return;
+    }
+
+    // Don't save while images are still uploading, or we'd lose their URLs.
+    if (isUploadingExperienceImages) {
+      setExperienceSaveError("Please wait for the images to finish uploading.");
       return;
     }
 
@@ -717,53 +688,53 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
     saveSkills(nextSkills);
   };
 
-  // Save the resume URL from the Experience tab, then save immediately.
-  const saveResumeUrl = async () => {
+  // Upload a resume file from the Experience tab to S3, then save its URL.
+  // Two steps: uploadFile() sends the file to /api/upload and returns a public
+  // URL; saveProfileFields() writes that URL to the database (resumeUrl).
+  const handleResumeFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
     if (!profile.id) {
       setResumeError("Profile id not found");
       return;
     }
-    const trimmed = newResumeUrl.trim();
-    if (!trimmed) return;
 
     setIsSavingResume(true);
     setResumeError("");
     try {
-      const updated = await saveProfileFields({ resumeUrl: trimmed });
+      const url = await uploadFile(file);
+      const updated = await saveProfileFields({ resumeUrl: url });
       setProfile((prev) => ({
         ...prev,
-        resumeUrl: updated?.resumeUrl ?? trimmed,
+        resumeUrl: updated?.resumeUrl ?? url,
       }));
-      setNewResumeUrl("");
-      setIsAddingResume(false);
     } catch (error) {
-      setResumeError(error.message || "Error saving resume");
+      setResumeError(error.message || "Error uploading resume");
     } finally {
       setIsSavingResume(false);
     }
   };
 
-  // Save the certification URL from the Experience tab, then save immediately.
-  const saveCertificationUrl = async () => {
+  // Upload a certification file from the Experience tab to S3, then save its URL.
+  const handleCertificationFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
     if (!profile.id) {
       setCertificationError("Profile id not found");
       return;
     }
-    const trimmed = newCertificationUrl.trim();
-    if (!trimmed) return;
 
     setIsSavingCertification(true);
     setCertificationError("");
     try {
-      const updated = await saveProfileFields({ certificationUrl: trimmed });
+      const url = await uploadFile(file);
+      const updated = await saveProfileFields({ certificationUrl: url });
       setProfile((prev) => ({
         ...prev,
-        certificationUrl: updated?.certificationUrl ?? trimmed,
+        certificationUrl: updated?.certificationUrl ?? url,
       }));
-      setNewCertificationUrl("");
-      setIsAddingCertification(false);
     } catch (error) {
-      setCertificationError(error.message || "Error saving certification");
+      setCertificationError(error.message || "Error uploading certification");
     } finally {
       setIsSavingCertification(false);
     }
@@ -1207,56 +1178,22 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
                 <p style={{ fontSize: 13, color: "#9CA3AF" }}>No resume added yet</p>
               )}
 
-              {isAddingResume ? (
-                <div className="skill-add-row" style={{ marginTop: 16 }}>
+              <div style={{ marginTop: 16 }}>
+                <label className="experience-add-btn" style={{ cursor: "pointer" }}>
+                  {isSavingResume
+                    ? "Uploading..."
+                    : currentUser.resumeUrl
+                      ? "Replace Resume"
+                      : "+ Upload Resume"}
                   <input
-                    autoFocus
-                    value={newResumeUrl}
-                    onChange={(e) => setNewResumeUrl(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        saveResumeUrl();
-                      }
-                    }}
-                    placeholder="Paste resume URL"
+                    type="file"
+                    accept=".pdf,.doc,.docx,image/*"
+                    onChange={handleResumeFileChange}
                     disabled={isSavingResume}
+                    style={{ display: "none" }}
                   />
-                  <button
-                    type="button"
-                    className="modal-btn modal-btn-secondary"
-                    onClick={saveResumeUrl}
-                    disabled={isSavingResume}
-                  >
-                    {isSavingResume ? "Saving..." : "Save"}
-                  </button>
-                  <button
-                    type="button"
-                    className="modal-btn modal-btn-secondary"
-                    onClick={() => {
-                      setIsAddingResume(false);
-                      setNewResumeUrl("");
-                      setResumeError("");
-                    }}
-                    disabled={isSavingResume}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div style={{ marginTop: 16 }}>
-                  <button
-                    type="button"
-                    className="experience-add-btn"
-                    onClick={() => {
-                      setNewResumeUrl(currentUser.resumeUrl || "");
-                      setIsAddingResume(true);
-                    }}
-                  >
-                    {currentUser.resumeUrl ? "Edit Resume" : "+ Add Resume"}
-                  </button>
-                </div>
-              )}
+                </label>
+              </div>
 
               {resumeError && <p className="error-text">{resumeError}</p>}
             </div>
@@ -1278,56 +1215,22 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
                 <p style={{ fontSize: 13, color: "#9CA3AF" }}>No certification added yet</p>
               )}
 
-              {isAddingCertification ? (
-                <div className="skill-add-row" style={{ marginTop: 16 }}>
+              <div style={{ marginTop: 16 }}>
+                <label className="experience-add-btn" style={{ cursor: "pointer" }}>
+                  {isSavingCertification
+                    ? "Uploading..."
+                    : currentUser.certificationUrl
+                      ? "Replace Certification"
+                      : "+ Upload Certification"}
                   <input
-                    autoFocus
-                    value={newCertificationUrl}
-                    onChange={(e) => setNewCertificationUrl(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        saveCertificationUrl();
-                      }
-                    }}
-                    placeholder="Paste certification URL"
+                    type="file"
+                    accept=".pdf,.doc,.docx,image/*"
+                    onChange={handleCertificationFileChange}
                     disabled={isSavingCertification}
+                    style={{ display: "none" }}
                   />
-                  <button
-                    type="button"
-                    className="modal-btn modal-btn-secondary"
-                    onClick={saveCertificationUrl}
-                    disabled={isSavingCertification}
-                  >
-                    {isSavingCertification ? "Saving..." : "Save"}
-                  </button>
-                  <button
-                    type="button"
-                    className="modal-btn modal-btn-secondary"
-                    onClick={() => {
-                      setIsAddingCertification(false);
-                      setNewCertificationUrl("");
-                      setCertificationError("");
-                    }}
-                    disabled={isSavingCertification}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div style={{ marginTop: 16 }}>
-                  <button
-                    type="button"
-                    className="experience-add-btn"
-                    onClick={() => {
-                      setNewCertificationUrl(currentUser.certificationUrl || "");
-                      setIsAddingCertification(true);
-                    }}
-                  >
-                    {currentUser.certificationUrl ? "Edit Certification" : "+ Add Certification"}
-                  </button>
-                </div>
-              )}
+                </label>
+              </div>
 
               {certificationError && <p className="error-text">{certificationError}</p>}
             </div>
@@ -1582,11 +1485,21 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               </div>
             )}
 
-            <label className="modal-label" htmlFor="profile-resume">Resume URL</label>
-            <input id="profile-resume" name="resumeUrl" value={formData.resumeUrl} onChange={handleFieldChange} />
+            <label className="modal-label" htmlFor="profile-resume">Upload Resume</label>
+            <input id="profile-resume" type="file" accept=".pdf,.doc,.docx,image/*" onChange={handleSingleImageChange("resumeUrl")} />
+            {formData.resumeUrl && (
+              <a href={formData.resumeUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#4F46E5", fontWeight: 600 }}>
+                View current resume
+              </a>
+            )}
 
-            <label className="modal-label" htmlFor="profile-certification">Certification URL</label>
-            <input id="profile-certification" name="certificationUrl" value={formData.certificationUrl} onChange={handleFieldChange} />
+            <label className="modal-label" htmlFor="profile-certification">Upload Certification</label>
+            <input id="profile-certification" type="file" accept=".pdf,.doc,.docx,image/*" onChange={handleSingleImageChange("certificationUrl")} />
+            {formData.certificationUrl && (
+              <a href={formData.certificationUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#4F46E5", fontWeight: 600 }}>
+                View current certification
+              </a>
+            )}
 
             <label className="modal-label">Skills</label>
             <div className="skills-row">
@@ -1689,12 +1602,41 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               accept="image/*"
               multiple
               onChange={handleExperienceImagesChange}
+              disabled={isUploadingExperienceImages}
             />
+            <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 4 }}>
+              You can add more images at any time before saving.
+            </p>
+            {isUploadingExperienceImages && (
+              <p style={{ fontSize: 13, color: "#7c83c9", fontWeight: 600 }}>Uploading…</p>
+            )}
 
             {experienceForm.images.length > 0 && (
               <div className="experience-images" style={{ marginTop: 8 }}>
                 {experienceForm.images.map((imageSrc, index) => (
-                  <img key={`preview-${index}`} src={imageSrc} alt={`Preview ${index + 1}`} />
+                  <div key={`preview-${index}`} style={{ position: "relative", display: "inline-block" }}>
+                    <img src={imageSrc} alt={`Preview ${index + 1}`} />
+                    <button
+                      type="button"
+                      onClick={() => removeExperienceImage(index)}
+                      aria-label="Remove image"
+                      style={{
+                        position: "absolute",
+                        top: 2,
+                        right: 2,
+                        border: "none",
+                        borderRadius: "50%",
+                        width: 20,
+                        height: 20,
+                        lineHeight: "18px",
+                        background: "rgba(0,0,0,0.6)",
+                        color: "#fff",
+                        cursor: "pointer",
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -1705,8 +1647,13 @@ function UserProfileView({ userMode, onToggleMode, onLogout }) {
               <button type="button" className="modal-btn modal-btn-secondary" onClick={closeExperienceModal}>
                 Cancel
               </button>
-              <button type="button" className="modal-btn modal-btn-primary" onClick={handleSaveExperience}>
-                Save
+              <button
+                type="button"
+                className="modal-btn modal-btn-primary"
+                onClick={handleSaveExperience}
+                disabled={isUploadingExperienceImages}
+              >
+                {isUploadingExperienceImages ? "Uploading…" : "Save"}
               </button>
             </div>
           </div>

@@ -1,17 +1,19 @@
 // ProviderBuild: Step 4 of the provider/both flow.
-// The user can paste links to their resume and any certifications. There is no
-// file upload yet, so these are plain URL fields. Saved as `resumeUrl` and
-// `certificationUrl` with PUT /api/users/:id.
+// The user uploads their resume and any certifications as files. Each file is
+// sent to S3 through our backend (POST /api/upload), which returns a public URL.
+// We then save those URLs as `resumeUrl` and `certificationUrl` with
+// PUT /api/users/:id.
 //
 // Note: the Figma design also showed a "Post an Experience" card and a Bio
 // field here, but those were intentionally dropped for now (bio is collected
-// on the profile step), so this page keeps just the two link fields.
+// on the profile step), so this page keeps just the two upload cards.
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Award } from 'lucide-react';
 import Stepper from './Stepper';
 import OnboardingChrome from './OnboardingChrome';
 import { updateUser } from '../../api/users';
+import { uploadFile } from '../../api/upload';
 import './Onboarding.css';
 import './ProviderBuild.css';
 
@@ -23,6 +25,27 @@ function ProviderBuild({ currentUser, onUserUpdate }) {
   const [certificationUrl, setCertificationUrl] = useState(currentUser?.certificationUrl || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // Which file is currently uploading, so we can show "Uploading…" on that card.
+  const [uploadingField, setUploadingField] = useState('');
+
+  // Send the chosen file to S3 and remember the returned URL in state.
+  // `field` is either "resume" or "certification" so we know which one to set.
+  const handleFileUpload = (field) => async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setError('');
+    setUploadingField(field);
+    try {
+      const url = await uploadFile(file);
+      if (field === 'resume') setResumeUrl(url);
+      else setCertificationUrl(url);
+    } catch (err) {
+      console.error('Failed to upload file:', err);
+      setError('Could not upload your file. Please try again.');
+    } finally {
+      setUploadingField('');
+    }
+  };
 
   const handleContinue = async () => {
     if (saving) return;
@@ -50,7 +73,7 @@ function ProviderBuild({ currentUser, onUserUpdate }) {
       <div className="onboarding-header">
         <h1 className="onboarding-title">Build your verified profile</h1>
         <p className="onboarding-subtitle">
-          Add links to your resume and certifications so clients can trust your work. Both are
+          Upload your resume and certifications so clients can trust your work. Both are
           optional and appear as trust badges on your public page.
         </p>
       </div>
@@ -66,11 +89,17 @@ function ProviderBuild({ currentUser, onUserUpdate }) {
             <p>Highlight your career path &amp; credentials</p>
           </div>
           <input
-            type="url"
-            value={resumeUrl}
-            onChange={(e) => setResumeUrl(e.target.value)}
-            placeholder="Paste a link (https://…)"
+            type="file"
+            accept=".pdf,.doc,.docx,image/*"
+            onChange={handleFileUpload('resume')}
+            disabled={uploadingField === 'resume'}
           />
+          {uploadingField === 'resume' && <span className="build-status">Uploading…</span>}
+          {resumeUrl && uploadingField !== 'resume' && (
+            <a href={resumeUrl} target="_blank" rel="noopener noreferrer" className="build-status">
+              Resume uploaded ✓
+            </a>
+          )}
         </div>
 
         {/* Certification link card */}
@@ -83,11 +112,17 @@ function ProviderBuild({ currentUser, onUserUpdate }) {
             <p>Secure verification of skills / licenses</p>
           </div>
           <input
-            type="url"
-            value={certificationUrl}
-            onChange={(e) => setCertificationUrl(e.target.value)}
-            placeholder="Paste a link (https://…)"
+            type="file"
+            accept=".pdf,.doc,.docx,image/*"
+            onChange={handleFileUpload('certification')}
+            disabled={uploadingField === 'certification'}
           />
+          {uploadingField === 'certification' && <span className="build-status">Uploading…</span>}
+          {certificationUrl && uploadingField !== 'certification' && (
+            <a href={certificationUrl} target="_blank" rel="noopener noreferrer" className="build-status">
+              Certification uploaded ✓
+            </a>
+          )}
         </div>
 
         {error && <p className="onboarding-error">{error}</p>}
@@ -101,7 +136,7 @@ function ProviderBuild({ currentUser, onUserUpdate }) {
             className="onboarding-primary-btn"
             style={{ background: PURPLE, flex: 1 }}
             onClick={handleContinue}
-            disabled={saving}
+            disabled={saving || Boolean(uploadingField)}
           >
             {saving ? 'Saving…' : 'Complete Profile & Continue'}
           </button>
