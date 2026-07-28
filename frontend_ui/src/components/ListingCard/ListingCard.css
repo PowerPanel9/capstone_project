@@ -182,3 +182,67 @@
 .card-name.card-poster-link:hover {
   color: var(--primary, #7B8FC8);
 }
+
+/* Skeleton loader — placeholder card shown while listings are loading */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.card-skeleton {
+  background: #fff;
+  border-radius: 24px;
+  border: 1px solid #E5E7EB;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.skeleton-block {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 6px;
+}
+
+.card-skeleton .skeleton-img {
+  height: 120px;
+  border-radius: 0;
+  margin-bottom: 0;
+}
+
+.card-skeleton .skeleton-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-skeleton .skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.card-skeleton .skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-skeleton .skeleton-name  { height: 12px; width: 100px; }
+.card-skeleton .skeleton-loc   { height: 10px; width: 70px; margin-top: 4px; }
+.card-skeleton .skeleton-badge { height: 22px; width: 60px; border-radius: 999px; margin-left: auto; }
+.card-skeleton .skeleton-title { height: 14px; width: 75%; }
+.card-skeleton .skeleton-desc1 { height: 12px; width: 100%; }
+.card-skeleton .skeleton-desc2 { height: 12px; width: 85%; }
+.card-skeleton .skeleton-tag   { height: 22px; width: 55px; border-radius: 999px; }
+.card-skeleton .skeleton-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid #F3F4F6;
+}
+.card-skeleton .skeleton-price { height: 14px; width: 50px; }
+.card-skeleton .skeleton-date  { height: 12px; width: 60px; }

@@ -108,10 +108,15 @@ function HomeView({
 
       {/* Feedback while the first batch loads, shown here in the feed area
           (under the header) rather than at the top of the page. */}
-      {isLoading && (
-        <p className="feed-status">
-          {showExperiences ? "Loading experiences…" : "Loading listings…"}
-        </p>
+      {isLoading && !showExperiences && (
+        <div className="listing-feed">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ListingCard key={i} skeleton />
+          ))}
+        </div>
+      )}
+      {isLoading && showExperiences && (
+        <p className="feed-status">Loading experiences…</p>
       )}
 
       {showExperiences ? (

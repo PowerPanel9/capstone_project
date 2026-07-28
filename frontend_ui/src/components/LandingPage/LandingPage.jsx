@@ -1,15 +1,14 @@
 import './LandingPage.css';
-
-// Image URLs from Figma
-const imgTaskLawn = "https://www.figma.com/api/mcp/asset/2bba32b2-1634-4e6a-9a13-2d79f553b9ae";
-const imgTaskCleaning = "https://www.figma.com/api/mcp/asset/1c159b3f-56e8-45f8-baa7-1ca4dcb1c04f";
-const imgTaskExtra = "https://www.figma.com/api/mcp/asset/70bb4f3b-b413-4478-a087-fae9a190ee35";
-const imgTaskNursing = "https://www.figma.com/api/mcp/asset/d4697ac7-7eae-4af3-81de-826486210304";
-const imgTaskGroceries = "https://www.figma.com/api/mcp/asset/68cdf121-6d16-46e7-a14b-b389bb372ea1";
-const imgTaskChildcare = "https://www.figma.com/api/mcp/asset/c9701fc0-dd76-4839-9edf-f63bd4549252";
-const imgTaskDogwalk = "https://www.figma.com/api/mcp/asset/2a2311a0-6fd5-468e-9e2f-0e48f880cfff";
-const imgTaskHandyman = "https://www.figma.com/api/mcp/asset/2dbc2b30-2029-404f-997a-df5fee22e733";
-const imgTaskPetSitting = "https://www.figma.com/api/mcp/asset/705fb4a5-9758-45e4-b9ae-9a91845f4e2b";
+import LogoMark from '../Logo/Logo';
+import imgTaskLawn from '../../assets/landing_page_images/mowing-lawn.png';
+import imgTaskCleaning from '../../assets/landing_page_images/painting.png';
+import imgTaskExtra from '../../assets/landing_page_images/shopping.png';
+import imgTaskNursing from '../../assets/landing_page_images/barber.png';
+import imgTaskGroceries from '../../assets/landing_page_images/nails.png';
+import imgTaskChildcare from '../../assets/landing_page_images/tutoring.png';
+import imgTaskDogwalk from '../../assets/landing_page_images/pet-sit.png';
+import imgTaskHandyman from '../../assets/landing_page_images/plumbing.png';
+import imgTaskPetSitting from '../../assets/landing_page_images/moving-couch.png';
 
 function LandingPage({ onOpenLogin, onOpenSignup }) {
   return (
@@ -17,8 +16,8 @@ function LandingPage({ onOpenLogin, onOpenSignup }) {
       {/* NAVIGATION */}
       <nav className="nav">
         <div className="nav-left">
-          <div className="nav-logo">S</div>
-          <div className="nav-brand">SideHustle</div>
+          <LogoMark size={36} />
+          <div className="nav-brand">Side<span style={{ color: '#7B8FC8' }}>Hustle</span></div>
         </div>
 
         <ul className="nav-links">
@@ -162,7 +161,7 @@ function LandingPage({ onOpenLogin, onOpenSignup }) {
       {/* FOOTER */}
       <footer className="footer">
         <div className="footer-left">
-          <div className="footer-logo">S</div>
+          <LogoMark size={22} />
           <span>© 2026 SideHustle Inc.</span>
         </div>
         <div className="footer-links">

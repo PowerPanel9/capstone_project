@@ -280,7 +280,12 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
             </div>
             <div className="chat-messages">
               {isLoadingConversation ? (
-                <p>Loading conversation...</p>
+                <div className="chat-skeleton">
+                  <div className="chat-skeleton-msg chat-skeleton-them"><div className="chat-skeleton-bubble skeleton-shimmer" /></div>
+                  <div className="chat-skeleton-msg chat-skeleton-me"><div className="chat-skeleton-bubble skeleton-shimmer" /></div>
+                  <div className="chat-skeleton-msg chat-skeleton-them"><div className="chat-skeleton-bubble skeleton-shimmer short" /></div>
+                  <div className="chat-skeleton-msg chat-skeleton-me"><div className="chat-skeleton-bubble skeleton-shimmer" /></div>
+                </div>
               ) : messages.length === 0 ? (
                 <div className="chat-start-state">
                   <MessageSquare size={20} />

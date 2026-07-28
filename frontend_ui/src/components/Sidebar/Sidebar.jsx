@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Home, User, MessageSquare, Bookmark, Plus, Sparkles, LogOut } from 'lucide-react';
+import LogoMark from '../Logo/Logo';
 import { NavLink } from 'react-router-dom';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
@@ -31,10 +32,8 @@ function Sidebar({ currentUser, userMode, onOpenAI, onLogout, unreadMessageCount
   return (
     <div className="sidebar-inner">
       <div className="logo-wrap">
-        <div className="logo-icon">
-          <Sparkles size={16} />
-        </div>
-        <span className="logo-name">SideHustle</span>
+        <LogoMark size={36} />
+        <span className="logo-name">Side<span style={{ color: '#7B8FC8' }}>Hustle</span></span>
       </div>
 
       <nav>

@@ -539,3 +539,38 @@
     display: flex;
   }
 }
+
+/* Skeleton loader for conversation loading state */
+@keyframes msg-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: msg-shimmer 1.4s infinite linear;
+  border-radius: 14px;
+}
+
+.chat-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.chat-skeleton-msg {
+  display: flex;
+}
+
+.chat-skeleton-me { justify-content: flex-end; }
+.chat-skeleton-them { justify-content: flex-start; }
+
+.chat-skeleton-bubble {
+  height: 38px;
+  width: 200px;
+  border-radius: 14px;
+}
+
+.chat-skeleton-bubble.short { width: 120px; }

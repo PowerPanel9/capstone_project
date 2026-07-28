@@ -8,6 +8,7 @@
 //   track  -> the small nav label, e.g. "Client Success Track"
 //   children -> the page-specific content
 import './Onboarding.css';
+import LogoMark from '../Logo/Logo';
 
 function OnboardingChrome({ accent, track, children }) {
   return (
@@ -15,8 +16,8 @@ function OnboardingChrome({ accent, track, children }) {
       {/* Top navigation bar */}
       <nav className="onboarding-nav">
         <div className="onboarding-logo">
-          <div className="onboarding-logo-mark" style={{ background: accent }}>S</div>
-          <span className="onboarding-logo-name">SideHustle</span>
+          <LogoMark size={36} />
+          <span className="onboarding-logo-name">Side<span style={{ color: '#7B8FC8' }}>Hustle</span></span>
         </div>
         <span className="onboarding-nav-track">Onboarding Portal · {track}</span>
         <button type="button" className="onboarding-nav-btn">Support</button>
@@ -28,7 +29,7 @@ function OnboardingChrome({ accent, track, children }) {
       {/* Footer */}
       <footer className="onboarding-footer">
         <div className="onboarding-footer-left">
-          <div className="onboarding-footer-mark" style={{ background: accent }}>S</div>
+          <LogoMark size={22} />
           <span>© 2026 SideHustle Inc.</span>
         </div>
         <div className="onboarding-footer-links">

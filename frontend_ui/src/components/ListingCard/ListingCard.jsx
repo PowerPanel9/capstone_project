@@ -5,8 +5,37 @@ import { fullName, initials } from '../../utils/user';
 import { formatCityState } from '../../utils/location';
 import './ListingCard.css';
 
-function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode }) {
+function ListingCard({ listing, bookmarked, onBookmark, onClick, userMode, skeleton }) {
   const navigate = useNavigate();
+
+  if (skeleton) {
+    return (
+      <div className="card-skeleton">
+        <div className="skeleton-block skeleton-img" />
+        <div className="skeleton-body">
+          <div className="skeleton-header">
+            <div className="skeleton-block skeleton-avatar" />
+            <div>
+              <div className="skeleton-block skeleton-name" />
+              <div className="skeleton-block skeleton-loc" />
+            </div>
+            <div className="skeleton-block skeleton-badge" />
+          </div>
+          <div className="skeleton-block skeleton-title" />
+          <div className="skeleton-block skeleton-desc1" />
+          <div className="skeleton-block skeleton-desc2" />
+          <div style={{ display: "flex", gap: 6 }}>
+            <div className="skeleton-block skeleton-tag" />
+            <div className="skeleton-block skeleton-tag" />
+          </div>
+          <div className="skeleton-footer">
+            <div className="skeleton-block skeleton-price" />
+            <div className="skeleton-block skeleton-date" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Show the user's typed-in category text when the category is OTHER,
   // otherwise show the fixed category value.

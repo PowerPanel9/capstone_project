@@ -813,11 +813,6 @@ function HomePage({ bookmarks, onBookmark, userMode, onOpenAI, currentUserId }) 
 
   return (
     <>
-      {isLoading && (
-        <p className="feed-status">
-          {showExperiences ? "Loading experiences…" : "Loading listings…"}
-        </p>
-      )}
       {error && <p className="feed-status feed-error">{error}</p>}
       <HomeView
         listings={listings}

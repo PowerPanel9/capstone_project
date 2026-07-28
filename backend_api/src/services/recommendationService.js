@@ -36,60 +36,39 @@ const MAX_LISTINGS = 8;
  *   personalized: true if the AI ranked them, false if we fell back
  */
 async function getRecommendedListings(userId) {
-  // Step 1: Load the provider so the AI knows their skills and location.
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      skills: true,
-      location: true,
-    },
-  });
-
-  if (!user) {
-    return { listings: [], personalized: false, message: "User not found." };
-  }
-
-  // Step 2: Load the provider's history — the listings they applied to and the
-  // ones they bookmarked. This tells the AI what kind of work they go for.
-  const [applications, bookmarks] = await Promise.all([
+  // Run all 4 DB queries in parallel — none depend on each other's results.
+  const [user, applications, bookmarks, openListings] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, skills: true, location: true },
+    }),
     prisma.application.findMany({
       where: { providerId: userId },
       select: {
-        listing: {
-          select: { title: true, category: true, skillsRequired: true },
-        },
+        listing: { select: { title: true, category: true, skillsRequired: true } },
       },
       take: 20,
     }),
     prisma.bookmark.findMany({
       where: { userId: userId },
       select: {
-        listing: {
-          select: { title: true, category: true, skillsRequired: true },
-        },
+        listing: { select: { title: true, category: true, skillsRequired: true } },
       },
       take: 20,
     }),
+    prisma.listing.findMany({
+      where: { status: "OPEN", userId: { not: userId } },
+      orderBy: { createdAt: "desc" },
+      take: MAX_LISTINGS,
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, profilePicture: true } },
+      },
+    }),
   ]);
 
-  // Step 3: Load the open listings that are candidates for the feed. We exclude
-  // the provider's own listings (they wouldn't apply to their own job).
-  const openListings = await prisma.listing.findMany({
-    where: {
-      status: "OPEN",
-      userId: { not: userId },
-    },
-    orderBy: { createdAt: "desc" },
-    take: MAX_LISTINGS,
-    // Same fields the normal feed already uses, so the frontend renders them
-    // the same way. We add `reason` ourselves after the AI responds.
-    include: {
-      user: {
-        select: { id: true, firstName: true, lastName: true, profilePicture: true },
-      },
-    },
-  });
+  if (!user) {
+    return { listings: [], personalized: false, message: "User not found." };
+  }
 
   // Step 4: If there is nothing to rank, just hand back what we have.
   if (openListings.length === 0) {
@@ -196,6 +175,7 @@ ${JSON.stringify(listingsForAi, null, 2)}`;
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
     ],
+    max_tokens: 400,
   });
 
   const text = response.choices[0].message.content;

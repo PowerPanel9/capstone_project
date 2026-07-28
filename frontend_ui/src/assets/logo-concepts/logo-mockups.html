@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SideHustle — Logo Concepts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f4f0;
+      color: #111;
+      padding: 48px 32px;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 48px;
+    }
+
+    .section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 20px;
+      margin-top: 48px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      border: 1.5px solid #e8e7e3;
+    }
+
+    .card-dark {
+      background: #111111;
+      border-color: #222;
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: #999;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+
+    .card-dark .label { color: #555; }
+
+    .logo-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 100px;
+    }
+
+    /* ─────────────── CONCEPT A: Wordmark ─────────────── */
+    .concept-a-wordmark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .concept-a-icon {
+      width: 40px;
+      height: 40px;
+      background: #4ecdc4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .concept-a-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: #111;
+      line-height: 1;
+    }
+
+    .concept-a-text span {
+      color: #4ecdc4;
+    }
+
+    /* ─────────────── CONCEPT B: Split color wordmark ─────────────── */
+    .concept-b {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+
+    .concept-b .side { color: #4ecdc4; }
+    .concept-b .hustle { color: #7B8FC8; }
+
+    /* ─────────────── CONCEPT C: Stack layout ─────────────── */
+    .concept-c {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .concept-c-icon {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, #4ecdc4, #7B8FC8);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 30px;
+    }
+
+    .concept-c-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: #111;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .concept-c-tagline {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      color: #999;
+      text-transform: uppercase;
+    }
+
+    /* ─────────────── CONCEPT D: Rounded square icon ─────────────── */
+    .concept-d {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .concept-d-icon {
+      width: 44px;
+      height: 44px;
+      background: #111;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .concept-d-dollar {
+      color: #4ecdc4;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .concept-d-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .concept-d-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #111;
+      line-height: 1;
+    }
+
+    .concept-d-sub {
+      font-size: 10px;
+      font-weight: 600;
+      color: #7B8FC8;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ─────────────── CONCEPT E: Arrow/motion mark ─────────────── */
+    .concept-e {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .concept-e-icon {
+      width: 44px;
+      height: 44px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .concept-e-icon svg {
+      width: 44px;
+      height: 44px;
+    }
+
+    .concept-e-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: #111;
+    }
+
+    /* ─────────────── CONCEPT F: Minimal monogram ─────────────── */
+    .concept-f {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .concept-f-badge {
+      width: 48px;
+      height: 48px;
+      border: 3px solid #4ecdc4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .concept-f-letter {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 26px;
+      color: #4ecdc4;
+      line-height: 1;
+    }
+
+    .concept-f-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #111;
+      letter-spacing: -0.3px;
+    }
+
+    /* ─────────────── CONCEPT G: Provider lavender variant ─────────────── */
+    .concept-g {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .concept-g-icon {
+      width: 40px;
+      height: 40px;
+      background: #7B8FC8;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 24px;
+    }
+
+    .concept-g-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .concept-g-text span {
+      color: #7B8FC8;
+    }
+
+    /* ─────────────── CONCEPT H: Double-S interlocked ─────────────── */
+    .concept-h {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .concept-h-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(145deg, #4ecdc4 0%, #7B8FC8 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .concept-h-letters {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 28px;
+      color: #fff;
+      letter-spacing: -4px;
+      padding-right: 4px;
+    }
+
+    .concept-h-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #111;
+    }
+
+    /* ─────────────── Icon-only row ─────────────── */
+    .icon-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .icon-only-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      border: 1.5px solid #e8e7e3;
+      min-width: 120px;
+    }
+
+    .icon-only-card.dark { background: #111; border-color: #222; }
+
+    .icon-only-card .icon-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* divider */
+    hr {
+      border: none;
+      border-top: 1px solid #e0dfd9;
+      margin: 48px 0 0;
+    }
+
+    .note {
+      margin-top: 48px;
+      padding: 20px 24px;
+      background: #fff;
+      border-radius: 12px;
+      border-left: 4px solid #4ecdc4;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #444;
+      max-width: 680px;
+    }
+
+    .note strong { color: #111; }
+  </style>
+</head>
+<body>
+
+  <h1>SideHustle — Logo Concepts</h1>
+  <p class="subtitle">6 directions using the existing brand colors (teal #4ecdc4 · lavender #7B8FC8 · dark #111)</p>
+
+  <!-- ═══════════ FULL WORDMARKS ═══════════ -->
+  <p class="section-title">Full Wordmarks (light background)</p>
+  <div class="grid">
+
+    <!-- A -->
+    <div class="card">
+      <span class="label">A — Circle + Wordmark</span>
+      <div class="logo-wrapper">
+        <div class="concept-a-wordmark">
+          <div class="concept-a-icon">S</div>
+          <div class="concept-a-text">Side<span>Hustle</span></div>
+        </div>
+      </div>
+      <small style="font-size:11px;color:#aaa;text-align:center">Current direction, refined. Simple & recognizable.</small>
+    </div>
+
+    <!-- B -->
+    <div class="card">
+      <span class="label">B — Two-tone Wordmark</span>
+      <div class="logo-wrapper">
+        <div class="concept-b">
+          <span class="side">Side</span><span class="hustle">Hustle</span>
+        </div>
+      </div>
+      <small style="font-size:11px;color:#aaa;text-align:center">Teal + lavender split. Reflects client/provider duality.</small>
+    </div>
+
+    <!-- C -->
+    <div class="card">
+      <span class="label">C — Stacked + Gradient Icon</span>
+      <div class="logo-wrapper">
+        <div class="concept-c">
+          <div class="concept-c-icon">S</div>
+          <div class="concept-c-text">SideHustle</div>
+          <div class="concept-c-tagline">Find · Earn · Connect</div>
+        </div>
+      </div>
+      <small style="font-size:11px;color:#aaa;text-align:center">Centered stack with gradient icon. Good for square formats.</small>
+    </div>
+
+    <!-- D -->
+    <div class="card">
+      <span class="label">D — Dollar Mark Icon</span>
+      <div class="logo-wrapper">
+        <div class="concept-d">
+          <div class="concept-d-icon">
+            <span class="concept-d-dollar">$</span>
+          </div>
+          <div class="concept-d-text">
+            <span class="concept-d-name">SideHustle</span>
+            <span class="concept-d-sub">Earn on your terms</span>
+          </div>
+        </div>
+      </div>
+      <small style="font-size:11px;color:#aaa;text-align:center">Bold dark tile with teal $. Emphasizes earning.</small>
+    </div>
+
+    <!-- E -->
+    <div class="card">
+      <span class="label">E — Arrow / Motion Mark</span>
+      <div class="logo-wrapper">
+        <div class="concept-e">
+          <div class="concept-e-icon">
+            <!-- Stylized "S" as two stacked arcs suggesting movement -->
+            <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="22" cy="22" r="22" fill="#4ecdc4"/>
+              <!-- Top arc → right -->
+              <path d="M14 18 Q14 12 22 12 Q30 12 30 18 Q30 22 22 22" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <!-- Bottom arc ← left -->
+              <path d="M30 26 Q30 32 22 32 Q14 32 14 26 Q14 22 22 22" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <!-- Arrowhead right on top arc -->
+              <polyline points="27,12 30,18 24,18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </div>
+          <div class="concept-e-text">SideHustle</div>
+        </div>
+      </div>
+      <small style="font-size:11px;color:#aaa;text-align:center">S-shaped mark with movement arrows. Dynamic feel.</small>
+    </div>
+
+    <!-- F -->
+    <div class="card">
+      <span class="label">F — Ring Monogram</span>
+      <div class="logo-wrapper">
+        <div class="concept-f">
+          <div class="concept-f-badge">
+            <span class="concept-f-letter">S</span>
+          </div>
+          <div class="concept-f-text">SideHustle</div>
+        </div>
+      </div>
+      <small style="font-size:11px;color:#aaa;text-align:center">Outlined ring monogram. Clean, editorial feel.</small>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ DARK BACKGROUND VARIANTS ═══════════ -->
+  <p class="section-title">Dark Background Variants</p>
+  <div class="grid">
+
+    <!-- A dark -->
+    <div class="card card-dark">
+      <span class="label">A — Dark</span>
+      <div class="logo-wrapper">
+        <div class="concept-a-wordmark">
+          <div class="concept-a-icon">S</div>
+          <div class="concept-a-text" style="color:#fff">Side<span>Hustle</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B dark -->
+    <div class="card card-dark">
+      <span class="label">B — Dark</span>
+      <div class="logo-wrapper">
+        <div class="concept-b">
+          <span class="side">Side</span><span class="hustle">Hustle</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- G — dark bg lavender variant -->
+    <div class="card card-dark">
+      <span class="label">G — Provider (Lavender)</span>
+      <div class="logo-wrapper">
+        <div class="concept-g">
+          <div class="concept-g-icon">S</div>
+          <div class="concept-g-text">Side<span>Hustle</span></div>
+        </div>
+      </div>
+      <small style="font-size:11px;color:#555;text-align:center">Provider-mode lavender. Could switch with user role.</small>
+    </div>
+
+    <!-- H dark -->
+    <div class="card card-dark">
+      <span class="label">H — Gradient Tile</span>
+      <div class="logo-wrapper">
+        <div class="concept-h">
+          <div class="concept-h-icon">
+            <span class="concept-h-letters">SH</span>
+          </div>
+          <div class="concept-h-text" style="color:#fff">SideHustle</div>
+        </div>
+      </div>
+      <small style="font-size:11px;color:#555;text-align:center">SH monogram on gradient tile. Premium feel.</small>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ ICON-ONLY VERSIONS ═══════════ -->
+  <p class="section-title">Icon-Only / Favicon Versions</p>
+  <div class="icon-row">
+
+    <!-- A icon -->
+    <div class="icon-only-card">
+      <div class="concept-a-icon" style="width:56px;height:56px;font-size:32px">S</div>
+      <span class="icon-label">A · Teal</span>
+    </div>
+
+    <!-- B icon gradient -->
+    <div class="icon-only-card">
+      <div class="concept-c-icon" style="width:56px;height:56px;font-size:32px;border-radius:16px">S</div>
+      <span class="icon-label">C · Grad</span>
+    </div>
+
+    <!-- D icon -->
+    <div class="icon-only-card">
+      <div class="concept-d-icon" style="width:56px;height:56px;border-radius:16px">
+        <span class="concept-d-dollar" style="font-size:32px">$</span>
+      </div>
+      <span class="icon-label">D · Dark $</span>
+    </div>
+
+    <!-- E icon -->
+    <div class="icon-only-card">
+      <svg viewBox="0 0 56 56" width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="28" fill="#4ecdc4"/>
+        <path d="M18 23 Q18 15 28 15 Q38 15 38 23 Q38 28 28 28" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <path d="M38 33 Q38 41 28 41 Q18 41 18 33 Q18 28 28 28" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <span class="icon-label">E · S-curve</span>
+    </div>
+
+    <!-- H icon -->
+    <div class="icon-only-card">
+      <div class="concept-h-icon" style="width:56px;height:56px;border-radius:16px">
+        <span class="concept-h-letters" style="font-size:24px">SH</span>
+      </div>
+      <span class="icon-label">H · Gradient</span>
+    </div>
+
+    <!-- dark favicon -->
+    <div class="icon-only-card dark">
+      <div style="width:56px;height:56px;background:#4ecdc4;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#111;font-family:'Outfit',sans-serif;font-weight:900;font-size:32px">S</div>
+      <span class="icon-label" style="color:#555">Dark BG</span>
+    </div>
+
+  </div>
+
+  <hr />
+
+  <div class="note">
+    <strong>Notes for the team:</strong><br />
+    — The current nav uses a plain teal circle "S" (closest to Concept A).<br />
+    — <strong>Concept B (two-tone)</strong> is the strongest visual tie to the client/provider dual identity.<br />
+    — <strong>Concept E (S-curve arrow)</strong> is the most distinctive and unique as an app icon or favicon.<br />
+    — <strong>Concept H (SH gradient tile)</strong> looks great on dark headers and app stores.<br />
+    — All icons work at 36 px (current nav size) and scale up to 512 px app store size.
+  </div>
+
+</body>
+</html>
