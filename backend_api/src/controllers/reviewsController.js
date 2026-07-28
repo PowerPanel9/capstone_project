@@ -42,6 +42,26 @@ async function createReview(req, res) {
       return res.status(404).json({ error: "User being reviewed not found" });
     }
 
+    // You can only review someone you've actually worked with. In this app that
+    // means a finished job: an ACCEPTED application on a COMPLETED listing.
+    // Reviews go both ways, so we accept either direction:
+    //   - the reviewer was the accepted provider on the reviewee's listing, OR
+    //   - the reviewee was the accepted provider on the reviewer's listing.
+    const workedTogether = await prisma.application.findFirst({
+      where: {
+        status: "ACCEPTED",
+        OR: [
+          { providerId: reviewerId, listing: { userId: reviewee_id, status: "COMPLETED" } },
+          { providerId: reviewee_id, listing: { userId: reviewerId, status: "COMPLETED" } },
+        ],
+      },
+    });
+    if (!workedTogether) {
+      return res.status(403).json({
+        error: "You can only review someone after a completed job with them.",
+      });
+    }
+
     const newReview = await prisma.review.create({
       data: {
         stars,
@@ -109,6 +129,43 @@ async function getReviewsForUser(req, res) {
   }
 }
 
+// GET /api/reviews/can-review/:user_id
+// Tell the frontend whether the logged-in user is allowed to review this user
+// yet. Returns { canReview: true } only if they've had a completed, paid job
+// together (same rule createReview enforces). Used to show/hide the review form.
+async function canReviewUser(req, res) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const reviewerId = req.user.userId;
+    const otherUserId = Number(req.params.user_id);
+
+    // A user can never review themselves, so short-circuit to false.
+    if (otherUserId === reviewerId) {
+      return res.status(200).json({ canReview: false });
+    }
+
+    // Same "worked together" check as createReview: an ACCEPTED application on a
+    // COMPLETED listing between the two users, in either direction.
+    const workedTogether = await prisma.application.findFirst({
+      where: {
+        status: "ACCEPTED",
+        OR: [
+          { providerId: reviewerId, listing: { userId: otherUserId, status: "COMPLETED" } },
+          { providerId: otherUserId, listing: { userId: reviewerId, status: "COMPLETED" } },
+        ],
+      },
+    });
+
+    return res.status(200).json({ canReview: Boolean(workedTogether) });
+  } catch (error) {
+    console.error("canReviewUser error:", error.message);
+    return res.status(500).json({ error: "Something went wrong" });
+  }
+}
+
 // DELETE /api/reviews/:id
 // Delete a review. Only the person who wrote it may delete it.
 async function deleteReview(req, res) {
@@ -144,5 +201,6 @@ module.exports = {
   createReview,
   getReviewById,
   getReviewsForUser,
+  canReviewUser,
   deleteReview,
 };

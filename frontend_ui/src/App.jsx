@@ -413,6 +413,17 @@ function App() {
                 />
 
                 <Route
+                  path="/listing/:id/edit"
+                  element={
+                    isAuthenticated ? (
+                      <EditListingPage />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+
+                <Route
                   path="/user/profile"
                   element={
                     isAuthenticated ? (
@@ -420,6 +431,8 @@ function App() {
                         userMode={userMode}
                         onToggleMode={toggleUserMode}
                         onLogout={handleLogout}
+                        onMessageUser={setMessagesStartUser}
+                        onMessageListing={setMessagesStartListing}
                       />
                     ) : (
                       <Navigate to="/" replace />
@@ -902,6 +915,11 @@ function ListingDetailPage({ userMode, appliedListingIds = [], onApply, onMessag
     }
   };
 
+  // Owner clicked "Edit" — send them to the edit page for this listing.
+  const handleEdit = () => {
+    navigate(`/listing/${id}/edit`);
+  };
+
   // Open a conversation with the client who posted this listing. We hand the
   // listing's owner up to App (which stores it as messagesStartUser) and then
   // navigate to Messages, where that conversation opens automatically.
@@ -931,6 +949,7 @@ function ListingDetailPage({ userMode, appliedListingIds = [], onApply, onMessag
       onBack={() => navigate(-1)}
       onApply={() => onApply(listing)}
       onDelete={handleDelete}
+      onEdit={handleEdit}
       onMessage={handleMessage}
     />
   );
@@ -940,6 +959,44 @@ function ListingDetailPage({ userMode, appliedListingIds = [], onApply, onMessag
 function CreateListingPage() {
   const navigate = useNavigate();
   return <CreateListingView onDone={() => navigate('/home')} />;
+}
+
+// Edit Listing Page Component
+// Loads the existing listing by its id, then reuses the CreateListingView form
+// in "edit mode" (pre-filled). The backend PUT route already blocks anyone who
+// isn't the owner, so we don't need to re-check ownership here.
+function EditListingPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [listing, setListing] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    getListingById(id)
+      .then((data) => setListing(data))
+      .catch((err) => {
+        console.error("Failed to load listing for editing:", err);
+        setError("Could not load this listing.");
+      })
+      .finally(() => setIsLoading(false));
+  }, [id]);
+
+  if (isLoading) return <p className="feed-status">Loading listing…</p>;
+  if (error) return <p className="feed-status feed-error">{error}</p>;
+  if (!listing) return <p className="feed-status feed-error">Listing not found</p>;
+
+  return (
+    <CreateListingView
+      listingId={id}
+      initialData={listing}
+      // Go back one step in history (to the detail page we came from) instead
+      // of pushing a NEW detail page on top. This removes the edit page from
+      // the history stack, so pressing "Back" on the detail page returns the
+      // user to where they originally were (e.g. the feed), not the editor.
+      onDone={() => navigate(-1)}
+    />
+  );
 }
 
 // Bookmarks Page Component

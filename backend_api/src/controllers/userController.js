@@ -29,6 +29,7 @@ const legacyUserProfileSelect = {
     lastName: true,
     email: true,
     role: true,
+    categories: true,
     bio: true,
     skills: true,
     location: true,
@@ -480,11 +481,14 @@ const updateUser = async (req, res) => {
             });
         } catch (updateError) {
             if (!isUnknownPrismaFieldError(updateError)) throw updateError;
+            // Only strip the fields that may not exist in older databases
+            // (the contact fields). `categories` DOES exist once the
+            // add_user_categories migration has run, so we keep it here — that
+            // is what the onboarding services step saves.
             const {
                 contactEmail: _contactEmail,
                 phoneNumber: _phoneNumber,
                 mailingAddress: _mailingAddress,
-                categories: _categories,
                 ...legacyData
             } = data;
             updatedUser = await prisma.user.update({

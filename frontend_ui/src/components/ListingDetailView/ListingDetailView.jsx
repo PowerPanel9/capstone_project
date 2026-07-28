@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { ChevronLeft, Clock, MapPin, Star, Briefcase, Check, Trash2, Mail } from 'lucide-react';
+import { ChevronLeft, Clock, MapPin, Star, Briefcase, Check, Trash2, Mail, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import { formatCityState } from '../../utils/location';
 import './ListingDetailView.css';
 
-function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, onMessage, onBack, onApply, backLabel = "Back to listings" }) {
-  // The owner can delete their own listing, but only while in client mode
-  // (deleting is a client action).
+function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, onEdit, onMessage, onBack, onApply, backLabel = "Back to listings" }) {
+  // The owner can edit or delete their own listing, but only while in client
+  // mode (both are client actions on a listing they posted).
   const canDelete = isOwner && userMode === "client";
+  const canEdit = isOwner && userMode === "client";
 
   // On/off switch for our in-app delete confirmation modal.
   // false = hidden, true = visible. The trashcan opens it; the modal's own
@@ -89,16 +90,31 @@ function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, o
                 </button>
               </div>
             )}
-            {canDelete && (
-              <button
-                type="button"
-                className="delete-listing-btn"
-                title="Delete listing"
-                aria-label="Delete listing"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 size={20} />
-              </button>
+            {(canEdit || canDelete) && (
+              <div className="owner-actions">
+                {canEdit && (
+                  <button
+                    type="button"
+                    className="edit-listing-btn"
+                    title="Edit listing"
+                    aria-label="Edit listing"
+                    onClick={onEdit}
+                  >
+                    <Pencil size={20} />
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    type="button"
+                    className="delete-listing-btn"
+                    title="Delete listing"
+                    aria-label="Delete listing"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
+              </div>
             )}
           </div>
 

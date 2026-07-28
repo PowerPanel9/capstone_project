@@ -1,0 +1,53 @@
+/* Provider-specific tweaks layered on top of ApplicationDetailModal.css. */
+
+/* Row of listing details (location, rate, category). */
+.pam-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.pam-detail {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #4B5563;
+}
+
+.pam-detail svg {
+  color: #9CA3AF;
+}
+
+/* The two primary action buttons sit side by side and share the width. */
+.pam-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.pam-action {
+  flex: 1;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+/* Keep the icons from shrinking when the button text wraps to two lines. */
+.pam-action svg {
+  flex-shrink: 0;
+}
+
+/* Review prompt shown once the job is completed. */
+.pam-review {
+  border-top: 1px solid #EEF0F6;
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+/* Full-width withdraw button. */
+.pam-withdraw {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+}

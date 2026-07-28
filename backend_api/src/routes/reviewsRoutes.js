@@ -13,6 +13,7 @@ const {
   createReview,
   getReviewById,
   getReviewsForUser,
+  canReviewUser,
   deleteReview,
 } = require("../controllers/reviewsController");
 
@@ -25,6 +26,10 @@ router.post("/", requireAuth, createReview);
 // NOTE: placed BEFORE "/:id" so "/user/5" isn't mistaken for a review whose id
 // is the word "user". Express matches routes top-to-bottom.
 router.get("/user/:user_id", getReviewsForUser);
+
+// GET /api/reviews/can-review/:user_id  -> can the logged-in user review them?
+// Also placed BEFORE "/:id" for the same reason. Requires login.
+router.get("/can-review/:user_id", requireAuth, canReviewUser);
 
 // GET /api/reviews/:id  -> one review by id
 router.get("/:id", getReviewById);
