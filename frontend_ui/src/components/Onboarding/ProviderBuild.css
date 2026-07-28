@@ -57,3 +57,11 @@
   outline: none;
   border-color: #7c83c9;
 }
+
+/* Small status line under an upload input ("Uploading…" or "uploaded ✓"). */
+.build-status {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c83c9;
+  text-decoration: none;
+}
