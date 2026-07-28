@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SideHustle — UserProfile Mockups</title>
+<style>
+  :root {
+    --primary: #7B8FC8;
+    --primary-dark: #6678B8;
+    --primary-soft: #ECEDF8;
+    --ink: #1E2340;
+    --muted: #9CA3AF;
+    --gray-6: #6B7280;
+    --line: #E5E7EB;
+    --bg: #F4F5FA;
+    --primary-gradient: linear-gradient(120deg, #AABAE8, #8B9FD4, #7B8FC8);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  /* ---- Page chrome ---- */
+  .page-head {
+    background: var(--ink);
+    color: #fff;
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .page-head h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.4px; }
+  .page-head p { margin: 0; color: #B6BCE0; font-size: 14px; }
+
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    padding: 12px;
+  }
+  .nav a {
+    text-decoration: none;
+    font-size: 13px; font-weight: 700;
+    color: var(--gray-6);
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 8px 14px; border-radius: 999px;
+    transition: all .15s;
+  }
+  .nav a:hover { color: #fff; background: var(--primary); border-color: var(--primary); }
+
+  .mock {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 40px 24px 24px;
+  }
+  .mock-label {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .mock-num {
+    font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    color: #fff; background: var(--primary); padding: 4px 10px; border-radius: 999px;
+  }
+  .mock-label h2 { margin: 0; font-size: 20px; letter-spacing: -0.3px; }
+  .mock-desc { color: var(--gray-6); font-size: 14px; margin: 4px 0 20px; max-width: 720px; line-height: 1.5; }
+  .mock-desc b { color: var(--ink); }
+  hr.sep { border: none; border-top: 1px dashed #D1D5DB; margin: 48px auto; max-width: 940px; }
+
+  /* shared pieces */
+  .avatar {
+    display:flex; align-items:center; justify-content:center;
+    font-weight: 800; color: var(--primary-dark); background:#F3F4F6;
+    border-radius: 50%;
+  }
+  .tag {
+    background:#F3F4F6; color: var(--primary); padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600;
+  }
+  .verified {
+    display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600;
+    color:#166534; background:#F0FDF4; border:1px solid #86EFAC; border-radius:999px; padding:3px 10px;
+  }
+  .btn-primary {
+    background: var(--primary); color:#fff; border:none; border-radius:10px;
+    padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; transition: all .15s;
+  }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .btn-ghost {
+    background:#F3F4F6; color:#374151; border:1px solid var(--line); border-radius:10px;
+    padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; transition: all .15s;
+  }
+  .btn-ghost:hover { background:#E5E7EB; }
+
+  /* Tabs (shared behavior) */
+  .tabs {
+    background:#fff; border:1px solid var(--line); border-radius:16px; padding:6px;
+    display:flex; gap:4px; margin: 18px 0;
+  }
+  .tabs button {
+    flex:1; padding:10px; border-radius:12px; font-size:14px; font-weight:700; border:none; cursor:pointer;
+    background:transparent; color:var(--muted); font-family:inherit; transition: all .18s;
+  }
+  .tabs button:hover { color:#374151; background:#F3F4F6; }
+  .tabs button.active { background: var(--primary); color:#fff; box-shadow:0 1px 4px rgba(123,143,200,.3); }
+
+  .card-lift { transition: box-shadow .18s ease, transform .18s ease; }
+  .card-lift:hover { box-shadow: 0 8px 22px rgba(30,35,64,.10); transform: translateY(-2px); }
+
+  /* =====================================================================
+     MOCK 1 — Polished baseline (their current layout, refined)
+  ===================================================================== */
+  .m1-card { background:#fff; border-radius:24px; border:1px solid var(--line); overflow:hidden; }
+  .m1-banner { height:128px; background: var(--primary-gradient); }
+  .m1-body { padding: 0 32px 28px; }
+  .m1-top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .m1-avatar { width:84px; height:84px; margin-top:-42px; margin-bottom:14px; border:4px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.12); font-size:24px; }
+  .m1-name { font-size:24px; font-weight:800; letter-spacing:-0.4px; margin:0; }
+  .m1-sub { color:var(--muted); font-size:14px; margin:4px 0 20px; }
+  .m1-stats { display:flex; gap:14px; }
+  .m1-stat {
+    flex:1; text-align:center; background:#F9FAFB; border:1px solid #EEF0F4; border-radius:14px; padding:14px 10px;
+    cursor:pointer; transition: all .18s;
+  }
+  .m1-stat:hover { border-color: var(--primary); background:#fff; transform: translateY(-2px); box-shadow:0 6px 16px rgba(123,143,200,.14); }
+  .m1-stat .n { font-size:20px; font-weight:800; }
+  .m1-stat:hover .n { color: var(--primary); }
+  .m1-stat .l { font-size:12px; color:var(--muted); margin-top:2px; }
+  .m1-mini { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; display:flex; gap:14px; align-items:center; margin-bottom:12px; }
+
+  /* =====================================================================
+     MOCK 2 — Social feed style (Instagram/Twitter vibe)
+  ===================================================================== */
+  .m2-card { background:#fff; border-radius:20px; border:1px solid var(--line); overflow:hidden; }
+  .m2-banner {
+    height:170px; position:relative;
+    background: var(--primary-gradient);
+  }
+  .m2-banner::after {
+    content:""; position:absolute; inset:0;
+    background: radial-gradient(circle at 20% 20%, rgba(255,255,255,.25), transparent 40%),
+                radial-gradient(circle at 80% 60%, rgba(255,255,255,.18), transparent 45%);
+  }
+  .m2-head { padding: 0 28px 22px; position:relative; }
+  .m2-avatar { width:104px; height:104px; margin-top:-56px; border:5px solid #fff; font-size:30px; position:relative; z-index:2; box-shadow:0 6px 18px rgba(30,35,64,.18); }
+  .m2-row { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-top:12px; flex-wrap:wrap; }
+  .m2-name { font-size:26px; font-weight:800; margin:0; letter-spacing:-.5px; }
+  .m2-handle { color:var(--muted); font-size:14px; }
+  .m2-actions { display:flex; gap:8px; }
+  .m2-bio { font-size:14px; color:#4B5563; line-height:1.6; margin:14px 0; }
+  .m2-meta { display:flex; gap:18px; flex-wrap:wrap; color:var(--gray-6); font-size:13px; font-weight:600; }
+  .m2-stats { display:flex; gap:26px; margin-top:16px; }
+  .m2-stats .s { cursor:pointer; }
+  .m2-stats .s b { font-size:17px; }
+  .m2-stats .s span { color:var(--muted); font-size:13px; margin-left:4px; }
+  .m2-stats .s:hover b { color: var(--primary); }
+  .m2-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:4px; margin-top:2px; }
+  .m2-grid .cell {
+    aspect-ratio:1; background: var(--primary-soft);
+    background-size:cover; background-position:center; position:relative; overflow:hidden; cursor:pointer;
+  }
+  .m2-grid .cell::after {
+    content:"View"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:13px; background:rgba(30,35,64,.45); opacity:0; transition:opacity .2s;
+  }
+  .m2-grid .cell:hover::after { opacity:1; }
+
+  /* =====================================================================
+     MOCK 3 — Dashboard / modular tiles + completion meter
+  ===================================================================== */
+  .m3-hero {
+    background:#fff; border:1px solid var(--line); border-radius:20px; padding:24px;
+    display:flex; gap:20px; align-items:center; flex-wrap:wrap;
+  }
+  .m3-avatar { width:88px; height:88px; font-size:26px; border:3px solid #fff; box-shadow:0 4px 12px rgba(30,35,64,.14); }
+  .m3-hero .info { flex:1; min-width:200px; }
+  .m3-name { font-size:22px; font-weight:800; margin:0; }
+  .m3-sub { color:var(--muted); font-size:14px; margin-top:3px; }
+  .m3-meter-wrap { min-width:220px; }
+  .m3-meter-label { display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--gray-6); margin-bottom:6px; }
+  .m3-meter { height:10px; border-radius:999px; background:#EEF0F4; overflow:hidden; }
+  .m3-meter i { display:block; height:100%; width:80%; border-radius:999px; background: linear-gradient(90deg, var(--primary), #9DB0E6); }
+  .m3-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-top:16px; }
+  .m3-tile {
+    background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px; cursor:pointer;
+  }
+  .m3-tile .ic { width:34px; height:34px; border-radius:10px; background: var(--primary-soft); display:flex; align-items:center; justify-content:center; margin-bottom:10px; font-size:16px; }
+  .m3-tile .n { font-size:22px; font-weight:800; }
+  .m3-tile .l { font-size:12px; color:var(--muted); margin-top:2px; }
+  .m3-cols { display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:14px; }
+  .m3-panel { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; }
+  .m3-panel h3 { margin:0 0 12px; font-size:14px; color:#374151; }
+
+  /* =====================================================================
+     MOCK 4 — Bold gradient hero + glass cards
+  ===================================================================== */
+  .m4-hero {
+    border-radius:24px; padding:34px 30px; color:#fff; position:relative; overflow:hidden;
+    background: linear-gradient(135deg, #6E83C4 0%, #8E7CC8 50%, #B58AC9 100%);
+  }
+  .m4-hero::before {
+    content:""; position:absolute; top:-60px; right:-40px; width:220px; height:220px; border-radius:50%;
+    background: rgba(255,255,255,.14);
+  }
+  .m4-hero::after {
+    content:""; position:absolute; bottom:-70px; left:-30px; width:180px; height:180px; border-radius:50%;
+    background: rgba(255,255,255,.10);
+  }
+  .m4-inner { position:relative; z-index:2; display:flex; gap:22px; align-items:center; flex-wrap:wrap; }
+  .m4-avatar { width:96px; height:96px; font-size:28px; background:rgba(255,255,255,.9); color:var(--primary-dark); border:4px solid rgba(255,255,255,.6); }
+  .m4-name { font-size:28px; font-weight:800; margin:0; letter-spacing:-.5px; }
+  .m4-sub { opacity:.9; font-size:14px; margin-top:4px; }
+  .m4-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.22); border:1px solid rgba(255,255,255,.4); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:999px; margin-top:10px; }
+  .m4-stats { display:flex; gap:12px; margin-left:auto; }
+  .m4-gstat {
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28);
+    border-radius:16px; padding:14px 18px; text-align:center; min-width:78px;
+    cursor:pointer; transition: all .18s; backdrop-filter: blur(4px);
+  }
+  .m4-gstat:hover { background:rgba(255,255,255,.28); transform: translateY(-2px); }
+  .m4-gstat b { display:block; font-size:20px; font-weight:800; }
+  .m4-gstat span { font-size:12px; opacity:.9; }
+  .m4-body { display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:16px; }
+  .m4-panel { background:#fff; border:1px solid var(--line); border-radius:18px; padding:20px; }
+  .m4-panel h3 { margin:0 0 12px; font-size:14px; color:#374151; }
+
+  /* =====================================================================
+     MOCK 5 — Professional two-column (LinkedIn-style)
+  ===================================================================== */
+  .m5-wrap { display:grid; grid-template-columns: 300px 1fr; gap:16px; }
+  .m5-side { display:flex; flex-direction:column; gap:14px; }
+  .m5-card { background:#fff; border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+  .m5-banner { height:80px; background: var(--primary-gradient); }
+  .m5-side .top { padding: 0 18px 18px; text-align:center; }
+  .m5-avatar { width:88px; height:88px; margin:-44px auto 12px; font-size:26px; border:4px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,.12); }
+  .m5-name { font-size:19px; font-weight:800; margin:0; }
+  .m5-sub { color:var(--muted); font-size:13px; margin-top:3px; }
+  .m5-verify { margin-top:10px; }
+  .m5-statline { display:flex; justify-content:space-around; padding:16px 8px; border-top:1px solid var(--line); }
+  .m5-statline .s { text-align:center; cursor:pointer; }
+  .m5-statline .s b { font-size:18px; font-weight:800; display:block; }
+  .m5-statline .s span { font-size:11px; color:var(--muted); }
+  .m5-statline .s:hover b { color:var(--primary); }
+  .m5-block { padding:18px; }
+  .m5-block h3 { margin:0 0 12px; font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .m5-main { display:flex; flex-direction:column; gap:14px; }
+  .m5-exp { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; }
+  .m5-exp h4 { margin:0 0 6px; font-size:16px; }
+  .m5-exp p { margin:0; font-size:14px; color:#4B5563; line-height:1.6; }
+  .m5-imgs { display:grid; grid-template-columns: repeat(3,1fr); gap:8px; margin-top:12px; }
+  .m5-imgs .im { aspect-ratio: 4/3; border-radius:10px; background: var(--primary-soft); background-size:cover; }
+
+  @media (max-width: 720px) {
+    .m3-grid { grid-template-columns: repeat(2,1fr); }
+    .m3-cols, .m4-body { grid-template-columns: 1fr; }
+    .m5-wrap { grid-template-columns: 1fr; }
+    .m2-grid { grid-template-columns: repeat(3,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>SideHustle — UserProfile Page Mockups</h1>
+  <p>5 design directions to compare. Hover cards & stats, click the tabs — some are live so you can feel the interactivity.</p>
+</div>
+
+<div class="nav">
+  <a href="#m1">1 · Polished baseline</a>
+  <a href="#m2">2 · Social feed</a>
+  <a href="#m3">3 · Dashboard tiles</a>
+  <a href="#m4">4 · Bold gradient</a>
+  <a href="#m5">5 · Pro two-column</a>
+</div>
+
+<!-- ================= MOCK 1 ================= -->
+<section class="mock" id="m1">
+  <div class="mock-label"><span class="mock-num">Option 1</span><h2>Polished baseline</h2></div>
+  <p class="mock-desc">Your <b>current layout, cleaned up</b>. Same structure, but the three stats become <b>clickable tiles</b> that lift on hover, and every card gets a consistent hover-lift. Lowest risk, closest to what you have.</p>
+
+  <div class="m1-card">
+    <div class="m1-banner"></div>
+    <div class="m1-body">
+      <div class="m1-top">
+        <div class="avatar m1-avatar">AU</div>
+        <button class="btn-ghost" style="margin-top:16px;">Edit Profile ▾</button>
+      </div>
+      <h1 class="m1-name">Ariane Umuhire <span class="verified">✓ Payment verified</span></h1>
+      <div class="m1-sub">📍 San Francisco, CA · Provider</div>
+      <div class="m1-stats">
+        <div class="m1-stat"><div class="n">12</div><div class="l">Listings</div></div>
+        <div class="m1-stat"><div class="n">34</div><div class="l">Reviews</div></div>
+        <div class="m1-stat"><div class="n">4.8 ★</div><div class="l">Rating</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="active">All</button><button>Listings</button><button>Experience</button><button>Applications</button>
+  </div>
+
+  <div class="m1-mini card-lift">
+    <div class="avatar" style="width:44px;height:44px;font-size:13px;">LS</div>
+    <div style="flex:1;"><div style="font-weight:700;font-size:14px;">Deep clean 2-bed apartment</div><div style="font-size:12px;color:var(--gray-6);">Need a thorough clean before move-out…</div></div>
+    <span class="tag" style="background:#DCFCE7;color:#166534;">OPEN</span>
+  </div>
+  <div class="m1-mini card-lift">
+    <div class="avatar" style="width:44px;height:44px;font-size:13px;">LS</div>
+    <div style="flex:1;"><div style="font-weight:700;font-size:14px;">Math tutoring, high school</div><div style="font-size:12px;color:var(--gray-6);">Weekly algebra help needed…</div></div>
+    <span class="tag" style="background:#FEF3C7;color:#92400E;">IN PROGRESS</span>
+  </div>
+</section>
+
+<hr class="sep" />
+
+<!-- ================= MOCK 2 ================= -->
+<section class="mock" id="m2">
+  <div class="mock-label"><span class="mock-num">Option 2</span><h2>Social feed style</h2></div>
+  <p class="mock-desc">Leans into your goal of <b>“resembling a social media app.”</b> Big banner, overlapping avatar, inline stats, and experience shown as an <b>Instagram-style image grid</b> with a hover overlay. Feels lively and browsable.</p>
+
+  <div class="m2-card">
+    <div class="m2-banner"></div>
+    <div class="m2-head">
+      <div class="avatar m2-avatar">AU</div>
+      <div class="m2-row">
+        <div>
+          <h1 class="m2-name">Ariane Umuhire</h1>
+          <div class="m2-handle">@ariane · Provider</div>
+        </div>
+        <div class="m2-actions">
+          <button class="btn-primary">Follow</button>
+          <button class="btn-ghost">Message</button>
+        </div>
+      </div>
+      <p class="m2-bio">Cleaning &amp; tutoring pro in the Bay Area. 3+ years turning messy spaces into spotless ones. Reliable, quick, and friendly. 🧽📚</p>
+      <div class="m2-meta"><span>📍 San Francisco, CA</span><span class="verified">✓ Payment verified</span></div>
+      <div class="m2-stats">
+        <div class="s"><b>12</b><span>Listings</span></div>
+        <div class="s"><b>34</b><span>Reviews</span></div>
+        <div class="s"><b>4.8★</b><span>Rating</span></div>
+      </div>
+    </div>
+    <div class="tabs" style="margin:0 16px 12px;">
+      <button class="active">Experience</button><button>Listings</button><button>Reviews</button>
+    </div>
+    <div class="m2-grid">
+      <div class="cell" style="background-image:linear-gradient(135deg,#AABAE8,#7B8FC8);"></div>
+      <div class="cell" style="background-image:linear-gradient(135deg,#C9B8E8,#9B8FD4);"></div>
+      <div class="cell" style="background-image:linear-gradient(135deg,#8FD4C8,#7BC8B8);"></div>
+      <div class="cell" style="background-image:linear-gradient(135deg,#E8C8AA,#D4A98F);"></div>
+      <div class="cell" style="background-image:linear-gradient(135deg,#AAD4E8,#8FBFD4);"></div>
+      <div class="cell" style="background-image:linear-gradient(135deg,#E8AAC8,#D48FB0);"></div>
+    </div>
+  </div>
+</section>
+
+<hr class="sep" />
+
+<!-- ================= MOCK 3 ================= -->
+<section class="mock" id="m3">
+  <div class="mock-label"><span class="mock-num">Option 3</span><h2>Dashboard tiles + completion meter</h2></div>
+  <p class="mock-desc">A <b>modular dashboard</b>. Adds a <b>“Profile 80% complete”</b> progress bar that nudges users to finish setup, plus clickable stat tiles with icons. Great if you want the profile to feel like a control center for providers.</p>
+
+  <div class="m3-hero">
+    <div class="avatar m3-avatar">AU</div>
+    <div class="info">
+      <h1 class="m3-name">Ariane Umuhire</h1>
+      <div class="m3-sub">📍 San Francisco, CA · Provider · <span class="verified">✓ Verified</span></div>
+    </div>
+    <div class="m3-meter-wrap">
+      <div class="m3-meter-label"><span>Profile completion</span><span>80%</span></div>
+      <div class="m3-meter"><i></i></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;">Add a resume to reach 100%</div>
+    </div>
+  </div>
+
+  <div class="m3-grid">
+    <div class="m3-tile card-lift"><div class="ic">📋</div><div class="n">12</div><div class="l">Listings</div></div>
+    <div class="m3-tile card-lift"><div class="ic">⭐</div><div class="n">4.8</div><div class="l">Rating</div></div>
+    <div class="m3-tile card-lift"><div class="ic">💬</div><div class="n">34</div><div class="l">Reviews</div></div>
+    <div class="m3-tile card-lift"><div class="ic">✅</div><div class="n">9</div><div class="l">Completed</div></div>
+  </div>
+
+  <div class="m3-cols">
+    <div class="m3-panel">
+      <h3>Bio</h3>
+      <p style="font-size:14px;color:#4B5563;line-height:1.6;margin:0;">Cleaning &amp; tutoring pro in the Bay Area. Reliable, quick, and friendly.</p>
+    </div>
+    <div class="m3-panel">
+      <h3>Skills</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <span class="tag">Deep Cleaning</span><span class="tag">Tutoring</span><span class="tag">Organizing</span><span class="tag">Laundry</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="sep" />
+
+<!-- ================= MOCK 4 ================= -->
+<section class="mock" id="m4">
+  <div class="mock-label"><span class="mock-num">Option 4</span><h2>Bold gradient hero</h2></div>
+  <p class="mock-desc">A <b>vibrant, modern header</b> with a colorful gradient, floating shapes, and <b>glassy stat cards</b>. The most eye-catching option — great for standing out, a bigger visual departure from your current look.</p>
+
+  <div class="m4-hero">
+    <div class="m4-inner">
+      <div class="avatar m4-avatar">AU</div>
+      <div>
+        <h1 class="m4-name">Ariane Umuhire</h1>
+        <div class="m4-sub">📍 San Francisco, CA · Provider</div>
+        <span class="m4-badge">✓ Payment verified</span>
+      </div>
+      <div class="m4-stats">
+        <div class="m4-gstat"><b>12</b><span>Listings</span></div>
+        <div class="m4-gstat"><b>34</b><span>Reviews</span></div>
+        <div class="m4-gstat"><b>4.8★</b><span>Rating</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="active">All</button><button>Listings</button><button>Experience</button><button>Applications</button>
+  </div>
+
+  <div class="m4-body">
+    <div class="m4-panel">
+      <h3>Bio</h3>
+      <p style="font-size:14px;color:#4B5563;line-height:1.6;margin:0;">Cleaning &amp; tutoring pro in the Bay Area. Reliable, quick, and friendly.</p>
+    </div>
+    <div class="m4-panel">
+      <h3>Skills</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <span class="tag">Deep Cleaning</span><span class="tag">Tutoring</span><span class="tag">Organizing</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="sep" />
+
+<!-- ================= MOCK 5 ================= -->
+<section class="mock" id="m5">
+  <div class="mock-label"><span class="mock-num">Option 5</span><h2>Professional two-column</h2></div>
+  <p class="mock-desc">A <b>LinkedIn-style layout</b>: a fixed identity card on the left (avatar, stats, skills) and scrollable content on the right. Feels <b>credible and professional</b> — good for building trust with clients hiring providers.</p>
+
+  <div class="m5-wrap">
+    <div class="m5-side">
+      <div class="m5-card">
+        <div class="m5-banner"></div>
+        <div class="top">
+          <div class="avatar m5-avatar">AU</div>
+          <h1 class="m5-name">Ariane Umuhire</h1>
+          <div class="m5-sub">📍 San Francisco, CA · Provider</div>
+          <div class="m5-verify"><span class="verified">✓ Payment verified</span></div>
+        </div>
+        <div class="m5-statline">
+          <div class="s"><b>12</b><span>Listings</span></div>
+          <div class="s"><b>34</b><span>Reviews</span></div>
+          <div class="s"><b>4.8★</b><span>Rating</span></div>
+        </div>
+      </div>
+      <div class="m5-card">
+        <div class="m5-block">
+          <h3>Skills</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <span class="tag">Deep Cleaning</span><span class="tag">Tutoring</span><span class="tag">Organizing</span><span class="tag">Laundry</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="m5-main">
+      <div class="tabs" style="margin:0;">
+        <button class="active">Experience</button><button>Listings</button><button>Applications</button>
+      </div>
+      <div class="m5-exp card-lift">
+        <h4>Move-out deep clean — Nob Hill</h4>
+        <p>Cleaned a 2-bedroom apartment top to bottom in 4 hours. Client got their full deposit back.</p>
+        <div class="m5-imgs">
+          <div class="im" style="background-image:linear-gradient(135deg,#AABAE8,#7B8FC8);"></div>
+          <div class="im" style="background-image:linear-gradient(135deg,#C9B8E8,#9B8FD4);"></div>
+          <div class="im" style="background-image:linear-gradient(135deg,#8FD4C8,#7BC8B8);"></div>
+        </div>
+      </div>
+      <div class="m5-exp card-lift">
+        <h4>Weekly algebra tutoring</h4>
+        <p>Helped a high-school student raise their grade from a C to an A- over one semester.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;color:var(--muted);font-size:13px;padding:32px;">
+  Tell me which numbers you like (or mix &amp; match) and I'll build it into <code>UserProfileView.jsx</code>.
+</div>
+
+<script>
+  // Make tab buttons togglable so the mockups feel interactive.
+  document.querySelectorAll('.tabs').forEach(function (bar) {
+    bar.addEventListener('click', function (e) {
+      if (e.target.tagName !== 'BUTTON') return;
+      bar.querySelectorAll('button').forEach(function (b) { b.classList.remove('active'); });
+      e.target.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

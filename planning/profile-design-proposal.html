@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SideHustle — Profile Page Design Proposal (Social Rail)</title>
+<style>
+  :root {
+    --primary: #7B8FC8;
+    --primary-dark: #6678B8;
+    --primary-soft: #ECEDF8;
+    --ink: #1E2340;
+    --muted: #9CA3AF;
+    --gray-6: #6B7280;
+    --line: #E5E7EB;
+    --bg: #F4F5FA;
+    --primary-gradient: linear-gradient(120deg, #AABAE8, #8B9FD4, #7B8FC8);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--ink);
+  }
+
+  /* ---------- Proposal header (for teammates) ---------- */
+  .proposal-head {
+    background: var(--ink); color:#fff; padding: 34px 24px;
+  }
+  .proposal-head .inner { max-width: 1100px; margin: 0 auto; }
+  .proposal-head .pill {
+    display:inline-block; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    color:#fff; background:var(--primary); padding:5px 12px; border-radius:999px; margin-bottom:12px;
+  }
+  .proposal-head h1 { margin:0 0 8px; font-size:26px; letter-spacing:-.5px; }
+  .proposal-head p { margin:0; color:#B6BCE0; font-size:15px; line-height:1.6; max-width:760px; }
+  .proposal-head .who { margin-top:14px; font-size:13px; color:#8890C4; }
+
+  /* ---------- Feedback callout ---------- */
+  .feedback {
+    max-width:1100px; margin:24px auto 0; padding:0 24px;
+  }
+  .feedback-box {
+    background:#fff; border:1px solid var(--line); border-left:4px solid var(--primary);
+    border-radius:14px; padding:18px 20px;
+  }
+  .feedback-box h2 { margin:0 0 10px; font-size:15px; }
+  .feedback-box ul { margin:0; padding-left:20px; color:var(--gray-6); font-size:14px; line-height:1.7; }
+  .feedback-box li b { color:var(--ink); }
+
+  /* ---------- App frame ---------- */
+  .frame-wrap { max-width:1100px; margin:28px auto; padding:0 24px; }
+  .frame-caption { font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .browser {
+    background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden;
+    box-shadow:0 20px 50px rgba(30,35,64,.12);
+  }
+  .browser-bar { display:flex; align-items:center; gap:8px; padding:12px 16px; background:#F9FAFB; border-bottom:1px solid var(--line); }
+  .browser-dot { width:11px; height:11px; border-radius:50%; }
+  .browser-url { flex:1; margin-left:10px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:12px; color:var(--muted); }
+  .app-body { background:var(--bg); padding:22px; }
+
+  /* ---------- Shared bits ---------- */
+  .avatar { display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--primary-dark); background:#F3F4F6; border-radius:50%; }
+  .tag { background:#F3F4F6; color:var(--primary); padding:4px 11px; border-radius:999px; font-size:12px; font-weight:600; }
+  .verified { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:#166534; background:#F0FDF4; border:1px solid #86EFAC; border-radius:999px; padding:3px 10px; }
+  .btn-primary { background:var(--primary); color:#fff; border:none; border-radius:10px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; font-family:inherit; }
+  .btn-primary:hover { background:var(--primary-dark); transform:translateY(-1px); }
+  .btn-ghost { background:#F3F4F6; color:#374151; border:1px solid var(--line); border-radius:10px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; font-family:inherit; }
+  .btn-ghost:hover { background:#E5E7EB; }
+  .card-lift { transition:box-shadow .18s ease, transform .18s ease; }
+  .card-lift:hover { box-shadow:0 8px 22px rgba(30,35,64,.10); transform:translateY(-2px); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+
+  .tabs { background:#fff; border:1px solid var(--line); border-radius:14px; padding:5px; display:flex; gap:4px; }
+  .tabs button { flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; background:transparent; color:var(--muted); font-family:inherit; transition:all .18s; }
+  .tabs button:hover { color:#374151; background:#F3F4F6; }
+  .tabs button.active { background:var(--primary); color:#fff; box-shadow:0 1px 4px rgba(123,143,200,.3); }
+
+  /* ---------- Social Rail layout ---------- */
+  .rail-layout { display:grid; grid-template-columns: 320px 1fr; gap:18px; align-items:start; }
+
+  .rail { position:sticky; top:22px; display:flex; flex-direction:column; gap:14px; }
+  .id-card { background:#fff; border:1px solid var(--line); border-radius:20px; overflow:hidden; }
+  .id-banner { height:96px; background:var(--primary-gradient); }
+  .id-body { padding:0 18px 18px; text-align:center; }
+  .id-avatar { width:92px; height:92px; margin:-46px auto 12px; font-size:26px; border:4px solid #fff; box-shadow:0 4px 12px rgba(30,35,64,.16); }
+  .id-name { font-size:20px; font-weight:800; margin:0; }
+  .id-sub { color:var(--muted); font-size:13px; margin-top:3px; }
+  .id-verify { margin-top:8px; }
+  .stat-line { display:flex; justify-content:space-around; padding:14px 6px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-top:14px; }
+  .stat-line .s { text-align:center; cursor:pointer; }
+  .stat-line .s b { font-size:17px; font-weight:800; display:block; }
+  .stat-line .s span { font-size:11px; color:var(--muted); }
+  .stat-line .s:hover b { color:var(--primary); }
+  .id-actions { display:flex; gap:8px; margin-top:14px; }
+  .id-actions button { flex:1; }
+
+  .rail-mini { background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px; }
+  .rail-mini h3 { margin:0 0 10px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .rail-mini p { margin:0; font-size:13px; color:#4B5563; line-height:1.6; }
+
+  /* ---------- Feed (likes & comments removed) ---------- */
+  .feed { display:flex; flex-direction:column; gap:14px; }
+  .post { background:#fff; border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+  .post .head { display:flex; align-items:center; gap:10px; padding:14px 16px; }
+  .post .head .a { width:38px; height:38px; font-size:13px; }
+  .post .head .meta b { font-size:14px; }
+  .post .head .meta span { display:block; font-size:12px; color:var(--muted); }
+  .post .head .cat { margin-left:auto; }
+  .post .body { padding:0 16px 14px; font-size:14px; color:#4B5563; line-height:1.6; }
+  .post .photos { display:grid; grid-template-columns:1fr 1fr; gap:3px; }
+  .post .photos.one { grid-template-columns:1fr; }
+  .post .photos .p { aspect-ratio:16/10; background-size:cover; background-position:center; cursor:pointer; }
+
+  .feed-add {
+    background:#fff; border:1px dashed #C7CED9; border-radius:16px; padding:16px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .feed-add span { font-size:13px; color:var(--gray-6); }
+
+  @media (max-width: 860px) {
+    .rail-layout { grid-template-columns: 1fr; }
+    .rail { position:static; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== Proposal header ===================== -->
+<div class="proposal-head">
+  <div class="inner">
+    <span class="pill">Design Proposal</span>
+    <h1>User Profile Page — “Social Rail” redesign</h1>
+    <p>
+      A redesign of our profile page that combines a <b>social-media feel</b> with a <b>full-width, side-by-side layout</b>.
+      A sticky identity card on the left holds the avatar, stats, and skills; the right side is a scrollable feed of the
+      user's experiences. The goal: match our platform's social theme and remove the empty white space in the current design.
+    </p>
+    <div class="who">SideHustle · Team Power Panel — Zainab, Ariane, Ardelia · For team design review</div>
+  </div>
+</div>
+
+<!-- ===================== Feedback callout ===================== -->
+<div class="feedback">
+  <div class="feedback-box">
+    <h2>👀 Teammates — what to look at</h2>
+    <ul>
+      <li><b>Layout:</b> Does the left rail + right feed feel balanced and fill the width well?</li>
+      <li><b>Social feel:</b> Do the experience "posts" match the vibe we want for the platform?</li>
+      <li><b>Stats &amp; skills:</b> Are Listings / Reviews / Rating and the skills chips in the right place?</li>
+      <li><b>Anything missing?</b> e.g. resume/certification links, applications tab, "edit profile".</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===================== The mockup ===================== -->
+<div class="frame-wrap">
+  <div class="frame-caption">Proposed profile page — provider view</div>
+  <div class="browser">
+    <div class="browser-bar">
+      <span class="browser-dot" style="background:#FF5F57;"></span>
+      <span class="browser-dot" style="background:#FEBC2E;"></span>
+      <span class="browser-dot" style="background:#28C840;"></span>
+      <span class="browser-url">sidehustle.app/user/profile</span>
+    </div>
+
+    <div class="app-body">
+      <div class="rail-layout">
+
+        <!-- ===== Left: sticky identity rail ===== -->
+        <div class="rail">
+          <div class="id-card">
+            <div class="id-banner"></div>
+            <div class="id-body">
+              <div class="avatar id-avatar">AU</div>
+              <h1 class="id-name">Ariane Umuhire</h1>
+              <div class="id-sub">@ariane · Provider</div>
+              <div class="id-verify"><span class="verified">✓ Payment verified</span></div>
+
+              <div class="stat-line">
+                <div class="s"><b>12</b><span>Listings</span></div>
+                <div class="s"><b>34</b><span>Reviews</span></div>
+                <div class="s"><b>4.8★</b><span>Rating</span></div>
+              </div>
+
+              <div class="id-actions">
+                <button class="btn-primary">Edit Profile</button>
+                <button class="btn-ghost">Share</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="rail-mini">
+            <h3>About</h3>
+            <p>Cleaning &amp; tutoring pro in the Bay Area. 3+ years turning messy spaces spotless. Reliable, quick, and friendly.</p>
+          </div>
+
+          <div class="rail-mini">
+            <h3>Skills</h3>
+            <div class="chips">
+              <span class="tag">Deep Cleaning</span>
+              <span class="tag">Tutoring</span>
+              <span class="tag">Organizing</span>
+              <span class="tag">Laundry</span>
+            </div>
+          </div>
+
+          <div class="rail-mini">
+            <h3>Credentials</h3>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <a href="#" style="font-size:13px; color:var(--primary-dark); font-weight:700; text-decoration:none;">📄 View Resume</a>
+              <a href="#" style="font-size:13px; color:var(--primary-dark); font-weight:700; text-decoration:none;">🎓 View Certification</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Right: feed ===== -->
+        <div class="feed">
+          <div class="tabs">
+            <button class="active">Experience</button>
+            <button>Listings</button>
+            <button>Applications</button>
+          </div>
+
+          <div class="feed-add">
+            <span>Share a new piece of work you're proud of</span>
+            <button class="btn-primary">+ Add Experience</button>
+          </div>
+
+          <!-- Post 1 -->
+          <div class="post card-lift">
+            <div class="head">
+              <div class="avatar a">AU</div>
+              <div class="meta"><b>Move-out deep clean</b><span>Nob Hill, San Francisco</span></div>
+              <span class="tag cat">Cleaning</span>
+            </div>
+            <div class="body">Cleaned a 2-bedroom apartment top to bottom in 4 hours. The client got their full deposit back. 🧽✨</div>
+            <div class="photos">
+              <div class="p" style="background-image:linear-gradient(135deg,#AABAE8,#7B8FC8);"></div>
+              <div class="p" style="background-image:linear-gradient(135deg,#C9B8E8,#9B8FD4);"></div>
+            </div>
+          </div>
+
+          <!-- Post 2 -->
+          <div class="post card-lift">
+            <div class="head">
+              <div class="avatar a">AU</div>
+              <div class="meta"><b>Weekly algebra tutoring</b><span>Remote</span></div>
+              <span class="tag cat">Tutoring</span>
+            </div>
+            <div class="body">Helped a high-school student go from a C to an A- in one semester. Patient, step-by-step sessions once a week. 📚</div>
+          </div>
+
+          <!-- Post 3 -->
+          <div class="post card-lift">
+            <div class="head">
+              <div class="avatar a">AU</div>
+              <div class="meta"><b>Kitchen scrub &amp; organize</b><span>Mission District, San Francisco</span></div>
+              <span class="tag cat">Cleaning</span>
+            </div>
+            <div class="body">Same-day deep kitchen clean and pantry reorganization for a busy family. 🍽️</div>
+            <div class="photos one">
+              <div class="p" style="background-image:linear-gradient(135deg,#8FD4C8,#7BC8B8);"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center; color:var(--muted); font-size:13px; padding:16px 24px 40px;">
+  Feedback? Drop notes in the team channel or comment on this file. · Colors match our live app theme.
+</div>
+
+<script>
+  // Tabs are clickable so reviewers can feel the interaction.
+  document.querySelectorAll('.tabs').forEach(function (bar) {
+    bar.addEventListener('click', function (e) {
+      if (e.target.tagName !== 'BUTTON') return;
+      bar.querySelectorAll('button').forEach(function (b) { b.classList.remove('active'); });
+      e.target.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
