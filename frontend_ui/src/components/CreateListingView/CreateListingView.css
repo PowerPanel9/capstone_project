@@ -239,6 +239,14 @@
   color: #991B1B;
 }
 
+/* Shown under the location field when the typed address wasn't picked from
+   the dropdown (same look as the Edit Profile / onboarding location error). */
+.error-text {
+  color: #b91c1c;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
 /* Spinner for the loading state */
 .spin {
   animation: spin 1s linear infinite;

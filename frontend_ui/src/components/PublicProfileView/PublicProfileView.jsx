@@ -9,6 +9,7 @@ import { getReviewsForUser } from "../../api/reviews";
 import { getExperiencesByUser } from "../../api/experiences";
 import { fullName } from "../../utils/user";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
+import { categoryLabel } from "../../utils/categories";
 // Reuse the same styles as the logged-in user's profile so this read-only
 // profile looks identical to it.
 import "../UserProfileView/UserProfileView.css";
@@ -190,6 +191,7 @@ function PublicProfileView({ currentUser }) {
 
   const revieweeId = Number(userId);
   const skills = Array.isArray(user.skills) ? user.skills : [];
+  const categories = Array.isArray(user.categories) ? user.categories : [];
   const profilePicture = typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";
   const bannerImageUrl = typeof user.imageUrl === "string" ? user.imageUrl.trim() : "";
   const bannerStyle = bannerImageUrl ? { backgroundImage: `url("${bannerImageUrl}")` } : undefined;
@@ -295,6 +297,19 @@ function PublicProfileView({ currentUser }) {
               </div>
             </div>
           </div>
+
+          {/* Only providers pick categories, so this card only shows up when
+              the user being viewed actually has some. */}
+          {categories.length > 0 && (
+            <div className="info-card">
+              <div className="info-card-title">Specialties</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {categories.map((value) => (
+                  <span key={value} className="tag">{categoryLabel(value)}</span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={{ fontWeight: 700, color: "#4B5563", fontSize: 14 }}>Listings</div>
           {isLoadingListings ? (

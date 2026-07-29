@@ -5,7 +5,7 @@
 // are what clients filter by on the home page to find matching providers — they
 // are separate from free-text `skills`, which the user adds on their profile.
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import Stepper from './Stepper';
 import OnboardingChrome from './OnboardingChrome';
@@ -32,6 +32,12 @@ const CATEGORIES = [
 
 function ProviderServices({ currentUser, onUserUpdate }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  // True when a CLIENT-only user got here from the "sign up as a provider"
+  // toggle (not the normal signup flow). Their role hasn't been saved as
+  // BOTH yet — that only happens on the final Welcome step — so we carry this
+  // flag forward through each page's navigation until then.
+  const addingProviderRole = Boolean(location.state?.addingProviderRole);
   // Keep onboarding selection in sync with the current saved profile.
   const [selected, setSelected] = useState(
     Array.isArray(currentUser?.categories) ? currentUser.categories : []
@@ -54,7 +60,7 @@ function ProviderServices({ currentUser, onUserUpdate }) {
     try {
       const updated = await updateUser(currentUser.id, { categories: selected });
       onUserUpdate?.(updated);
-      navigate('/onboarding/build');
+      navigate('/onboarding/build', { state: { addingProviderRole } });
     } catch (err) {
       console.error('Failed to save provider categories:', err);
       setError('Could not save your categories. Please try again.');

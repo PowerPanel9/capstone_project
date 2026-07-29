@@ -14,6 +14,10 @@
 //   variant     - "onboarding" (default) shows the map-pin box used in the
 //                 onboarding flow. "modal" renders a plain input so it matches
 //                 the other inputs inside the Edit Profile modal.
+//   inputClassName - optional extra class on the "modal" variant's <input>,
+//                 so it can pick up a different form's input styling (e.g.
+//                 "form-input" on the Create Listing page) instead of relying
+//                 on being nested inside .profile-modal.
 import { useEffect, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
 import { getAddressSuggestions } from "../../api/users";
@@ -25,6 +29,7 @@ function AddressAutocomplete({
   placeholder,
   inputId,
   variant = "onboarding",
+  inputClassName = "",
 }) {
   // The list of address options currently shown in the dropdown.
   const [suggestions, setSuggestions] = useState([]);
@@ -135,9 +140,9 @@ function AddressAutocomplete({
   return (
     <div className="address-autocomplete" ref={containerRef}>
       {variant === "modal" ? (
-        // Plain input: inherits the modal's input styling so it matches the
-        // Bio / Resume / Certification fields around it.
-        <input {...inputProps} />
+        // Plain input: inherits the surrounding form's input styling (either
+        // via .profile-modal input in CSS, or an explicit inputClassName).
+        <input {...inputProps} className={inputClassName || undefined} />
       ) : (
         // Onboarding look: a bordered box with a map-pin icon inside.
         <div className="ob-input-wrap">

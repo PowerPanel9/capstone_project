@@ -195,8 +195,8 @@ function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, o
       {/* In-app delete confirmation. Only rendered when the switch is on, so it
           isn't in the page until the user clicks the trashcan. */}
       {showDeleteConfirm && (
-        <div className="confirm-backdrop">
-          <div className="confirm-box">
+        <div className="confirm-backdrop" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="confirm-box" onClick={(e) => e.stopPropagation()}>
             <h3 className="confirm-title">Delete this listing?</h3>
             <p className="confirm-text">
               This cannot be undone. The listing will be permanently removed.

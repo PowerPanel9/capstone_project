@@ -8,7 +8,7 @@
 // field here, but those were intentionally dropped for now (bio is collected
 // on the profile step), so this page keeps just the two upload cards.
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FileText, Award } from 'lucide-react';
 import Stepper from './Stepper';
 import OnboardingChrome from './OnboardingChrome';
@@ -21,6 +21,9 @@ const PURPLE = '#7c83c9';
 
 function ProviderBuild({ currentUser, onUserUpdate }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Carried forward from ProviderServices — see the comment there.
+  const addingProviderRole = Boolean(location.state?.addingProviderRole);
   const [resumeUrl, setResumeUrl] = useState(currentUser?.resumeUrl || '');
   const [certificationUrl, setCertificationUrl] = useState(currentUser?.certificationUrl || '');
   const [saving, setSaving] = useState(false);
@@ -54,7 +57,7 @@ function ProviderBuild({ currentUser, onUserUpdate }) {
     try {
       const updated = await updateUser(currentUser.id, { resumeUrl, certificationUrl });
       onUserUpdate(updated);
-      navigate('/onboarding/welcome');
+      navigate('/onboarding/welcome', { state: { addingProviderRole } });
     } catch (err) {
       console.error('Failed to save profile links:', err);
       setError('Could not save your links. Please try again.');
@@ -64,7 +67,7 @@ function ProviderBuild({ currentUser, onUserUpdate }) {
   };
 
   // Skip saves nothing and moves straight to the welcome screen.
-  const handleSkip = () => navigate('/onboarding/welcome');
+  const handleSkip = () => navigate('/onboarding/welcome', { state: { addingProviderRole } });
 
   return (
     <OnboardingChrome accent={PURPLE} track="Service Provider Track">

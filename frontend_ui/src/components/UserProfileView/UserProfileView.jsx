@@ -17,6 +17,7 @@ import {
   deleteExperience,
 } from "../../api/experiences";
 import { uploadFile } from "../../api/upload";
+import { CATEGORY_OPTIONS, categoryLabel } from "../../utils/categories";
 import {
   getMyApplications,
   getReceivedApplications,
@@ -32,22 +33,6 @@ const STATUS_LABELS = { PENDING: "Pending", ACCEPTED: "Accepted", REJECTED: "Rej
 import "./UserProfileView.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
-// Category options for the experience form. `value` matches the backend
-// ListingCategory enum; `label` is the friendlier text the user sees. Same
-// list the "Post a Listing" form uses.
-const CATEGORY_OPTIONS = [
-  { value: "CLEANING", label: "Cleaning" },
-  { value: "TUTORING", label: "Tutoring" },
-  { value: "PLUMBING", label: "Plumbing" },
-  { value: "GARDENING", label: "Gardening" },
-  { value: "BEAUTY", label: "Beauty" },
-  { value: "BABYSITTING", label: "Babysitting" },
-  { value: "MOVING", label: "Moving" },
-  { value: "HANDYMAN", label: "Handyman" },
-  { value: "DELIVERY", label: "Delivery" },
-  { value: "OTHER", label: "Other" },
-];
 
 async function readJsonSafe(response) {
   const contentType = response.headers.get("content-type") || "";
@@ -99,12 +84,6 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
   // Controls whether the skill input is shown. Starts hidden so we only show
   // the "+ Add Skill" button until the user clicks it.
   const [isAddingSkill, setIsAddingSkill] = useState(false);
-  // Resume and certification uploads on the Experience tab. Each tracks whether
-  // a file is currently uploading and any error message to show.
-  const [isSavingResume, setIsSavingResume] = useState(false);
-  const [resumeError, setResumeError] = useState("");
-  const [isSavingCertification, setIsSavingCertification] = useState(false);
-  const [certificationError, setCertificationError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   // Whether the location currently in the edit form is a valid address.
@@ -157,6 +136,7 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
     city: "",
     state: "",
     skills: [],
+    categories: [],
     contactEmail: "",
     phoneNumber: "",
     mailingAddress: "",
@@ -170,6 +150,7 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
     bio: "",
     location: "",
     skills: [],
+    categories: [],
     contactEmail: "",
     phoneNumber: "",
     mailingAddress: "",
@@ -235,6 +216,7 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
           city: userProfile.city || "",
           state: userProfile.state || "",
           skills: Array.isArray(userProfile.skills) ? userProfile.skills : [],
+          categories: Array.isArray(userProfile.categories) ? userProfile.categories : [],
           contactEmail: userProfile.contactEmail || "",
           phoneNumber: userProfile.phoneNumber || "",
           mailingAddress: userProfile.mailingAddress || "",
@@ -321,6 +303,7 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
       bio: profile.bio || "",
       location: profile.location || "",
       skills: Array.isArray(profile.skills) ? [...profile.skills] : [],
+      categories: Array.isArray(profile.categories) ? [...profile.categories] : [],
       contactEmail: profile.contactEmail || "",
       phoneNumber: profile.phoneNumber || "",
       mailingAddress: profile.mailingAddress || "",
@@ -589,6 +572,17 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
     }));
   };
 
+  // Add the category if it isn't picked yet, otherwise remove it (same
+  // multi-select pattern as the ProviderServices onboarding step).
+  const toggleCategory = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(value)
+        ? prev.categories.filter((v) => v !== value)
+        : [...prev.categories, value],
+    }));
+  };
+
   const handleSaveProfile = async () => {
     // Check the address only when the user actually tries to save. If it's not
     // valid, show the message under the box and stop here (don't submit).
@@ -633,6 +627,7 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
         city: updated.city || "",
         state: updated.state || "",
         skills: Array.isArray(updated.skills) ? updated.skills : [],
+        categories: Array.isArray(updated.categories) ? updated.categories : [],
       }));
       setIsEditModalOpen(false);
     } catch (error) {
@@ -717,58 +712,6 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
   const removeExperienceSkill = (skillToRemove) => {
     const nextSkills = profile.skills.filter((skill) => skill !== skillToRemove);
     saveSkills(nextSkills);
-  };
-
-  // Upload a resume file from the Experience tab to S3, then save its URL.
-  // Two steps: uploadFile() sends the file to /api/upload and returns a public
-  // URL; saveProfileFields() writes that URL to the database (resumeUrl).
-  const handleResumeFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!profile.id) {
-      setResumeError("Profile id not found");
-      return;
-    }
-
-    setIsSavingResume(true);
-    setResumeError("");
-    try {
-      const url = await uploadFile(file);
-      const updated = await saveProfileFields({ resumeUrl: url });
-      setProfile((prev) => ({
-        ...prev,
-        resumeUrl: updated?.resumeUrl ?? url,
-      }));
-    } catch (error) {
-      setResumeError(error.message || "Error uploading resume");
-    } finally {
-      setIsSavingResume(false);
-    }
-  };
-
-  // Upload a certification file from the Experience tab to S3, then save its URL.
-  const handleCertificationFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!profile.id) {
-      setCertificationError("Profile id not found");
-      return;
-    }
-
-    setIsSavingCertification(true);
-    setCertificationError("");
-    try {
-      const url = await uploadFile(file);
-      const updated = await saveProfileFields({ certificationUrl: url });
-      setProfile((prev) => ({
-        ...prev,
-        certificationUrl: updated?.certificationUrl ?? url,
-      }));
-    } catch (error) {
-      setCertificationError(error.message || "Error uploading certification");
-    } finally {
-      setIsSavingCertification(false);
-    }
   };
 
   const currentUser = profile;
@@ -1117,6 +1060,24 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
         {skillError && <p className="error-text">{skillError}</p>}
       </div>
 
+      {/* Specialties card in the rail. Only providers pick categories, so this
+          card only shows up for providers/both — a client-only user has
+          nothing to show here. */}
+      {(profile.role === "PROVIDER" || profile.role === "BOTH") && (
+        <div className="rail-mini">
+          <h3 className="rail-mini-title">Specialties</h3>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {currentUser.categories.length > 0 ? (
+              currentUser.categories.map((value) => (
+                <span key={value} className="tag">{categoryLabel(value)}</span>
+              ))
+            ) : (
+              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>No specialties added yet</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Bio card in the rail (the mockup's "About" card, renamed to Bio). */}
       <div className="rail-mini">
         <h3 className="rail-mini-title">Bio</h3>
@@ -1156,8 +1117,8 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
 
       {activeTab === "All" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Bio and Skills now live in the left rail, so the "All" feed
-              focuses on the user's listings. */}
+          {/* Bio, Skills, and Specialties now live in the left rail, so the
+              "All" feed focuses on the user's listings. */}
           <div style={{ fontWeight: 700, color: "#4B5563", fontSize: 14 }}>Listings</div>
           {isLoadingListings ? (
             <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
@@ -1479,8 +1440,8 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
       </div>{/* .social-layout */}
 
       {isEditModalOpen && (
-        <div className="profile-modal-backdrop">
-          <div className="profile-modal">
+        <div className="profile-modal-backdrop" onClick={closeEditModal}>
+          <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
             <div className="profile-modal-header">
               <h2>Edit Profile</h2>
               <p>Update your public profile details</p>
@@ -1525,33 +1486,98 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
             <label className="modal-label" htmlFor="profile-picture">Upload Profile Picture</label>
             <input id="profile-picture" type="file" accept="image/*" onChange={handleSingleImageChange("profilePicture")} />
             {formData.profilePicture && (
-              <div className="experience-images" style={{ marginTop: 4, marginBottom: 8 }}>
-                <img src={formData.profilePicture} alt="Profile preview" />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4, marginBottom: 8 }}>
+                <div className="experience-images">
+                  <img src={formData.profilePicture} alt="Profile preview" />
+                </div>
+                <button
+                  type="button"
+                  className="skill-remove-btn"
+                  style={{ fontSize: 13 }}
+                  onClick={() => setFormData((prev) => ({ ...prev, profilePicture: "" }))}
+                >
+                  Remove
+                </button>
               </div>
             )}
 
             <label className="modal-label" htmlFor="profile-image">Upload Banner Image</label>
             <input id="profile-image" type="file" accept="image/*" onChange={handleSingleImageChange("imageUrl")} />
             {formData.imageUrl && (
-              <div className="experience-images" style={{ marginTop: 4, marginBottom: 8 }}>
-                <img src={formData.imageUrl} alt="Banner preview" />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4, marginBottom: 8 }}>
+                <div className="experience-images">
+                  <img src={formData.imageUrl} alt="Banner preview" />
+                </div>
+                <button
+                  type="button"
+                  className="skill-remove-btn"
+                  style={{ fontSize: 13 }}
+                  onClick={() => setFormData((prev) => ({ ...prev, imageUrl: "" }))}
+                >
+                  Remove
+                </button>
               </div>
             )}
 
             <label className="modal-label" htmlFor="profile-resume">Upload Resume</label>
             <input id="profile-resume" type="file" accept=".pdf,.doc,.docx,image/*" onChange={handleSingleImageChange("resumeUrl")} />
             {formData.resumeUrl && (
-              <a href={formData.resumeUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#4F46E5", fontWeight: 600 }}>
-                View current resume
-              </a>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <a href={formData.resumeUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#4F46E5", fontWeight: 600 }}>
+                  View current resume
+                </a>
+                <button
+                  type="button"
+                  className="skill-remove-btn"
+                  style={{ fontSize: 13 }}
+                  onClick={() => setFormData((prev) => ({ ...prev, resumeUrl: "" }))}
+                >
+                  Remove
+                </button>
+              </div>
             )}
 
             <label className="modal-label" htmlFor="profile-certification">Upload Certification</label>
             <input id="profile-certification" type="file" accept=".pdf,.doc,.docx,image/*" onChange={handleSingleImageChange("certificationUrl")} />
             {formData.certificationUrl && (
-              <a href={formData.certificationUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#4F46E5", fontWeight: 600 }}>
-                View current certification
-              </a>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <a href={formData.certificationUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#4F46E5", fontWeight: 600 }}>
+                  View current certification
+                </a>
+                <button
+                  type="button"
+                  className="skill-remove-btn"
+                  style={{ fontSize: 13 }}
+                  onClick={() => setFormData((prev) => ({ ...prev, certificationUrl: "" }))}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+
+            {/* Only providers pick specialties, and only while actually viewing
+                the profile in provider mode — a client-only user, or a BOTH
+                user currently in client mode, has no reason to see this. */}
+            {(profile.role === "PROVIDER" || profile.role === "BOTH") && userMode === "provider" && (
+              <>
+                <label className="modal-label">Service Categories</label>
+                <div className="skills-row">
+                  {CATEGORY_OPTIONS.map((option) => {
+                    const isActive = formData.categories.includes(option.value);
+                    return (
+                      <button
+                        type="button"
+                        key={option.value}
+                        className={`modal-skill-tag modal-category-pill ${isActive ? "modal-category-pill-active" : ""}`}
+                        onClick={() => toggleCategory(option.value)}
+                      >
+                        {option.label}
+                        {isActive && <Check size={12} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
             )}
 
             <label className="modal-label">Skills</label>
@@ -1594,8 +1620,8 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
       )}
 
       {isExperienceModalOpen && (
-        <div className="profile-modal-backdrop">
-          <div className="profile-modal">
+        <div className="profile-modal-backdrop" onClick={closeExperienceModal}>
+          <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
             <div className="profile-modal-header">
               <h2>Add Experience</h2>
               <p>Share your work experience details</p>

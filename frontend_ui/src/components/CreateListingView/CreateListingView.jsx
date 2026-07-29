@@ -144,17 +144,18 @@ function CreateListingView({ onDone, listingId, initialData }) {
       setError("Please fill in the title, rate, description, and location.");
       return;
     }
+    // The location must be one the user picked from the address dropdown, the
+    // same rule used on the Edit Profile and onboarding location fields.
+    if (!isLocationValid) {
+      setShowLocationError(true);
+      return;
+    }
     if (!form.category) {
       setError("Please choose a category.");
       return;
     }
     if (form.category === "OTHER" && !form.customCategory) {
       setError("Please enter a custom category.");
-      return;
-    }
-    // The location must be picked from the dropdown so we store a real address.
-    if (!isLocationValid) {
-      setShowLocationError(true);
       return;
     }
     // Don't submit while the cover image is still uploading, or we'd lose its URL.
@@ -372,8 +373,9 @@ function CreateListingView({ onDone, listingId, initialData }) {
           <AddressAutocomplete
             inputId="listing-location"
             variant="modal"
+            inputClassName="form-input"
             value={form.location}
-            placeholder="e.g. Lincoln, NE"
+            placeholder="Start typing your address…"
             onChange={(nextText, picked) => {
               setForm((prev) => ({ ...prev, location: nextText }));
               // A listing needs a location, so a non-empty value is only valid
@@ -383,9 +385,9 @@ function CreateListingView({ onDone, listingId, initialData }) {
             }}
           />
           {showLocationError && (
-            <div className="auth-error" style={{ marginTop: 8 }}>
+            <p className="error-text">
               Please select a valid address from the dropdown.
-            </div>
+            </p>
           )}
         </div>
 
