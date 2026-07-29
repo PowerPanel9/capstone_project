@@ -181,9 +181,110 @@ const createExperience = async (req, res) => {
     }
 };
 
+// PUT /api/experiences/:id
+// Updates an experience the logged-in user owns. Only the owner can edit their
+// own experience, so we first load it and compare its userId to the token's
+// userId. The editable fields are the same ones used when creating.
+const updateExperience = async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        if (!Number.isInteger(userId) || userId <= 0) {
+            return res.status(401).json({ message: "Unauthorized user" });
+        }
+
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ message: "Invalid experience id" });
+        }
+
+        // Make sure the experience exists and belongs to this user before we
+        // change anything.
+        const existing = await prisma.experience.findUnique({ where: { id } });
+        if (!existing) {
+            return res.status(404).json({ message: "Experience not found" });
+        }
+        if (existing.userId !== userId) {
+            return res.status(403).json({ message: "You can only edit your own experience" });
+        }
+
+        const { jobTitle, category, customCategory, description, images } = req.body || {};
+
+        const cleanTitle = typeof jobTitle === "string" ? jobTitle.trim() : "";
+        const cleanDescription = typeof description === "string" ? description.trim() : "";
+
+        if (!cleanTitle) {
+            return res.status(400).json({ message: "Job title is required" });
+        }
+        if (!cleanDescription) {
+            return res.status(400).json({ message: "Description is required" });
+        }
+
+        const cleanCategory = isValidCategory(category) ? category : "OTHER";
+        const cleanCustomCategory =
+            cleanCategory === "OTHER" && typeof customCategory === "string" && customCategory.trim()
+                ? customCategory.trim()
+                : null;
+
+        // Only keep string entries so we never store bad data in the array.
+        const cleanImages = Array.isArray(images)
+            ? images.filter((img) => typeof img === "string" && img.trim())
+            : [];
+
+        const experience = await prisma.experience.update({
+            where: { id },
+            data: {
+                jobTitle: cleanTitle,
+                category: cleanCategory,
+                customCategory: cleanCustomCategory,
+                description: cleanDescription,
+                images: cleanImages,
+            },
+            select: experienceWithPoster,
+        });
+
+        res.status(200).json(experience);
+    } catch (error) {
+        console.error("updateExperience error:", error);
+        res.status(500).json({ message: "Error updating experience" });
+    }
+};
+
+// DELETE /api/experiences/:id
+// Removes an experience the logged-in user owns. Same owner check as update.
+const deleteExperience = async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        if (!Number.isInteger(userId) || userId <= 0) {
+            return res.status(401).json({ message: "Unauthorized user" });
+        }
+
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({ message: "Invalid experience id" });
+        }
+
+        const existing = await prisma.experience.findUnique({ where: { id } });
+        if (!existing) {
+            return res.status(404).json({ message: "Experience not found" });
+        }
+        if (existing.userId !== userId) {
+            return res.status(403).json({ message: "You can only delete your own experience" });
+        }
+
+        await prisma.experience.delete({ where: { id } });
+
+        res.status(200).json({ message: "Experience deleted" });
+    } catch (error) {
+        console.error("deleteExperience error:", error);
+        res.status(500).json({ message: "Error deleting experience" });
+    }
+};
+
 module.exports = {
     getExperiences,
     getExperienceById,
     getExperiencesByUser,
     createExperience,
+    updateExperience,
+    deleteExperience,
 };

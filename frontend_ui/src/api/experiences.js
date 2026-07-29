@@ -64,3 +64,31 @@ export async function createExperience({ jobTitle, category, customCategory, des
   );
   return response.data;
 }
+
+// PUT /api/experiences/:id
+// Update an experience the logged-in user owns. Sends the same fields as
+// create; the backend checks that the token's user is the owner. Returns the
+// updated experience so the UI can swap it into the list.
+export async function updateExperience(id, { jobTitle, category, customCategory, description, images }) {
+  const response = await api.put(
+    `/api/experiences/${id}`,
+    {
+      jobTitle,
+      category,
+      customCategory: customCategory || null,
+      description,
+      images: Array.isArray(images) ? images : [],
+    },
+    { headers: authHeader() }
+  );
+  return response.data;
+}
+
+// DELETE /api/experiences/:id
+// Remove an experience the logged-in user owns.
+export async function deleteExperience(id) {
+  const response = await api.delete(`/api/experiences/${id}`, {
+    headers: authHeader(),
+  });
+  return response.data;
+}

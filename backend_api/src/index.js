@@ -21,6 +21,7 @@ const paymentsRoutes = require("./routes/paymentsRoutes");
 const { handleStripeWebhook } = require("./controllers/webhookController");
 const app = express();
 const PORT = process.env.PORT || 3000;
+const uploadRoutes = require("./routes/uploadRoutes");
 // Middleware
 // Allow both deployed frontend and local dev frontends.
 // This avoids CORS blocks when .env contains a production FRONTEND_URL
@@ -78,6 +79,7 @@ app.use("/api/experiences", experienceRoutes);
 app.use("/api/connect", connectRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/users/name/:name", userRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Socket.IO lets us push events (like "new_message") to the browser the
 // moment something happens, instead of the frontend having to keep asking

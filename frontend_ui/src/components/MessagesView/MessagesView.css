@@ -465,6 +465,21 @@
   outline: none;
 }
 
+/* Notice shown under the input once the message hits the character limit. */
+.chat-input-limit {
+  margin: 6px 4px 0;
+  font-size: 12px;
+  color: #b91c1c;
+}
+
+/* Notice shown under the input when a send fails, so the user knows the
+   message wasn't delivered instead of it silently disappearing. */
+.chat-input-error {
+  margin: 6px 4px 0;
+  font-size: 12px;
+  color: #b91c1c;
+}
+
 .send-btn {
   width: 32px;
   height: 32px;

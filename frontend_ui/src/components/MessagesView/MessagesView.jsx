@@ -5,12 +5,20 @@ import { getConversation, getInbox, sendMessage, markConversationRead, getUnread
 import { getSocket } from "../../api/socket";
 import './MessagesView.css';
 
+// The most characters a single message can have. Kept in one place so the
+// input limit and the "reached the limit" notice always use the same number.
+const MESSAGE_MAX_LENGTH = 1000;
+
 function MessagesView({ startConversationUser, startListing, onStartConversationHandled, onUnreadCountChange }) {
   const [inbox, setInbox] = useState([]);
   const [conversationSearch, setConversationSearch] = useState("");
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
+  // Holds a short message to show the user when a send fails. Empty string
+  // means "no error". Without this, a failed send only logged to the console
+  // and the message silently disappeared with no on-screen feedback.
+  const [sendError, setSendError] = useState("");
   const [isLoadingInbox, setIsLoadingInbox] = useState(true);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   // The listing this conversation is about, shown as a chip above the input.
@@ -68,6 +76,8 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
   const loadConversation = async (user) => {
     if (!user?.id) return;
     setSelectedPartner(user);
+    // Drop any stale send error so it doesn't linger when opening a different chat.
+    setSendError("");
     setIsLoadingConversation(true);
     try {
       const data = await getConversation(user.id);
@@ -157,6 +167,8 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
   const handleSend = async () => {
     const text = draft.trim();
     if (!text || !selectedPartner?.id) return;
+    // Clear any error from a previous failed attempt before trying again.
+    setSendError("");
     setDraft("");
     // Attach the listing (if any) to THIS message, then clear it so later
     // messages in the conversation are just normal text.
@@ -182,6 +194,12 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
       });
     } catch (error) {
       console.error("Failed to send message:", error);
+      // Show the user why it failed. If the backend sent a reason (e.g. the
+      // message was too long), use it; otherwise fall back to a general note.
+      setSendError(
+        error?.response?.data?.error ||
+          "Message couldn't be sent. Please try again."
+      );
       setDraft(text);
       // Sending failed, so put the listing chip back for the retry.
       if (listingId) setAttachedListing(attachedListing);
@@ -342,7 +360,13 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
                   className="chat-input"
                   placeholder="Type a message..."
                   value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
+                  // maxLength stops the browser from accepting more characters.
+                  // We also slice in onChange as a backup (e.g. pasted text), so
+                  // the draft can never go past the limit.
+                  maxLength={MESSAGE_MAX_LENGTH}
+                  onChange={(event) =>
+                    setDraft(event.target.value.slice(0, MESSAGE_MAX_LENGTH))
+                  }
                   onKeyDown={(event) => {
                     if (event.key === "Enter") handleSend();
                   }}
@@ -351,6 +375,18 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
                   <Send size={16} />
                 </button>
               </div>
+              {/* Once the draft hits the limit, tell the user they can't type
+                  more. It shows only when the max is reached. */}
+              {draft.length >= MESSAGE_MAX_LENGTH && (
+                <p className="chat-input-limit">
+                  Reached {MESSAGE_MAX_LENGTH} characters. You can't type more.
+                </p>
+              )}
+              {/* If the last send failed, show the reason so the message
+                  doesn't just silently disappear. */}
+              {sendError && (
+                <p className="chat-input-error">{sendError}</p>
+              )}
             </div>
           </div>
         )}
