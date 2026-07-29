@@ -11,13 +11,24 @@ const avatarColors = {
   AR: { background: "#F3F4F6", color: "#4B5563" }
 };
 
-function ProfilePicture({ initials, size = "md" }) {
+// `src` is an optional real profile picture URL. When given, it's shown as a
+// cover-fit background image instead of the initials fallback — same
+// approach the profile header's own avatar already uses.
+function ProfilePicture({ initials, size = "md", src }) {
   const sizeClass = `avatar-${size}`;
   const colors = avatarColors[initials] ?? { background: "#F3F4F6", color: "#4B5563" };
+  const trimmedSrc = typeof src === "string" ? src.trim() : "";
 
   return (
-    <div className={`avatar ${sizeClass}`} style={colors}>
-      {initials}
+    <div
+      className={`avatar ${sizeClass}`}
+      style={
+        trimmedSrc
+          ? { backgroundImage: `url("${trimmedSrc}")`, backgroundSize: "cover", backgroundPosition: "center" }
+          : colors
+      }
+    >
+      {!trimmedSrc && initials}
     </div>
   );
 }

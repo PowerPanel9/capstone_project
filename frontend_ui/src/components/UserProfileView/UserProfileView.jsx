@@ -540,7 +540,9 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
         }}
         style={{ cursor: "pointer" }}
       >
-        <ProfilePicture initials="LS" size="xs" />
+        {/* These are always the profile owner's own listings, so the avatar
+            shown is always their own picture/initials, not a placeholder. */}
+        <ProfilePicture initials={profileInitials} src={userProfilePicture} size="xs" />
         <div className="mini-info">
           <div className="mini-title">{listing.title}</div>
           <div className="mini-desc">{listing.description}</div>
@@ -1183,7 +1185,20 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
                       : CATEGORY_OPTIONS.find((cat) => cat.value === experience.category)?.label;
 
                   return (
-                    <div key={experience.id} className="exp-post">
+                    <div
+                      key={experience.id}
+                      className="exp-post"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigate(`/experiences/${experience.id}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          navigate(`/experiences/${experience.id}`);
+                        }
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <div className="exp-post-head">
                         <ProfilePicture initials={profileInitials} size="xs" />
                         <div className="exp-post-meta">
@@ -1191,8 +1206,10 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
                           {categoryLabel && <span>{categoryLabel}</span>}
                         </div>
                         {/* Owner controls: edit opens the pre-filled modal;
-                            delete removes the post after a confirm prompt. */}
-                        <div className="exp-post-actions">
+                            delete removes the post after a confirm prompt.
+                            stopPropagation keeps these clicks from also
+                            triggering the card's navigate-to-detail click. */}
+                        <div className="exp-post-actions" onClick={(event) => event.stopPropagation()}>
                           <button
                             type="button"
                             className="exp-action-btn"

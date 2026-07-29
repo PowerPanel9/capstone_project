@@ -4,27 +4,26 @@ import { MapPin, ChevronLeft, Briefcase, Check } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
 import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
 import { getUserById } from "../../api/users";
-import { getListings } from "../../api/listings";
+import { getListingsByUser } from "../../api/listings";
 import { getReviewsForUser } from "../../api/reviews";
 import { getExperiencesByUser } from "../../api/experiences";
-import { fullName } from "../../utils/user";
+import { fullName, initials } from "../../utils/user";
+import { formatCityState } from "../../utils/location";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 import { categoryLabel } from "../../utils/categories";
 // Reuse the same styles as the logged-in user's profile so this read-only
-// profile looks identical to it.
+// profile looks identical to it (same social-rail layout, cards, and tabs).
 import "../UserProfileView/UserProfileView.css";
 
 // Read-only profile for viewing ANOTHER user (e.g. a provider found in search
 // or a listing's poster). It mirrors the logged-in user's profile layout
-// (banner, avatar, bio, skills, listings, review stats) but WITHOUT the
-// client/provider toggle, the Edit Profile button, or the Add Experience
-// feature — those only make sense on your own profile.
+// exactly (social rail with identity/Skills/Specialties/Bio cards, and a tab
+// feed with Listings/Experience) but WITHOUT any editable fields or buttons:
+// no Edit Profile, no toggle mode, no payout setup, no Add/Delete Experience,
+// and no Applications tab (that's private data specific to the account owner).
 function PublicProfileView({ currentUser }) {
   const { userId } = useParams();
   const navigate = useNavigate();
-
-  const [activeTab, setActiveTab] = useState("All");
-  const tabs = ["All", "Listings", "Experience"];
 
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +37,15 @@ function PublicProfileView({ currentUser }) {
   // same endpoint the owner's own profile uses), so anyone viewing this profile
   // sees the experiences this user posted.
   const [experiences, setExperiences] = useState([]);
+
+  // Always show both tabs on every public profile, no matter the profile
+  // owner's role or the viewer's current client/provider mode. Posted work
+  // is a trust signal for ANY user — a client browsing in provider mode
+  // should still be able to see a job poster's experience just like a
+  // provider browsing in client mode can. A profile with no experiences yet
+  // just shows the tab's empty state, same as the owner's own profile does.
+  const [activeTab, setActiveTab] = useState("Experience");
+  const tabs = ["Experience", "Listings"];
 
   const [showReviews, setShowReviews] = useState(false);
   const [reviewCount, setReviewCount] = useState(0);
@@ -58,9 +66,8 @@ function PublicProfileView({ currentUser }) {
     return () => { ignore = true; };
   }, [userId]);
 
-  // Load this user's listings. The listings API has no "by user" filter, so we
-  // page through the feed and keep only the ones this user posted (same
-  // approach the logged-in profile uses).
+  // Load this user's listings. Same per-user endpoint the owner's own profile
+  // uses, so both views count listings the same way (all statuses, not just OPEN).
   useEffect(() => {
     let ignore = false;
 
@@ -74,27 +81,11 @@ function PublicProfileView({ currentUser }) {
         setIsLoadingListings(true);
         setListingsError("");
 
-        const combinedListings = [];
-        let page = 1;
-        let hasMore = true;
-        const PAGE_LIMIT = 50;
-        const MAX_PAGES = 20; // safety guard
+        const mine = await getListingsByUser(userId);
 
-        while (hasMore && page <= MAX_PAGES) {
-          const data = await getListings({ page, limit: PAGE_LIMIT });
-          const pageListings = Array.isArray(data.listings) ? data.listings : [];
-          combinedListings.push(...pageListings);
-          hasMore = Boolean(data.hasMore);
-          page += 1;
-        }
-
-        const theirs = combinedListings.filter((listing) => {
-          const ownerId = listing?.userId ?? listing?.user?.id;
-          return Number(ownerId) === Number(userId);
-        });
-
-        if (!ignore) setUserListings(theirs);
+        if (!ignore) setUserListings(Array.isArray(mine) ? mine : []);
       } catch (err) {
+        console.error("Failed to load listings:", err);
         if (!ignore) {
           setListingsError("Failed to load listings.");
           setUserListings([]);
@@ -171,7 +162,9 @@ function PublicProfileView({ currentUser }) {
         }}
         style={{ cursor: "pointer" }}
       >
-        <ProfilePicture initials="LS" size="xs" />
+        {/* These are always this profile's own listings, so the avatar shown
+            is always their own picture/initials, not a placeholder. */}
+        <ProfilePicture initials={profileInitials} src={userProfilePicture} size="xs" />
         <div className="mini-info">
           <div className="mini-title">{listing.title}</div>
           <div className="mini-desc">{listing.description}</div>
@@ -192,220 +185,230 @@ function PublicProfileView({ currentUser }) {
   const revieweeId = Number(userId);
   const skills = Array.isArray(user.skills) ? user.skills : [];
   const categories = Array.isArray(user.categories) ? user.categories : [];
-  const profilePicture = typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";
+  const userProfilePicture = typeof user.profilePicture === "string" ? user.profilePicture.trim() : "";
   const bannerImageUrl = typeof user.imageUrl === "string" ? user.imageUrl.trim() : "";
   const bannerStyle = bannerImageUrl ? { backgroundImage: `url("${bannerImageUrl}")` } : undefined;
-  const profileInitials = `${(user.firstName?.[0] || "").toUpperCase()}${(user.lastName?.[0] || "").toUpperCase()}`;
+  const profileInitials = initials(user);
   const displayLocation =
-    user.city && user.state ? `${user.city}, ${user.state}` : (user.location || "Location");
+    user.city && user.state ? `${user.city}, ${user.state}` : formatCityState(user.location);
+  const roleLabel =
+    user.role === "BOTH" ? "Client & Provider" : user.role === "PROVIDER" ? "Provider" : "Client";
 
   return (
-    <div className="profile-wrap">
+    <div className="profile-wrap profile-wrap-social">
       <button className="back-btn" onClick={() => navigate(-1)}>
         <ChevronLeft size={16} />
         Back
       </button>
 
-      <div className="profile-card">
-        <div className="profile-banner" style={bannerStyle} />
-        <div className="profile-body">
-          <div className="profile-top-row">
-            <div className="profile-avatar-wrap">
-              <div
-                className="profile-avatar"
-                style={
-                  profilePicture
-                    ? { backgroundImage: `url("${profilePicture}")`, backgroundSize: "cover", backgroundPosition: "center" }
-                    : undefined
-                }
-              >
-                {!profilePicture && profileInitials}
-              </div>
-            </div>
-            {/* No toggle or Edit button here — this is someone else's profile. */}
-          </div>
-          <div className="profile-name-row">
-            <h1 className="profile-name">{fullName(user)}</h1>
-            {/* Lets clients see the provider has Stripe payouts enabled. */}
-            {user.paymentVerified && (
-              <span className="payment-verified">
-                <Check size={13} />
-                Payment verified
-              </span>
-            )}
-          </div>
-          <div className="profile-sub">
-            <MapPin size={13} />
-            {displayLocation} · Provider
-          </div>
-          <div className="stats-row">
-            {[
-              [userListings.length, "Listings"],
-              [reviewCount, "Reviews"],
-              [avgRating ? `${avgRating} ★` : "0", "Rating"],
-            ].map(([num, label]) => {
-              // Only the Rating stat opens the reviews modal.
-              const clickable = label === "Rating";
-              return (
-                <div
-                  key={label}
-                  className={clickable ? "stat-clickable" : undefined}
-                  onClick={clickable ? () => setShowReviews(true) : undefined}
-                >
-                  <div className="stat-n">{num}</div>
-                  <div className="stat-l">{label}</div>
+      <div className="social-layout">
+        {/* LEFT RAIL: identity card + Skills + Specialties + Bio. Same rail
+            the owner's own profile uses, minus anything editable. */}
+        <aside className="social-rail">
+          <div className="profile-card rail-card">
+            <div
+              className={`profile-banner ${bannerImageUrl ? "" : "profile-banner-animated"}`}
+              style={bannerStyle}
+            />
+            <div className="profile-body">
+              <div className="profile-top-row">
+                <div className="profile-avatar-wrap">
+                  <div
+                    className="profile-avatar"
+                    style={
+                      userProfilePicture
+                        ? { backgroundImage: `url("${userProfilePicture}")`, backgroundSize: "cover", backgroundPosition: "center" }
+                        : undefined
+                    }
+                  >
+                    {!userProfilePicture && profileInitials}
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div className="tabs-bar">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            className={`tab-btn ${activeTab === tab ? "active" : ""}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "All" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div className="info-card">
-              <div className="info-card-title">Bio</div>
-              <div className="info-card-content">
-                <p style={{ fontSize: 14, color: "#4B5563" }}>
-                  {user.bio || "No bio yet"}
-                </p>
               </div>
+              <div className="profile-name-row">
+                <h1 className="profile-name">{fullName(user)}</h1>
+                {/* Lets clients see the provider has Stripe payouts enabled. */}
+                {user.paymentVerified && (
+                  <span className="payment-verified">
+                    <Check size={13} />
+                    Payment verified
+                  </span>
+                )}
+              </div>
+              <div className="profile-sub">
+                <MapPin size={13} />
+                {displayLocation} · {roleLabel}
+              </div>
+              <div className="stats-row">
+                {[
+                  [userListings.length, "Listings"],
+                  [reviewCount, "Reviews"],
+                  [avgRating ? `${avgRating} ★` : "0", "Rating"],
+                ].map(([num, label]) => {
+                  // Only the Rating stat opens the reviews modal.
+                  const clickable = label === "Rating";
+                  return (
+                    <div
+                      key={label}
+                      className={clickable ? "stat-clickable" : undefined}
+                      onClick={clickable ? () => setShowReviews(true) : undefined}
+                    >
+                      <div className="stat-n">{num}</div>
+                      <div className="stat-l">{label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* No action row here — Edit and the toggle button only make
+                  sense on your own profile. */}
             </div>
-            <div className="info-card">
-              <div className="info-card-title">Skills</div>
+          </div>
+
+          {/* Skills card in the rail, read-only (no add/remove controls). */}
+          <div className="rail-mini">
+            <h3 className="rail-mini-title">Skills</h3>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {skills.length > 0 ? (
+                skills.map((skill) => (
+                  <span key={skill} className="modal-skill-tag">{skill}</span>
+                ))
+              ) : (
+                <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>No skills added yet</p>
+              )}
+            </div>
+          </div>
+
+          {/* Specialties card in the rail. Only providers pick categories, so
+              this card only shows up for providers/both. */}
+          {(user.role === "PROVIDER" || user.role === "BOTH") && (
+            <div className="rail-mini">
+              <h3 className="rail-mini-title">Specialties</h3>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {skills.length > 0 ? (
-                  skills.map((skill) => (
-                    <span key={skill} className="tag">{skill}</span>
+                {categories.length > 0 ? (
+                  categories.map((value) => (
+                    <span key={value} className="tag">{categoryLabel(value)}</span>
                   ))
                 ) : (
-                  <p style={{ fontSize: 13, color: "#9CA3AF" }}>No skills added yet</p>
+                  <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>No specialties added yet</p>
                 )}
               </div>
             </div>
+          )}
+
+          {/* Bio card in the rail. */}
+          <div className="rail-mini">
+            <h3 className="rail-mini-title">Bio</h3>
+            <p style={{ margin: 0, fontSize: 13, color: "#4B5563", lineHeight: 1.6 }}>
+              {user.bio || "No bio yet."}
+            </p>
+          </div>
+        </aside>
+
+        {/* RIGHT COLUMN: the "feed" — tabs and tab content. */}
+        <div className="social-feed">
+          <div className="tabs-bar">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                className={`tab-btn ${activeTab === tab ? "active" : ""}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
 
-          {/* Only providers pick categories, so this card only shows up when
-              the user being viewed actually has some. */}
-          {categories.length > 0 && (
-            <div className="info-card">
-              <div className="info-card-title">Specialties</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {categories.map((value) => (
-                  <span key={value} className="tag">{categoryLabel(value)}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div style={{ fontWeight: 700, color: "#4B5563", fontSize: 14 }}>Listings</div>
-          {isLoadingListings ? (
-            <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-              Loading listings...
-            </div>
-          ) : listingsError ? (
-            <div style={{ padding: 20, textAlign: "center", color: "#b91c1c", fontSize: 13 }}>
-              {listingsError}
-            </div>
-          ) : userListings.length > 0 ? (
-            userListings.slice(0, 2).map((listing) => renderListingCard(listing))
-          ) : (
-            <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-              No listings yet
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === "Listings" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {isLoadingListings ? (
-            <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-              Loading listings...
-            </div>
-          ) : listingsError ? (
-            <div style={{ padding: 20, textAlign: "center", color: "#b91c1c", fontSize: 13 }}>
-              {listingsError}
-            </div>
-          ) : userListings.length > 0 ? (
-            userListings.map((listing) => renderListingCard(listing))
-          ) : (
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              padding: "40px 20px",
-              color: "#9CA3AF",
-              textAlign: "center"
-            }}>
-              <Briefcase size={32} style={{ marginBottom: 12 }} />
-              <p style={{ fontSize: 14, fontWeight: 600 }}>No listings yet</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === "Experience" && (
-        <div className="experience-layout">
-          <div className="experience-skills-column">
-            <div className="info-card" style={{ padding: 20 }}>
-              <div className="info-card-title" style={{ marginBottom: 16 }}>
-                Skills
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {skills.length > 0 ? (
-                  skills.map((skill) => (
-                    <span key={skill} className="tag">{skill}</span>
-                  ))
+          <div className="tab-panel" key={activeTab}>
+            {activeTab === "Listings" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {isLoadingListings ? (
+                  <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+                    Loading listings...
+                  </div>
+                ) : listingsError ? (
+                  <div style={{ padding: 20, textAlign: "center", color: "#b91c1c", fontSize: 13 }}>
+                    {listingsError}
+                  </div>
+                ) : userListings.length > 0 ? (
+                  userListings.map((listing) => renderListingCard(listing))
                 ) : (
-                  <p style={{ fontSize: 13, color: "#9CA3AF" }}>
-                    No experience skills added yet
-                  </p>
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    padding: "40px 20px",
+                    color: "#9CA3AF",
+                    textAlign: "center"
+                  }}>
+                    <Briefcase size={32} style={{ marginBottom: 12 }} />
+                    <p style={{ fontSize: 14, fontWeight: 600 }}>No listings yet</p>
+                  </div>
                 )}
               </div>
-            </div>
-          </div>
+            )}
 
-          <div className="experience-content-column">
-            <div className="experience-section-title">Previous Experience</div>
-            <div className="experience-list">
-              {experiences.length > 0 ? (
-                experiences.map((experience) => (
-                  <div key={experience.id} className="experience-card">
-                    <h3 className="experience-title">{experience.jobTitle}</h3>
-                    <p className="experience-description">{experience.description}</p>
-                    {Array.isArray(experience.images) && experience.images.length > 0 && (
-                      <div className="experience-images">
-                        {experience.images.map((imageSrc, index) => (
-                          <img key={`${experience.id}-${index}`} src={imageSrc} alt={`${experience.jobTitle} ${index + 1}`} />
-                        ))}
+            {activeTab === "Experience" && (
+              <div className="experience-layout">
+                <div className="experience-content-column">
+                  <div className="experience-section-title">MY WORK</div>
+                  <div className="experience-list">
+                    {experiences.length > 0 ? (
+                      experiences.map((experience) => {
+                        // Build the small category sub-line shown under the job
+                        // title. "Other" uses the custom text; known categories
+                        // use their friendly label.
+                        const expCategoryLabel =
+                          experience.category === "OTHER"
+                            ? experience.customCategory
+                            : categoryLabel(experience.category);
+
+                        return (
+                          <div
+                            key={experience.id}
+                            className="exp-post"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => navigate(`/experiences/${experience.id}`)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                navigate(`/experiences/${experience.id}`);
+                              }
+                            }}
+                            style={{ cursor: "pointer" }}
+                          >
+                            <div className="exp-post-head">
+                              <ProfilePicture initials={profileInitials} size="xs" />
+                              <div className="exp-post-meta">
+                                <b>{experience.jobTitle}</b>
+                                {expCategoryLabel && <span>{expCategoryLabel}</span>}
+                              </div>
+                              {/* No owner controls — this is a read-only profile. */}
+                            </div>
+                            <p className="exp-post-body">{experience.description}</p>
+                            {Array.isArray(experience.images) && experience.images.length > 0 && (
+                              <div className="exp-post-photos">
+                                {experience.images.map((imageSrc, index) => (
+                                  <img key={`${experience.id}-${index}`} src={imageSrc} alt={`${experience.jobTitle} ${index + 1}`} />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="experience-empty">
+                        No experiences to show yet.
                       </div>
                     )}
                   </div>
-                ))
-              ) : (
-                <div className="experience-empty">
-                  No experiences to show yet.
+                  {/* No "Add Experience" button — this is a read-only profile. */}
                 </div>
-              )}
-            </div>
-            {/* No "Add Experience" button — this is a read-only profile. */}
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Reviews modal — opens only when the Rating stat is clicked. */}
       {showReviews && (
