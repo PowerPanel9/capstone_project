@@ -7,6 +7,8 @@ const {
     getExperienceById,
     getExperiencesByUser,
     createExperience,
+    updateExperience,
+    deleteExperience,
 } = require('../controllers/experienceController');
 
 // Get every experience (randomized) for the client-mode home feed.
@@ -21,5 +23,11 @@ router.get('/:id', getExperienceById);
 
 // Create a new experience. Only a logged-in user can post one.
 router.post('/', requireAuth, createExperience);
+
+// Update an experience. Only the logged-in owner can edit their own.
+router.put('/:id', requireAuth, updateExperience);
+
+// Delete an experience. Only the logged-in owner can remove their own.
+router.delete('/:id', requireAuth, deleteExperience);
 
 module.exports = router;

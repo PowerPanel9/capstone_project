@@ -38,58 +38,35 @@ function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, o
     <div className="detail-wrap">
       <button className="back-btn" onClick={onBack}>
         <ChevronLeft size={16} />
-        Back
+        {backLabel}
       </button>
 
-      <div className="detail-card">
-        {listing.imageUrl && (
-          <div className="detail-img">
-            <img src={listing.imageUrl} alt={listing.title} />
-          </div>
-        )}
+      {/* One two-column layout: the left column flows image -> title ->
+          About -> Skills, so with no image everything just moves up. The
+          right column stacks the price card and client card together. */}
+      <div className="detail-layout">
+        <div className="detail-main">
+          {listing.imageUrl && (
+            <div className="detail-img">
+              <img src={listing.imageUrl} alt={listing.title} />
+            </div>
+          )}
 
-        <div className="detail-body">
-          <div className="detail-top">
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <div className="detail-title-block">
+            <div className="detail-title-info">
+              <div className="detail-badge-row">
                 <span className="badge">{categoryLabel}</span>
-                <span style={{ fontSize: 12, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 4 }}>
-                  <Clock size={10} />
-                  {new Date(listing.createdAt).toLocaleDateString()}
+                <span className="detail-posted">
+                  <Clock size={11} />
+                  Posted {new Date(listing.createdAt).toLocaleDateString()}
                 </span>
               </div>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1E2340", letterSpacing: "-0.4px", marginBottom: 4 }}>
-                {listing.title}
-              </h1>
-              <p style={{ fontSize: 14, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 6 }}>
+              <h1 className="detail-title">{listing.title}</h1>
+              <p className="detail-location">
                 <MapPin size={13} />
                 {listingLocation}
               </p>
             </div>
-            {userMode === 'provider' && !isOwner && (
-              <div className="detail-actions">
-                {/* Once the provider has applied, show a disabled "Applied"
-                    button so they can't apply to the same listing twice. */}
-                {hasApplied ? (
-                  <button className="apply-btn apply-btn-applied" disabled>
-                    Applied
-                  </button>
-                ) : (
-                  <button className="apply-btn" onClick={onApply}>
-                    Apply Now
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="message-btn"
-                  title="Message the client"
-                  aria-label="Message the client"
-                  onClick={onMessage}
-                >
-                  <Mail size={18} />
-                </button>
-              </div>
-            )}
             {(canEdit || canDelete) && (
               <div className="owner-actions">
                 {canEdit && (
@@ -118,69 +95,100 @@ function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, o
             )}
           </div>
 
-          <div className="stats-grid">
-            <div>
-              <div className="stat-label">Rate</div>
-              <div className="stat-val">${listing.price}</div>
-            </div>
-            <div>
-              <div className="stat-label">Category</div>
-              <div className="stat-val" style={{ fontSize: 14 }}>{categoryLabel}</div>
-            </div>
+          <div>
+            <div className="section-title">About this role</div>
+            <p className="about-text">
+              {listing.description}
+            </p>
           </div>
 
-          <div className="detail-grid">
-            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-              <div>
-                <div className="section-title">About this role</div>
-                <p className="about-text">
-                  {listing.description}
-                </p>
-              </div>
-
-              <div>
-                <div className="section-title">Required Skills</div>
-                <div className="skill-tags">
-                  {/* If the listing has skills, show them as tags. Otherwise
-                      show "None" so the section isn't just blank. */}
-                  {listing.skillsRequired.length > 0 ? (
-                    listing.skillsRequired.map((skill) => (
-                      <span key={skill} className="skill-tag">{skill}</span>
-                    ))
-                  ) : (
-                    <span className="skill-tag-none">None</span>
-                  )}
-                </div>
-              </div>
+          <div>
+            <div className="section-title">Required Skills</div>
+            <div className="skill-tags">
+              {/* If the listing has skills, show them as tags. Otherwise
+                  show "None" so the section isn't just blank. */}
+              {listing.skillsRequired.length > 0 ? (
+                listing.skillsRequired.map((skill) => (
+                  <span key={skill} className="skill-tag">{skill}</span>
+                ))
+              ) : (
+                <span className="skill-tag-none">None</span>
+              )}
             </div>
+          </div>
+        </div>
 
-            <div className="client-card">
-              <div className="client-title">About the Client</div>
-              <div
-                className="client-row client-row-clickable"
-                onClick={goToPosterProfile}
-              >
-                <ProfilePicture initials={initials(listing.user)} size="xs" />
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: 14, color: "#1E2340" }}>
-                    {fullName(listing.user)}
-                  </p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#6B7280" }}>
-                    <Star size={11} />
-                    4.9 · 23 reviews
-                  </div>
-                </div>
-              </div>
-              <div className="client-details">
-                <p><MapPin size={12} />{listingLocation}</p>
-                <p><Briefcase size={12} />8 jobs posted</p>
-                {/* Only show when the client actually has Stripe payouts enabled. */}
-                {listing.user?.paymentVerified && (
-                  <p><Check size={12} />Payment verified</p>
+        {/* Sticky sidebar: price + actions card, then the client card. */}
+        <div className="detail-side">
+          <aside className="booking-card">
+            <div className="booking-price-row">
+              <span className="booking-price">${listing.price}</span>
+            </div>
+            <p className="booking-price-note">Rate</p>
+
+            {userMode === 'provider' && !isOwner && (
+              <>
+                {/* Once the provider has applied, show a disabled "Applied"
+                    button so they can't apply to the same listing twice. */}
+                {hasApplied ? (
+                  <button className="apply-btn apply-btn-applied" disabled>
+                    Applied
+                  </button>
+                ) : (
+                  <button className="apply-btn" onClick={onApply}>
+                    Apply Now
+                  </button>
                 )}
+                <button
+                  type="button"
+                  className="message-btn"
+                  title="Message the client"
+                  aria-label="Message the client"
+                  onClick={onMessage}
+                >
+                  <Mail size={18} />
+                  Message client
+                </button>
+              </>
+            )}
+
+            <div className="booking-meta">
+              <div className="booking-meta-line">
+                <span className="booking-meta-label">
+                  <Briefcase size={13} />
+                  Category
+                </span>
+                <span className="booking-meta-val">{categoryLabel}</span>
               </div>
             </div>
-          </div>
+          </aside>
+
+          <aside className="client-card">
+            <div className="client-title">About the Client</div>
+            <div
+              className="client-row client-row-clickable"
+              onClick={goToPosterProfile}
+            >
+              <ProfilePicture initials={initials(listing.user)} size="xs" />
+              <div>
+                <p style={{ fontWeight: 700, fontSize: 14, color: "#1E2340" }}>
+                  {fullName(listing.user)}
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#6B7280" }}>
+                  <Star size={11} />
+                  4.9 · 23 reviews
+                </div>
+              </div>
+            </div>
+            <div className="client-details">
+              <p><MapPin size={12} />{listingLocation}</p>
+              <p><Briefcase size={12} />8 jobs posted</p>
+              {/* Only show when the client actually has Stripe payouts enabled. */}
+              {listing.user?.paymentVerified && (
+                <p><Check size={12} />Payment verified</p>
+              )}
+            </div>
+          </aside>
         </div>
       </div>
 
