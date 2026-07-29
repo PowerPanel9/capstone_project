@@ -4,6 +4,7 @@ import { X, DollarSign, Loader } from 'lucide-react';
 // to the lucide-react import above (it's used by the upload dropbox).
 import { createListing, updateListing } from '../../api/listings';
 import { getPriceRecommendations } from '../../api/prices';
+import AddressAutocomplete from '../AddressAutocomplete/AddressAutocomplete';
 import './CreateListingView.css';
 
 // The category options for the dropdown. `value` matches the backend
@@ -62,6 +63,14 @@ function CreateListingView({ onDone, listingId, initialData }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  // A non-empty location is only valid once picked from the address dropdown
+  // (same rule as the Edit Profile and onboarding location fields). A location
+  // already saved on the listing (edit mode) counts as valid to start.
+  const [isLocationValid, setIsLocationValid] = useState(true);
+  // Whether to SHOW the "pick a valid address" message. We only turn this on
+  // when the user tries to submit with an invalid address, not while typing.
+  const [showLocationError, setShowLocationError] = useState(false);
+
   // Price-suggestion feature state.
   const [priceRec, setPriceRec] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(false);
@@ -107,6 +116,12 @@ function CreateListingView({ onDone, listingId, initialData }) {
     // Basic front-end validation so we don't send an obviously bad request.
     if (!form.title || !form.description || !form.price || !form.location) {
       setError("Please fill in the title, rate, description, and location.");
+      return;
+    }
+    // The location must be one the user picked from the address dropdown, the
+    // same rule used on the Edit Profile and onboarding location fields.
+    if (!isLocationValid) {
+      setShowLocationError(true);
       return;
     }
     if (!form.category) {
@@ -320,13 +335,27 @@ function CreateListingView({ onDone, listingId, initialData }) {
         </div>
 
         <div>
-          <label className="form-label">Location</label>
-          <input
-            className="form-input"
+          <label className="form-label" htmlFor="listing-location">Location</label>
+          <AddressAutocomplete
+            inputId="listing-location"
+            variant="modal"
+            inputClassName="form-input"
             value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-            placeholder="e.g. Lincoln, NE"
+            placeholder="Start typing your address…"
+            onChange={(nextText, picked) => {
+              setForm({ ...form, location: nextText });
+              // Empty stays invalid (location is required for a listing) —
+              // only a picked suggestion counts as valid.
+              const nextValid = Boolean(picked);
+              setIsLocationValid(nextValid);
+              if (nextValid) setShowLocationError(false);
+            }}
           />
+          {showLocationError && (
+            <p className="error-text">
+              Please select a valid address from the dropdown.
+            </p>
+          )}
         </div>
 
         {/*

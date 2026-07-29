@@ -46,8 +46,8 @@ function ApplicationModal({ listing, currentUser, onClose, onSuccess }) {
   };
 
   return (
-    <div className="modal-bg">
-      <div className="modal">
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-body">
           <div className="modal-header">
             <div>
