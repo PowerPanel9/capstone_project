@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Briefcase, FileText, ChevronDown, Check } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
@@ -10,7 +10,12 @@ import { getListingsByUser } from "../../api/listings";
 import { listingStatusLabel, isListingGrayed } from "../../utils/listingStatus";
 import { formatCityState } from "../../utils/location";
 import { getReviewsForUser } from "../../api/reviews";
-import { getExperiencesByUser, createExperience } from "../../api/experiences";
+import {
+  getExperiencesByUser,
+  createExperience,
+  updateExperience,
+  deleteExperience,
+} from "../../api/experiences";
 import { uploadFile } from "../../api/upload";
 import {
   getMyApplications,
@@ -62,7 +67,7 @@ function toDisplayName(value) {
     .join(" ");
 }
 
-function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMessageListing }) {
+function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListing }) {
   const navigate = useNavigate();
 
   // Open a direct-message conversation with another user. This mirrors the
@@ -75,11 +80,15 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
     if (listing?.id) onMessageListing?.(listing);
     navigate("/messages");
   };
-  const [activeTab, setActiveTab] = useState("All");
+  // Providers land on their Experience feed first; clients (who have no
+  // Experience tab) land on Listings.
+  const [activeTab, setActiveTab] = useState(() =>
+    userMode === "provider" ? "Experience" : "Listings"
+  );
   const tabs =
     userMode === "provider"
-      ? ["All", "Listings", "Experience", "Applications"]
-      : ["All", "Listings", "Applications"];
+      ? ["Experience", "Listings", "Applications"]
+      : ["Listings", "Applications"];
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newSkill, setNewSkill] = useState("");
@@ -111,13 +120,16 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
   const [isLoadingListings, setIsLoadingListings] = useState(false);
   const [listingsError, setListingsError] = useState("");
   const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false);
+  // Which experience the modal is editing. null means "creating a new one".
+  const [editingExperienceId, setEditingExperienceId] = useState(null);
+  // Id of the experience currently being deleted, so we can disable its button
+  // and show a "Removing…" label while the request is in flight.
+  const [deletingExperienceId, setDeletingExperienceId] = useState(null);
   const [experienceSaveError, setExperienceSaveError] = useState("");
   // True while experience images are being uploaded to S3, so we can show
   // "Uploading…" and stop the user from saving before the URLs come back.
   const [isUploadingExperienceImages, setIsUploadingExperienceImages] = useState(false);
   const [experiences, setExperiences] = useState([]);
-  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
-  const actionsMenuRef = useRef(null);
   const [experienceForm, setExperienceForm] = useState({
     jobTitle: "",
     category: "",
@@ -131,27 +143,6 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
       setActiveTab("All");
     }
   }, [userMode, activeTab]);
-
-  useEffect(() => {
-    function handleOutsideClick(event) {
-      if (!actionsMenuRef.current?.contains(event.target)) {
-        setIsActionsMenuOpen(false);
-      }
-    }
-
-    function handleEscape(event) {
-      if (event.key === "Escape") {
-        setIsActionsMenuOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, []);
 
   const [profile, setProfile] = useState({
     id: null,
@@ -353,17 +344,6 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
 
   const handleToggleModeClick = () => {
     onToggleMode();
-    setIsActionsMenuOpen(false);
-  };
-
-  const handleEditProfileClick = () => {
-    openEditModal();
-    setIsActionsMenuOpen(false);
-  };
-
-  const handleLogoutClick = () => {
-    setIsActionsMenuOpen(false);
-    onLogout?.();
   };
 
   const handleFieldChange = (event) => {
@@ -397,6 +377,8 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
 
   const openExperienceModal = () => {
     setExperienceSaveError("");
+    // No id -> the modal is in "create" mode.
+    setEditingExperienceId(null);
     setExperienceForm({
       jobTitle: "",
       category: "",
@@ -407,8 +389,43 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
     setIsExperienceModalOpen(true);
   };
 
+  // Open the SAME modal but pre-filled with an existing experience's values,
+  // and remember its id so Save updates instead of creates.
+  const openEditExperienceModal = (experience) => {
+    setExperienceSaveError("");
+    setEditingExperienceId(experience.id);
+    setExperienceForm({
+      jobTitle: experience.jobTitle || "",
+      category: experience.category || "",
+      customCategory: experience.customCategory || "",
+      description: experience.description || "",
+      // Copy the array so editing in the form doesn't mutate the saved list.
+      images: Array.isArray(experience.images) ? [...experience.images] : [],
+    });
+    setIsExperienceModalOpen(true);
+  };
+
   const closeExperienceModal = () => {
     setIsExperienceModalOpen(false);
+    setEditingExperienceId(null);
+  };
+
+  // Delete an experience the user owns, after a confirm prompt. On success we
+  // remove it from the list so it disappears right away.
+  const handleDeleteExperience = async (experienceId) => {
+    const confirmed = window.confirm("Delete this experience? This cannot be undone.");
+    if (!confirmed) return;
+
+    setDeletingExperienceId(experienceId);
+    try {
+      await deleteExperience(experienceId);
+      setExperiences((prev) => prev.filter((exp) => exp.id !== experienceId));
+    } catch (error) {
+      console.error("Failed to delete experience:", error);
+      window.alert("Could not delete experience. Please try again.");
+    } finally {
+      setDeletingExperienceId(null);
+    }
   };
 
   const handleExperienceFieldChange = (event) => {
@@ -482,19 +499,31 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
       return;
     }
 
+    // The fields are the same whether we're creating or editing.
+    const payload = {
+      jobTitle,
+      category: experienceForm.category,
+      customCategory: experienceForm.category === "OTHER" ? customCategory : null,
+      description,
+      images: experienceForm.images,
+    };
+
     try {
       setExperienceSaveError("");
-      // Save to the backend. It returns the created experience (with its real
-      // database id), which we add to the top of the list so it shows right away.
-      const saved = await createExperience({
-        jobTitle,
-        category: experienceForm.category,
-        customCategory: experienceForm.category === "OTHER" ? customCategory : null,
-        description,
-        images: experienceForm.images,
-      });
-      setExperiences((prev) => [saved, ...prev]);
+      if (editingExperienceId) {
+        // EDIT: send the changes and swap the updated experience into the list.
+        const updated = await updateExperience(editingExperienceId, payload);
+        setExperiences((prev) =>
+          prev.map((exp) => (exp.id === editingExperienceId ? updated : exp))
+        );
+      } else {
+        // CREATE: the backend returns the new experience (with its real id),
+        // which we add to the top of the list so it shows right away.
+        const saved = await createExperience(payload);
+        setExperiences((prev) => [saved, ...prev]);
+      }
       setIsExperienceModalOpen(false);
+      setEditingExperienceId(null);
     } catch (error) {
       console.error("Failed to save experience:", error);
       setExperienceSaveError("Could not save experience. Please try again.");
@@ -915,10 +944,23 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
   }
 
   return (
-    <div className="profile-wrap">
-      <div className="profile-card">
-        <div className="profile-banner" style={bannerStyle} />
+    <div className="profile-wrap profile-wrap-social">
+      <div className="social-layout">
+        {/* LEFT RAIL: identity card + skills + bio. Stays put while the
+            feed on the right scrolls (the "Social Rail" layout). */}
+        <aside className="social-rail">
+      <div className="profile-card rail-card">
+        {/* When there's no uploaded banner image we add the "animated" class so
+            the default gradient gently shifts. With a real image we leave it off
+            so we don't slowly pan the photo. */}
+        <div
+          className={`profile-banner ${bannerImageUrl ? "" : "profile-banner-animated"}`}
+          style={bannerStyle}
+        />
         <div className="profile-body">
+          {/* Centered avatar, like the Social Rail mockup. Clicking it opens the
+              edit modal (where the picture is changed). The old actions dropdown
+              was removed; logout still lives in the sidebar/top bar. */}
           <div className="profile-top-row">
             <button
               type="button"
@@ -937,37 +979,6 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
                 {!userProfilePicture && profileInitials}
               </div>
             </button>
-            <div className="profile-actions-menu" ref={actionsMenuRef}>
-              <button
-                type="button"
-                className="actions-menu-trigger"
-                onClick={() => setIsActionsMenuOpen((prev) => !prev)}
-                aria-expanded={isActionsMenuOpen}
-                aria-haspopup="menu"
-                aria-label="Open profile actions"
-              >
-                <ChevronDown size={15} className={isActionsMenuOpen ? "menu-arrow open" : "menu-arrow"} />
-              </button>
-
-              {isActionsMenuOpen && (
-                <div className="actions-menu-dropdown" role="menu">
-                  {/* A BOTH user has both views, so this just switches between
-                      them. A single-role user doesn't have the other view yet,
-                      so the button invites them to sign up for that role. */}
-                  <button type="button" className="actions-menu-item" role="menuitem" onClick={handleToggleModeClick}>
-                    {profile.role === "BOTH"
-                      ? `Switch to ${userMode === "client" ? "Provider" : "Client"} Mode`
-                      : `Sign up as a ${userMode === "client" ? "Provider" : "Client"}`}
-                  </button>
-                  <button type="button" className="actions-menu-item" role="menuitem" onClick={handleEditProfileClick}>
-                    Edit Profile
-                  </button>
-                  <button type="button" className="actions-menu-item logout" role="menuitem" onClick={handleLogoutClick}>
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
           <div className="profile-name-row">
             <h1 className="profile-name">{displayFirstName} {displayLastName}</h1>
@@ -1012,17 +1023,119 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
               );
             })}
           </div>
+
+          {/* Two-button action row (replaces the mockup's Edit + Share).
+              Left = Edit profile. Right = switch/sign-up for the other mode:
+              a BOTH user switches between views; a single-role user is invited
+              to sign up for the other role. */}
+          <div className="rail-actions">
+            <button type="button" className="btn-primary" onClick={openEditModal}>
+              Edit
+            </button>
+            <button type="button" className="btn-ghost" onClick={handleToggleModeClick}>
+              {profile.role === "BOTH"
+                ? `Switch to ${userMode === "client" ? "Provider" : "Client"} Mode`
+                : `Sign up as ${userMode === "client" ? "Provider" : "Client"}`}
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Skills card in the rail (from the mockup's "Skills" mini-card).
+          Users add/remove skills right here; each change saves to the backend. */}
+      <div className="rail-mini">
+        <h3 className="rail-mini-title">Skills</h3>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {currentUser.skills.length > 0 ? (
+            currentUser.skills.map((skill) => (
+              <span key={skill} className="modal-skill-tag">
+                {skill}
+                <button
+                  type="button"
+                  className="skill-remove-btn"
+                  onClick={() => removeExperienceSkill(skill)}
+                  disabled={isSavingSkill}
+                >
+                  x
+                </button>
+              </span>
+            ))
+          ) : (
+            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>No skills added yet</p>
+          )}
+        </div>
+
+        {isAddingSkill ? (
+          <div className="skill-add-row">
+            <input
+              autoFocus
+              value={newExperienceSkill}
+              onChange={(e) => setNewExperienceSkill(e.target.value)}
+              onKeyDown={(e) => {
+                // Add the skill when the user presses Enter/Return.
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addExperienceSkill();
+                }
+              }}
+              placeholder="Add skill"
+              disabled={isSavingSkill}
+            />
+            <button
+              type="button"
+              className="modal-btn modal-btn-secondary"
+              onClick={addExperienceSkill}
+              disabled={isSavingSkill}
+            >
+              {isSavingSkill ? "Saving..." : "Add"}
+            </button>
+            <button
+              type="button"
+              className="modal-btn modal-btn-secondary"
+              onClick={() => {
+                setIsAddingSkill(false);
+                setNewExperienceSkill("");
+                setSkillError("");
+              }}
+              disabled={isSavingSkill}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              className="experience-add-btn"
+              onClick={() => setIsAddingSkill(true)}
+            >
+              + Add Skill
+            </button>
+          </div>
+        )}
+
+        {skillError && <p className="error-text">{skillError}</p>}
+      </div>
+
+      {/* Bio card in the rail (the mockup's "About" card, renamed to Bio). */}
+      <div className="rail-mini">
+        <h3 className="rail-mini-title">Bio</h3>
+        <p style={{ margin: 0, fontSize: 13, color: "#4B5563", lineHeight: 1.6 }}>
+          {currentUser.bio || "No bio yet."}
+        </p>
       </div>
 
       {/* Providers set up Stripe payouts here so they can receive payments.
           After onboarding, this box shows once then disappears on refresh (the
-          header "Payment verified" checkmark becomes the lasting indicator). */}
+          header "Payment verified" checkmark becomes the lasting indicator).
+          Sits under the Bio card in the left rail. */}
       {userMode === "provider" && (
-        <div style={{ marginTop: 16, marginBottom: 24 }}>
-          <ConnectOnboarding justOnboarded={justOnboarded} />
-        </div>
+        <ConnectOnboarding justOnboarded={justOnboarded} />
       )}
+        </aside>
+
+        {/* RIGHT COLUMN: the "feed" — tabs and tab content. */}
+        <div className="social-feed">
 
       <div className="tabs-bar">
         {tabs.map((tab) => (
@@ -1036,29 +1149,15 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
         ))}
       </div>
 
+      {/* Keyed on the active tab so React re-mounts this block whenever the tab
+          changes. That replays the CSS entrance animation, giving each tab a
+          little slide-in instead of an instant swap. */}
+      <div className="tab-panel" key={activeTab}>
+
       {activeTab === "All" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div className="info-card">
-              <div className="info-card-title">Bio</div>
-              <div className="info-card-content">
-                <p style={{ fontSize: 14, color: "#4B5563" }}>{currentUser.bio}</p>
-              </div>
-            </div>
-            <div className="info-card">
-              <div className="info-card-title">Skills</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {currentUser.skills.length > 0 ? (
-                  currentUser.skills.map((skill) => (
-                    <span key={skill} className="tag">{skill}</span>
-                  ))
-                ) : (
-                  <p style={{ fontSize: 13, color: "#9CA3AF" }}>No skills added yet</p>
-                )}
-              </div>
-            </div>
-          </div>
-
+          {/* Bio and Skills now live in the left rail, so the "All" feed
+              focuses on the user's listings. */}
           <div style={{ fontWeight: 700, color: "#4B5563", fontSize: 14 }}>Listings</div>
           {isLoadingListings ? (
             <div style={{ padding: 20, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
@@ -1109,177 +1208,58 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
 
       {activeTab === "Experience" && (
         <div className="experience-layout">
-          <div className="experience-skills-column">
-            <div className="info-card" style={{ padding: 20 }}>
-              <div className="info-card-title" style={{ marginBottom: 16 }}>
-                Skills
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {currentUser.skills.length > 0 ? (
-                  currentUser.skills.map((skill) => (
-                    <span key={skill} className="modal-skill-tag">
-                      {skill}
-                      <button
-                        type="button"
-                        className="skill-remove-btn"
-                        onClick={() => removeExperienceSkill(skill)}
-                        disabled={isSavingSkill}
-                      >
-                        x
-                      </button>
-                    </span>
-                  ))
-                ) : (
-                  <p style={{ fontSize: 13, color: "#9CA3AF" }}>
-                    No experience skills added yet
-                  </p>
-                )}
-              </div>
-
-              {isAddingSkill ? (
-                <div className="skill-add-row" style={{ marginTop: 16 }}>
-                  <input
-                    autoFocus
-                    value={newExperienceSkill}
-                    onChange={(e) => setNewExperienceSkill(e.target.value)}
-                    onKeyDown={(e) => {
-                      // Add the skill when the user presses Enter/Return.
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addExperienceSkill();
-                      }
-                    }}
-                    placeholder="Add skill"
-                    disabled={isSavingSkill}
-                  />
-                  <button
-                    type="button"
-                    className="modal-btn modal-btn-secondary"
-                    onClick={addExperienceSkill}
-                    disabled={isSavingSkill}
-                  >
-                    {isSavingSkill ? "Saving..." : "Add"}
-                  </button>
-                  <button
-                    type="button"
-                    className="modal-btn modal-btn-secondary"
-                    onClick={() => {
-                      setIsAddingSkill(false);
-                      setNewExperienceSkill("");
-                      setSkillError("");
-                    }}
-                    disabled={isSavingSkill}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div style={{ marginTop: 16 }}>
-                  <button
-                    type="button"
-                    className="experience-add-btn"
-                    onClick={() => setIsAddingSkill(true)}
-                  >
-                    + Add Skill
-                  </button>
-                </div>
-              )}
-
-              {skillError && <p className="error-text">{skillError}</p>}
-            </div>
-
-            <div className="info-card" style={{ padding: 20, marginTop: 16 }}>
-              <div className="info-card-title" style={{ marginBottom: 16 }}>
-                Resume
-              </div>
-              {currentUser.resumeUrl ? (
-                <a
-                  href={currentUser.resumeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ fontSize: 14, color: "#4F46E5", fontWeight: 600 }}
-                >
-                  View Resume
-                </a>
-              ) : (
-                <p style={{ fontSize: 13, color: "#9CA3AF" }}>No resume added yet</p>
-              )}
-
-              <div style={{ marginTop: 16 }}>
-                <label className="experience-add-btn" style={{ cursor: "pointer" }}>
-                  {isSavingResume
-                    ? "Uploading..."
-                    : currentUser.resumeUrl
-                      ? "Replace Resume"
-                      : "+ Upload Resume"}
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,image/*"
-                    onChange={handleResumeFileChange}
-                    disabled={isSavingResume}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              </div>
-
-              {resumeError && <p className="error-text">{resumeError}</p>}
-            </div>
-
-            <div className="info-card" style={{ padding: 20, marginTop: 16 }}>
-              <div className="info-card-title" style={{ marginBottom: 16 }}>
-                Certification
-              </div>
-              {currentUser.certificationUrl ? (
-                <a
-                  href={currentUser.certificationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ fontSize: 14, color: "#4F46E5", fontWeight: 600 }}
-                >
-                  View Certification
-                </a>
-              ) : (
-                <p style={{ fontSize: 13, color: "#9CA3AF" }}>No certification added yet</p>
-              )}
-
-              <div style={{ marginTop: 16 }}>
-                <label className="experience-add-btn" style={{ cursor: "pointer" }}>
-                  {isSavingCertification
-                    ? "Uploading..."
-                    : currentUser.certificationUrl
-                      ? "Replace Certification"
-                      : "+ Upload Certification"}
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,image/*"
-                    onChange={handleCertificationFileChange}
-                    disabled={isSavingCertification}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              </div>
-
-              {certificationError && <p className="error-text">{certificationError}</p>}
-            </div>
-          </div>
-
           <div className="experience-content-column">
-            <div className="experience-section-title">Previous Experience</div>
+            <div className="experience-section-title">MY WORK</div>
             <div className="experience-list">
               {experiences.length > 0 ? (
-                experiences.map((experience) => (
-                  <div key={experience.id} className="experience-card">
-                    <h3 className="experience-title">{experience.jobTitle}</h3>
-                    <p className="experience-description">{experience.description}</p>
-                    {experience.images.length > 0 && (
-                      <div className="experience-images">
-                        {experience.images.map((imageSrc, index) => (
-                          <img key={`${experience.id}-${index}`} src={imageSrc} alt={`${experience.jobTitle} ${index + 1}`} />
-                        ))}
+                experiences.map((experience) => {
+                  // Build the small category sub-line shown under the job title
+                  // (like "Cleaning" in the mockup). "Other" uses the custom text;
+                  // known categories use their friendly label from CATEGORY_OPTIONS.
+                  const categoryLabel =
+                    experience.category === "OTHER"
+                      ? experience.customCategory
+                      : CATEGORY_OPTIONS.find((cat) => cat.value === experience.category)?.label;
+
+                  return (
+                    <div key={experience.id} className="exp-post">
+                      <div className="exp-post-head">
+                        <ProfilePicture initials={profileInitials} size="xs" />
+                        <div className="exp-post-meta">
+                          <b>{experience.jobTitle}</b>
+                          {categoryLabel && <span>{categoryLabel}</span>}
+                        </div>
+                        {/* Owner controls: edit opens the pre-filled modal;
+                            delete removes the post after a confirm prompt. */}
+                        <div className="exp-post-actions">
+                          <button
+                            type="button"
+                            className="exp-action-btn"
+                            onClick={() => openEditExperienceModal(experience)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="exp-action-btn exp-action-delete"
+                            onClick={() => handleDeleteExperience(experience.id)}
+                            disabled={deletingExperienceId === experience.id}
+                          >
+                            {deletingExperienceId === experience.id ? "Removing…" : "Delete"}
+                          </button>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))
+                      <p className="exp-post-body">{experience.description}</p>
+                      {experience.images.length > 0 && (
+                        <div className="exp-post-photos">
+                          {experience.images.map((imageSrc, index) => (
+                            <img key={`${experience.id}-${index}`} src={imageSrc} alt={`${experience.jobTitle} ${index + 1}`} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
                 <div className="experience-empty">
                   No experiences yet. Click Add Experience to create one.
@@ -1494,6 +1474,10 @@ function UserProfileView({ userMode, onToggleMode, onLogout, onMessageUser, onMe
           )}
         </div>
       )}
+      </div>{/* .tab-panel */}
+        </div>{/* .social-feed */}
+      </div>{/* .social-layout */}
+
       {isEditModalOpen && (
         <div className="profile-modal-backdrop">
           <div className="profile-modal">

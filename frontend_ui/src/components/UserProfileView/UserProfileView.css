@@ -6,6 +6,158 @@
   width: 100%;
 }
 
+/* ===================================================================
+   SOCIAL RAIL LAYOUT
+   A sticky identity rail on the left + the feed (tabs & content) on
+   the right. The rail holds the profile card, Skills, and Bio.
+=================================================================== */
+/* Wider than the default so the two columns use the screen and we don't leave
+   big empty gutters on the left and right of the content area. */
+.profile-wrap-social {
+  max-width: 1400px;
+}
+
+.social-layout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.social-rail {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Inside the rail the cards are spaced by the flex gap, so drop the
+   profile card's own bottom margin. */
+.rail-card {
+  margin-bottom: 0;
+}
+
+/* Center the identity card like the Social Rail mockup. These rules are scoped
+   to .rail-card so the shared .profile-* classes (also used by the public
+   profile) are left unchanged. */
+.rail-card .profile-body {
+  text-align: center;
+}
+
+/* Avatar sits centered and overlapping the banner. */
+.rail-card .profile-top-row {
+  justify-content: center;
+}
+
+.rail-card .profile-avatar-wrap {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Name row and location sub-line center under the avatar. */
+.rail-card .profile-name-row {
+  justify-content: center;
+}
+
+.rail-card .profile-sub {
+  justify-content: center;
+}
+
+/* Stats become an evenly-spaced strip with divider lines, like the mockup. */
+.rail-card .stats-row {
+  justify-content: space-around;
+  gap: 0;
+  padding: 14px 6px;
+  border-top: 1px solid #E5E7EB;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.rail-card .stats-row > div {
+  text-align: center;
+}
+
+.social-feed {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Two-button action row under the stats (Edit + switch/sign-up mode). */
+.rail-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.rail-actions button {
+  flex: 1;
+}
+
+/* Filled + outline buttons, matching the mockup. */
+.btn-primary {
+  background: var(--primary, #7B8FC8);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark, #6678B8);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: #F3F4F6;
+  color: #374151;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.btn-ghost:hover {
+  background: #E5E7EB;
+}
+
+/* Small rail cards for Skills and Bio. */
+.rail-mini {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.rail-mini-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9CA3AF;
+  font-weight: 700;
+}
+
+/* On narrow screens, stack the rail above the feed and stop it sticking. */
+@media (max-width: 860px) {
+  .social-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .social-rail {
+    position: static;
+  }
+}
+
 /* "Back" button, used on the read-only public profile view. */
 .profile-wrap .back-btn {
   display: flex;
@@ -516,16 +668,78 @@
   font-size: 13px;
 }
 
+/* Social-feed "post" style for each experience (from the Social Rail mockup),
+   but without the likes/comments footer. */
+.exp-post {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 18px;
+  overflow: hidden;
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.exp-post:hover {
+  box-shadow: 0 8px 22px rgba(30, 35, 64, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Header row: avatar on the left, job title + category stacked next to it. */
+.exp-post-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.exp-post-meta b {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1E2340;
+}
+
+.exp-post-meta span {
+  display: block;
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.exp-post-body {
+  padding: 0 16px 14px;
+  margin: 0;
+  font-size: 14px;
+  color: #4B5563;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Photos sit at the bottom of the post, two per row. */
+.exp-post-photos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 16px 16px;
+}
+
+/* Each photo keeps a steady 16:10 frame so the grid stays tidy, but
+   `object-fit: contain` means the WHOLE image is shown scaled to fit — never
+   cropped, never stretched. Any leftover space around a tall or wide image is
+   filled by the soft gray background so it reads as an intentional frame. */
+.exp-post-photos img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  display: block;
+}
+
 .experience-layout {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(250px, 360px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
-}
-
-.experience-skills-column {
-  width: 100%;
 }
 
 .experience-content-column {
@@ -541,8 +755,8 @@
 
 .experience-actions {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 8px;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .experience-add-btn {
@@ -708,6 +922,17 @@
 
 .skill-add-row input {
   margin: 0;
+}
+
+/* In the narrow left rail the input + Add + Cancel need room to wrap so they
+   don't overflow the card. The input takes the first full line, the buttons
+   sit on the next. */
+.rail-mini .skill-add-row {
+  flex-wrap: wrap;
+}
+
+.rail-mini .skill-add-row input {
+  flex: 1 1 100%;
 }
 
 .modal-actions {
@@ -878,4 +1103,162 @@
   border: 1px solid #86EFAC;
   border-radius: 999px;
   padding: 4px 12px;
+}
+
+/* ===================================================================
+   INTERACTIVITY & MOTION
+   All animation lives here so it's easy to find and tweak. Pure CSS —
+   React only toggles a couple of classes / re-keys the tab panel.
+=================================================================== */
+
+/* --- Entrance cascade ---------------------------------------------
+   On page load the feed and each rail card rise into place. We animate
+   the rail's CHILDREN (not the .social-rail itself), because that
+   element is position: sticky and a leftover transform would interfere
+   with its sticking. The children stagger so they arrive in sequence. */
+.social-feed {
+  animation: profileRise 0.6s ease both;
+  animation-delay: 0.1s;
+}
+
+.social-rail > * {
+  animation: profileRise 0.5s ease both;
+}
+
+.social-rail > *:nth-child(1) { animation-delay: 0.05s; }
+.social-rail > *:nth-child(2) { animation-delay: 0.14s; }
+.social-rail > *:nth-child(3) { animation-delay: 0.23s; }
+.social-rail > *:nth-child(4) { animation-delay: 0.32s; }
+
+@keyframes profileRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Tab switch ----------------------------------------------------
+   The panel is re-keyed on tab change (see the JSX), which replays this
+   slide-in so switching tabs feels responsive instead of instant. */
+.tab-panel {
+  animation: tabIn 0.35s ease both;
+}
+
+@keyframes tabIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Signature: living banner -------------------------------------
+   With no uploaded photo, the default gradient slowly drifts so the
+   header quietly feels alive. A real banner image is left untouched. */
+.profile-banner-animated {
+  background: linear-gradient(120deg, #AABAE8, #8B9FD4, #7B8FC8, #8B9FD4, #AABAE8);
+  background-size: 300% 300%;
+  animation: bannerDrift 12s ease-in-out infinite;
+}
+
+@keyframes bannerDrift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* --- Avatar hover --------------------------------------------------
+   Springs slightly on hover to invite the "click to edit" action. */
+.profile-avatar {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease;
+}
+
+.profile-avatar-btn:hover .profile-avatar {
+  transform: scale(1.06);
+}
+
+/* --- Card hover lifts ----------------------------------------------
+   Every listing / application card lifts with a soft periwinkle-tinted
+   shadow on hover. The rank card already had its own hover, so we only
+   add the shared lift to plain mini-cards here. */
+.mini-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.mini-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(123, 143, 200, 0.16);
+  border-color: #D8DCF5;
+}
+
+/* A grayed-out (completed) listing shouldn't invite interaction, so it
+   stays flat on hover. */
+.mini-card.listing-grayed:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #E5E7EB;
+}
+
+/* --- Rail mini-cards (Skills / Bio) hover -------------------------- */
+.rail-mini {
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.rail-mini:hover {
+  box-shadow: 0 6px 18px rgba(123, 143, 200, 0.12);
+  border-color: #D8DCF5;
+}
+
+/* --- Skill tags ---------------------------------------------------- */
+.modal-skill-tag {
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.modal-skill-tag:hover {
+  transform: translateY(-1px);
+  background: #E9ECFA;
+}
+
+/* --- Stats hover --------------------------------------------------- */
+.stat-clickable {
+  transition: transform 0.15s ease;
+}
+
+.stat-clickable:hover {
+  transform: translateY(-2px);
+}
+
+/* --- Button press feedback ----------------------------------------
+   Buttons dip slightly when clicked so actions feel tactile. */
+.btn-primary:active,
+.btn-ghost:active,
+.tab-btn:active,
+.modal-btn:active,
+.experience-add-btn:active {
+  transform: scale(0.96);
+}
+
+/* --- Reduced motion ------------------------------------------------
+   Honor the visitor's system setting: no entrance, tab, or banner
+   animation, and near-instant transitions. */
+@media (prefers-reduced-motion: reduce) {
+  .social-rail,
+  .social-feed,
+  .social-rail > *,
+  .tab-panel,
+  .profile-banner-animated {
+    animation: none !important;
+  }
+
+  .profile-wrap-social *,
+  .profile-wrap-social *::before,
+  .profile-wrap-social *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===================================================================
+   RESPONSIVE WIDTH
+   On big screens use more of the width; keep the single-column stack
+   from the earlier @media (max-width: 860px) rule intact.
+=================================================================== */
+@media (max-width: 1200px) {
+  .social-layout {
+    grid-template-columns: 360px 1fr;
+  }
 }
