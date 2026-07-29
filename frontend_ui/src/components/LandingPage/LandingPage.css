@@ -10,6 +10,29 @@
 
 /* ========== NAVIGATION ========== */
 .nav {
+  /* Bar stretches edge to edge across the page. */
+  border-bottom: 1px solid #e8e7e3;
+  width: 100%;
+  /* Stick the bar to the top so it stays visible while scrolling. The blur +
+     translucent background let the page content softly show through it. */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+/* Added by React once the user scrolls down: a soft shadow that lifts the bar
+   off the page, signalling that content is scrolling underneath it. */
+.nav-scrolled {
+  box-shadow: 0 6px 24px rgba(17, 17, 17, 0.06);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.nav-inner {
+  /* Content stays capped and centered so it lines up with the footer below. */
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -17,7 +40,6 @@
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
-  border-bottom: 1px solid #e8e7e3;
   gap: 20px;
 }
 
@@ -58,6 +80,7 @@
 }
 
 .nav-links a {
+  position: relative;
   font-size: 15px;
   font-weight: 600;
   color: #111111;
@@ -65,8 +88,37 @@
   transition: color 0.2s;
 }
 
+/* A teal underline that grows out from the left on hover. It lives in the
+   ::after pseudo-element so it can animate its width without shifting layout. */
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 2px;
+  background: #4ecdc4;
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+
 .nav-links a:hover {
   color: #4ecdc4;
+}
+
+.nav-links a:hover::after {
+  transform: scaleX(1);
+}
+
+/* The logo tile gently springs on hover, giving the brand a playful touch. */
+.nav-logo {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-left:hover .nav-logo {
+  transform: rotate(-8deg) scale(1.08);
 }
 
 .nav-right {
@@ -109,6 +161,18 @@
 
 .btn-signup:hover {
   background: #3db8b0;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(78, 205, 196, 0.35);
+}
+
+/* Small press feedback: the button dips back down when clicked. Applied to
+   every button on the page so interactions feel consistent and tactile. */
+.btn-login:active,
+.btn-signup:active,
+.btn-join:active,
+.btn-account:active,
+.pathway-cta:active {
+  transform: translateY(0) scale(0.97);
 }
 
 /* ========== HERO SECTION ========== */
@@ -140,8 +204,29 @@
   margin: 0;
 }
 
+/* SIGNATURE MOMENT: "your choice." is where the two sides of the marketplace
+   meet, so we paint it with a gradient that blends the client teal into the
+   provider periwinkle and slowly sweeps it left to right. The gradient is
+   clipped to the text itself so only the letters are colored. */
 .hero-headline span {
-  color: #4ecdc4;
+  background: linear-gradient(
+    100deg,
+    #4ecdc4 0%,
+    #7c83c9 50%,
+    #4ecdc4 100%
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: choiceShimmer 6s ease-in-out infinite;
+}
+
+@keyframes choiceShimmer {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
 }
 
 .hero-subheadline {
@@ -156,6 +241,23 @@
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+/* HERO LOAD CASCADE: each element starts slightly lower and see-through, then
+   rises into place. The per-element "--delay" (set inline in the JSX) staggers
+   them so the headline, subtext, and buttons appear one after another. */
+.hero-fade {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: heroRise 0.7s ease forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes heroRise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .btn-join {
@@ -173,6 +275,8 @@
 
 .btn-join:hover {
   background: #3db8b0;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(78, 205, 196, 0.4);
 }
 
 .btn-account {
@@ -190,6 +294,8 @@
 
 .btn-account:hover {
   background: #e8e5ff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(124, 131, 201, 0.25);
 }
 
 /* ========== HERO COLLAGE ========== */
@@ -205,6 +311,33 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* Each column drifts up and down forever at a slightly different pace, giving
+     the collage a calm, living feel. The load-in fade uses "--col-delay" (set
+     in the JSX) so the three columns arrive one after another. */
+  opacity: 0;
+  animation:
+    collageIn 0.8s ease forwards,
+    collageFloat 6s ease-in-out infinite;
+  animation-delay: var(--col-delay, 0s), calc(var(--col-delay, 0s) + 0.8s);
+}
+
+/* Vary the float rhythm per column so they don't bob in unison. */
+.collage-col:nth-child(2) {
+  animation-duration: 0.8s, 7.5s;
+}
+
+.collage-col:nth-child(3) {
+  animation-duration: 0.8s, 6.8s;
+}
+
+@keyframes collageIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes collageFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
 }
 
 .collage-img {
@@ -212,6 +345,16 @@
   border-radius: 14px;
   object-fit: cover;
   display: block;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Lift the individual tile the cursor is over so the collage feels responsive
+   to touch without breaking the ambient float of the whole column. */
+.collage-img:hover {
+  transform: scale(1.04);
+  box-shadow: 0 14px 30px rgba(17, 17, 17, 0.18);
+  position: relative;
+  z-index: 2;
 }
 
 .collage-img.short {
@@ -294,6 +437,20 @@
   display: flex;
   flex-direction: column;
   gap: 36px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* The whole card lifts and casts a soft shadow tinted with its own brand color
+   when hovered, inviting the reader to engage with that path. The extra class
+   in the selector keeps hover winning over the scroll-reveal transform. */
+.pathway.pathway-clients:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(78, 205, 196, 0.18);
+}
+
+.pathway.pathway-providers:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(124, 131, 201, 0.18);
 }
 
 .pathway-clients {
@@ -366,6 +523,13 @@
   font-size: 15px;
   color: #ffffff;
   flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* When the reader hovers a card, its step numbers give a little springy pop to
+   draw the eye down through the three-step sequence. */
+.pathway:hover .step-number {
+  transform: scale(1.12);
 }
 
 .client-number {
@@ -419,6 +583,8 @@
 
 .client-cta:hover {
   background: #3db8b0;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(78, 205, 196, 0.35);
 }
 
 .provider-cta {
@@ -427,12 +593,20 @@
 
 .provider-cta:hover {
   background: #6b73b5;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(124, 131, 201, 0.35);
 }
 
 /* ========== FOOTER ========== */
 .footer {
+  /* Band stretches edge to edge across the page. */
   background: #faf8f5;
   border-top: 1px solid #e8e7e3;
+  width: 100%;
+}
+
+.footer-inner {
+  /* Content stays capped and centered so it lines up with the nav above. */
   padding: 28px 80px;
   display: flex;
   align-items: center;
@@ -483,12 +657,56 @@
   color: #111111;
 }
 
+/* ========== SCROLL REVEAL ========== */
+/* Elements tagged with "reveal" in the JSX start lower and transparent. When
+   they scroll into view, React adds "is-visible" and they ease into place.
+   The two pathway cards are given small opposite offsets so they slide in from
+   their own sides, mirroring the two-path layout. */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.pathway-clients {
+  transform: translateY(40px) translateX(-24px);
+}
+
+.reveal.pathway-providers {
+  transform: translateY(40px) translateX(24px);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) translateX(0);
+}
+
+/* ========== REDUCED MOTION ========== */
+/* Respect visitors who ask their system to minimize animation: turn off all
+   the movement above and simply show everything in its final state. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-fade,
+  .collage-col,
+  .hero-headline span,
+  .reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .landing-page *,
+  .landing-page *::before,
+  .landing-page *::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 1200px) {
-  .nav,
+  .nav-inner,
   .hero,
   .how-it-works,
-  .footer {
+  .footer-inner {
     padding-left: 40px;
     padding-right: 40px;
   }
@@ -541,7 +759,7 @@
     padding: 32px 24px;
   }
 
-  .footer {
+  .footer-inner {
     padding: 24px;
     flex-direction: column;
     gap: 16px;

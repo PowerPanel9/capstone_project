@@ -84,6 +84,24 @@
   resize: none;
 }
 
+/* Make the AddressAutocomplete input (used for the Location field) look like
+   the other inputs in this form. The component's "modal" variant renders a
+   plain <input> with no class, so we style it to match .form-input here. */
+.form-card .address-autocomplete input {
+  width: 100%;
+  padding: 12px 16px;
+  background: #F3F4F6;
+  border: none;
+  border-radius: 16px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.form-card .address-autocomplete input:focus {
+  box-shadow: 0 0 0 2px var(--primary-light, #AABAE8);
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

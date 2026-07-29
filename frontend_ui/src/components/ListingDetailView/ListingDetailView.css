@@ -1,6 +1,6 @@
 .detail-wrap {
   padding: 24px;
-  max-width: 900px;
+  max-width: 1080px;
   margin: 0 auto;
   width: 100%;
 }
@@ -24,17 +24,42 @@
   color: #1E2340;
 }
 
-.detail-card {
-  background: #fff;
-  border-radius: 24px;
-  border: 1px solid #E5E7EB;
-  overflow: hidden;
+/* One two-column layout for the whole page. The left column flows
+   image -> title -> About -> Skills; the right column stacks the price
+   and client cards. Each column sizes to its own content, so an empty
+   space in one column never pushes the other column's items down. */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Left column: even vertical spacing between image, title, and sections. */
+.detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+/* Right column: the price card and client card sit close together and
+   stick to the top as one unit while the left column scrolls. */
+.detail-side {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .detail-img {
-  height: 256px;
+  height: 340px;
   background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 24px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(139, 159, 212, 0.1);
 }
 
 .detail-img img {
@@ -43,16 +68,107 @@
   object-fit: cover;
 }
 
-.detail-body {
-  padding: 32px;
-}
-
-.detail-top {
+/* Badge + posted date, title, and location. Spacing above/below is handled
+   by the .detail-main flex gap, so no margin here. */
+.detail-title-block {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 28px;
+}
+
+.detail-title-info {
+  min-width: 0;
+}
+
+.detail-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.detail-posted {
+  font-size: 12px;
+  color: #9CA3AF;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.detail-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1E2340;
+  letter-spacing: -0.6px;
+  margin-bottom: 8px;
+}
+
+.detail-location {
+  font-size: 14px;
+  color: #9CA3AF;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Price + action card at the top of the right column. The whole
+   .detail-side column is what sticks, so no sticky here. */
+.booking-card {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 8px 30px rgba(139, 159, 212, 0.16);
+}
+
+.booking-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.booking-price {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1E2340;
+  letter-spacing: -0.5px;
+}
+
+.booking-price-note {
+  font-size: 13px;
+  color: #9CA3AF;
+  margin-bottom: 20px;
+}
+
+/* Category meta row under the buttons in the price card. */
+.booking-meta {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #F3F4F6;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booking-meta-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.booking-meta-label {
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.booking-meta-val {
+  color: #1E2340;
+  font-weight: 700;
 }
 
 /* Teal trashcan, shown at the top right for the owner in client mode.
@@ -178,16 +294,17 @@
   background: #0D9488;
 }
 
+/* Full-width Apply button inside the price card. */
 .apply-btn {
+  width: 100%;
   background: var(--primary, #7B8FC8);
   color: #fff;
   border: none;
-  padding: 12px 28px;
+  padding: 15px;
   border-radius: 16px;
-  font-weight: 700;
-  font-size: 14px;
+  font-weight: 800;
+  font-size: 15px;
   cursor: pointer;
-  flex-shrink: 0;
   transition: background 0.15s;
   font-family: inherit;
 }
@@ -205,25 +322,22 @@
   cursor: default;
 }
 
-/* Apply + Message sit side by side, Message to the right of Apply. */
-.detail-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-/* Envelope button for messaging the client. Uses the theme accent as an
-   outlined button so it sits next to (but reads as secondary to) Apply Now. */
+/* Full-width outlined "Message client" button, stacked under Apply Now. */
 .message-btn {
+  width: 100%;
+  margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  gap: 8px;
+  padding: 13px;
   border-radius: 16px;
   background: #fff;
   color: var(--primary, #7B8FC8);
   border: 1px solid var(--primary, #7B8FC8);
+  font-weight: 700;
+  font-size: 14px;
+  font-family: inherit;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -233,39 +347,6 @@
   color: #fff;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 32px;
-  padding: 20px;
-  background: #F9FAFB;
-  border-radius: 16px;
-}
-
-/* Center each stat within its column so Rate and Category fill the row evenly */
-.stats-grid > div {
-  text-align: left;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #9CA3AF;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.stat-val {
-  font-weight: 800;
-  color: #1E2340;
-  font-size: 18px;
-}
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-}
 
 .section-title {
   font-weight: 800;
@@ -338,4 +419,16 @@
 /* Clickable "About the Client" row -> opens poster's profile */
 .client-row-clickable {
   cursor: pointer;
+}
+
+/* On narrow screens the layout stacks to one column and the right-hand
+   column stops sticking, so everything reads top to bottom. */
+@media (max-width: 860px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-side {
+    position: static;
+  }
 }

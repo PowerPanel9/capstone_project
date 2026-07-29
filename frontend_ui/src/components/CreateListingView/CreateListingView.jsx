@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { X, DollarSign, Loader } from 'lucide-react';
-// NOTE: when restoring the preserved image-upload UI below, add `Upload` back
-// to the lucide-react import above (it's used by the upload dropbox).
 import { createListing, updateListing } from '../../api/listings';
 import { getPriceRecommendations } from '../../api/prices';
+import { uploadFile } from '../../api/upload';
 import AddressAutocomplete from '../AddressAutocomplete/AddressAutocomplete';
 import './CreateListingView.css';
 
@@ -60,15 +59,42 @@ function CreateListingView({ onDone, listingId, initialData }) {
   const removeSkill = (skillToRemove) => {
     setSkills((prev) => prev.filter((skill) => skill !== skillToRemove));
   };
+
+  // Upload the chosen cover image to AWS S3 (through our backend) and store the
+  // returned public URL in the form. This is the same two-step flow the profile
+  // picture uses: uploadFile() POSTs the file to /api/upload, which saves it to
+  // S3 and returns a URL string; we keep that URL so the listing's image_url is
+  // saved to the database on submit.
+  const handleCoverImageChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setError(null);
+      setIsUploadingImage(true);
+      const fileUrl = await uploadFile(file);
+      setForm((prev) => ({ ...prev, imageUrl: fileUrl }));
+    } catch (err) {
+      console.error("Failed to upload cover image:", err);
+      setError("Could not upload image. Please try again.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // A non-empty location is only valid once picked from the address dropdown
-  // (same rule as the Edit Profile and onboarding location fields). A location
-  // already saved on the listing (edit mode) counts as valid to start.
+  // True while the cover image is uploading to S3, so we can show "Uploading…"
+  // and stop the user from submitting before the URL comes back.
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Whether the location currently in the form is a valid address. In edit mode
+  // the saved location was already picked from the dropdown before, so we treat
+  // it as valid to start. A NEW listing starts empty, which is also fine — the
+  // value only becomes invalid once the user types without picking a suggestion.
   const [isLocationValid, setIsLocationValid] = useState(true);
   // Whether to SHOW the "pick a valid address" message. We only turn this on
-  // when the user tries to submit with an invalid address, not while typing.
+  // when the user tries to submit with an invalid address, not while they type.
   const [showLocationError, setShowLocationError] = useState(false);
 
   // Price-suggestion feature state.
@@ -130,6 +156,11 @@ function CreateListingView({ onDone, listingId, initialData }) {
     }
     if (form.category === "OTHER" && !form.customCategory) {
       setError("Please enter a custom category.");
+      return;
+    }
+    // Don't submit while the cover image is still uploading, or we'd lose its URL.
+    if (isUploadingImage) {
+      setError("Please wait for the image to finish uploading.");
       return;
     }
 
@@ -336,6 +367,9 @@ function CreateListingView({ onDone, listingId, initialData }) {
 
         <div>
           <label className="form-label" htmlFor="listing-location">Location</label>
+          {/* Same address dropdown as the Edit Profile modal: the user types and
+              picks a real address from the list. `picked` is true only after a
+              suggestion is chosen, which is what makes the value "valid". */}
           <AddressAutocomplete
             inputId="listing-location"
             variant="modal"
@@ -343,12 +377,11 @@ function CreateListingView({ onDone, listingId, initialData }) {
             value={form.location}
             placeholder="Start typing your address…"
             onChange={(nextText, picked) => {
-              setForm({ ...form, location: nextText });
-              // Empty stays invalid (location is required for a listing) —
-              // only a picked suggestion counts as valid.
-              const nextValid = Boolean(picked);
-              setIsLocationValid(nextValid);
-              if (nextValid) setShowLocationError(false);
+              setForm((prev) => ({ ...prev, location: nextText }));
+              // A listing needs a location, so a non-empty value is only valid
+              // once it's picked from the dropdown.
+              setIsLocationValid(picked);
+              if (picked) setShowLocationError(false);
             }}
           />
           {showLocationError && (
@@ -358,40 +391,42 @@ function CreateListingView({ onDone, listingId, initialData }) {
           )}
         </div>
 
-        {/*
-          TODO (future sprint): real image upload. The drag-and-drop UI below is
-          PRESERVED for when we implement file uploads. For now (MVP) we use a
-          simple image URL text box instead, so listings can have a picture
-          without building the upload/storage feature yet.
-
-          --- PRESERVED IMAGE UPLOAD UI (do not delete) ---
-          <div>
-            <label className="form-label">Cover Image (optional)</label>
-            <div className="upload-area">
-              <div className="upload-icon">
-                <Upload size={18} />
-              </div>
-              <div className="upload-text">Drag & drop or click to upload</div>
-              <div className="upload-hint">PNG, JPG up to 10MB</div>
-            </div>
-          </div>
-          --- END PRESERVED IMAGE UPLOAD UI ---
-        */}
-
         <div>
-          <label className="form-label">Cover Image URL (optional)</label>
+          <label className="form-label" htmlFor="listing-cover-image">
+            Cover Image (optional)
+          </label>
+          {/* Pick a file from your computer. On change we upload it to AWS S3
+              (via /api/upload) and store the returned link in form.imageUrl,
+              which is saved as the listing's image_url on submit. */}
           <input
+            id="listing-cover-image"
             className="form-input"
-            value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-            placeholder="e.g. https://example.com/photo.jpg"
+            type="file"
+            accept="image/*"
+            onChange={handleCoverImageChange}
+            disabled={isUploadingImage}
           />
+          {isUploadingImage && (
+            <p style={{ fontSize: 13, color: "var(--primary, #7B8FC8)", fontWeight: 600, marginTop: 6 }}>
+              Uploading…
+            </p>
+          )}
+          {/* Show a preview of the uploaded image once we have its S3 URL. */}
+          {form.imageUrl && !isUploadingImage && (
+            <img
+              src={form.imageUrl}
+              alt="Cover preview"
+              style={{ marginTop: 8, maxWidth: "100%", borderRadius: 12 }}
+            />
+          )}
         </div>
 
         {error && <div className="auth-error">{error}</div>}
 
-        <button className="submit-btn" onClick={handleSubmit} disabled={isSubmitting}>
-          {isSubmitting
+        <button className="submit-btn" onClick={handleSubmit} disabled={isSubmitting || isUploadingImage}>
+          {isUploadingImage
+            ? "Uploading…"
+            : isSubmitting
             ? (isEditing ? "Saving…" : "Posting…")
             : (isEditing ? "Save Changes" : "Post Listing")}
         </button>
