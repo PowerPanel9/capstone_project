@@ -233,6 +233,23 @@ async function getPaymentForListing(req, res) {
       return res.status(401).json({ error: "Not authorized" });
     }
 
+    // Same self-heal as generateInvoice: if the webhook that flips PENDING ->
+    // HELD was missed, check Stripe directly so the "paid" state (and the
+    // receipt button) shows up without waiting on the webhook.
+    if (payment.status === "PENDING" && payment.stripePaymentIntentId) {
+      try {
+        const intent = await stripe.paymentIntents.retrieve(payment.stripePaymentIntentId);
+        if (intent.status === "succeeded") {
+          payment = await prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: "HELD" },
+          });
+        }
+      } catch (err) {
+        console.error("Failed to verify payment intent with Stripe:", err.message);
+      }
+    }
+
     return res.status(200).json(payment);
   } catch (error) {
     console.error("getPaymentForListing error:", error.message);
@@ -252,7 +269,7 @@ async function generateInvoice(req, res) {
     }
 
     const paymentId = Number(req.params.id);
-    const payment = await prisma.payment.findUnique({
+    let payment = await prisma.payment.findUnique({
       where: { id: paymentId },
       include: { listing: true, client: true },
     });
@@ -263,6 +280,26 @@ async function generateInvoice(req, res) {
     // Only the client who paid can generate the receipt.
     if (payment.clientId !== req.user.userId) {
       return res.status(401).json({ error: "Not authorized" });
+    }
+
+    // Normally the Stripe webhook flips PENDING -> HELD right after the card is
+    // charged. If that webhook was missed or delayed (e.g. misconfigured on the
+    // deployed server), the row can be stuck on PENDING even though the client
+    // really did pay. Before rejecting, double check with Stripe directly and
+    // self-heal the row so the receipt isn't blocked by a missed webhook.
+    if (payment.status === "PENDING" && payment.stripePaymentIntentId) {
+      try {
+        const intent = await stripe.paymentIntents.retrieve(payment.stripePaymentIntentId);
+        if (intent.status === "succeeded") {
+          payment = await prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: "HELD" },
+            include: { listing: true, client: true },
+          });
+        }
+      } catch (err) {
+        console.error("Failed to verify payment intent with Stripe:", err.message);
+      }
     }
 
     // Only makes sense once the payment actually happened.

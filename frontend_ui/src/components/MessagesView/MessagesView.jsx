@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { MessageSquare, Search, Send, X, ArrowLeft } from "lucide-react";
 import { getConversation, getInbox, sendMessage, markConversationRead, getUnreadCount } from "../../api/messages";
 import { getSocket } from "../../api/socket";
+import ProfilePicture from "../ProfilePicture/ProfilePicture";
+import { initials } from "../../utils/user";
 import './MessagesView.css';
 
 // The most characters a single message can have. Kept in one place so the
@@ -294,7 +296,19 @@ function MessagesView({ startConversationUser, startListing, onStartConversation
               >
                 <ArrowLeft size={18} />
               </button>
-              <p className="chat-header-name">{toName(selectedPartner)}</p>
+              {/* Avatar + name together link to the partner's profile page. */}
+              <button
+                type="button"
+                className="chat-header-user"
+                onClick={() => selectedPartner?.id && navigate(`/users/${selectedPartner.id}`)}
+              >
+                <ProfilePicture
+                  initials={initials(selectedPartner)}
+                  size="xs"
+                  src={selectedPartner?.profilePicture}
+                />
+                <p className="chat-header-name">{toName(selectedPartner)}</p>
+              </button>
             </div>
             <div className="chat-messages">
               {isLoadingConversation ? (
