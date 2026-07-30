@@ -155,27 +155,28 @@ function App() {
       return;
     }
 
-    // Single-role user adding the other role. Save role = BOTH first so every
-    // page below (which reads currentUser.role) treats them as having both.
-    try {
-      const updated = await updateUser(currentUser.id, { role: 'BOTH' });
-      handleUserUpdate(updated); // keep App state + localStorage in sync
-    } catch (err) {
-      console.error('Failed to add the second role:', err);
-      return; // leave them where they are if the save fails
-    }
-
     if (role === 'PROVIDER') {
-      // A provider already finished profile setup, and the client side has no
-      // extra onboarding, so drop them straight into the client view.
+      // Adding the client side has no extra onboarding screens to abandon, so
+      // it's safe to save + switch right away (nothing to lose by hitting Back).
+      try {
+        const updated = await updateUser(currentUser.id, { role: 'BOTH' });
+        handleUserUpdate(updated); // keep App state + localStorage in sync
+      } catch (err) {
+        console.error('Failed to add the second role:', err);
+        return; // leave them where they are if the save fails
+      }
       setUserMode('client');
       localStorage.setItem('sideHustleUserMode', 'client');
       navigate('/home');
     } else {
-      // A client is adding the provider side, which has extra questions
-      // (services + verification). Send them through provider onboarding; the
-      // final Welcome page lands them in the provider view.
-      navigate('/onboarding/services');
+      // A client is adding the provider side, which has extra onboarding
+      // screens (services + verification) that can be abandoned partway
+      // through. Don't save role: 'BOTH' yet — if they hit Back before
+      // finishing, their account should stay CLIENT-only. We pass
+      // `addingProviderRole` through route state so the onboarding pages can
+      // still show the provider track; the Welcome page saves role: 'BOTH'
+      // for real only once the user actually finishes (handleFinishOnboarding).
+      navigate('/onboarding/services', { state: { addingProviderRole: true } });
     }
   };
 
@@ -582,7 +583,11 @@ function App() {
             path="/onboarding/welcome"
             element={
               isAuthenticated ? (
-                <Welcome currentUser={currentUser} onFinish={handleFinishOnboarding} />
+                <Welcome
+                  currentUser={currentUser}
+                  onUserUpdate={handleUserUpdate}
+                  onFinish={handleFinishOnboarding}
+                />
               ) : (
                 <Navigate to="/" replace />
               )

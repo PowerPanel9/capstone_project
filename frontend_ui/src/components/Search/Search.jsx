@@ -18,12 +18,18 @@ function Search({ userMode }) {
     userMode === 'client' ? 'Search providers, skills, services...' : 'Search listings, services, clients...';
 
   // When the user types, update the URL. Empty text clears the search param.
+  // We start from the CURRENT params (not an empty object) so other filters
+  // already in the URL, like ?category=GARDENING, stay in place.
   const handleSearchChange = (value) => {
-    if (value) {
-      setSearchParams({ search: value });
-    } else {
-      setSearchParams({});
-    }
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) {
+        next.set('search', value);
+      } else {
+        next.delete('search');
+      }
+      return next;
+    });
   };
 
   return (

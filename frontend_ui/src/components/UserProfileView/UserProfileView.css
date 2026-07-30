@@ -1074,6 +1074,16 @@
   color: #111827;
 }
 
+.modal-category-pill {
+  border: 1.5px solid transparent;
+  cursor: pointer;
+}
+
+.modal-category-pill-active {
+  background: var(--primary, #7B8FC8);
+  color: #fff;
+}
+
 .skill-add-row,
 .modal-actions {
   display: flex;
