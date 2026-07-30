@@ -32,6 +32,7 @@ export const runAgent = async (userMessage, userId) => {
     command: "node",
     args: [SERVER_PATH],
     cwd: BACKEND_DIR,
+    env: process.env,
   });
   const mcp = new Client({ name: "sidehustle-agent", version: "1.0.0" });
   await mcp.connect(transport);
