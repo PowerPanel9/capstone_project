@@ -170,15 +170,27 @@ function PublicProfileView({ currentUser }) {
         }}
         style={{ cursor: "pointer" }}
       >
-        <ProfilePicture initials="LS" size="xs" />
-        <div className="mini-info">
+        <div className="mini-card-grid">
           <div className="mini-title">{listing.title}</div>
+          <div className="mini-card-status">
+            <span className={`listing-status listing-status-${(listing.status || "OPEN").toLowerCase()}`}>
+              {listingStatusLabel(listing.status)}
+            </span>
+          </div>
           <div className="mini-desc">{listing.description}</div>
-        </div>
-        <div className="listing-status-row">
-          <span className={`listing-status listing-status-${(listing.status || "OPEN").toLowerCase()}`}>
-            {listingStatusLabel(listing.status)}
-          </span>
+          <div className="mini-card-meta">
+            {listing.price != null && (
+              <span className="mini-price">${listing.price}</span>
+            )}
+            {listing.price != null && (listing.category || listing.customCategory) && (
+              <span className="mini-dot">·</span>
+            )}
+            {(listing.category || listing.customCategory) && (
+              <span className="mini-category-tag">
+                {listing.category === "OTHER" ? listing.customCategory : listing.category}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -273,7 +285,7 @@ function PublicProfileView({ currentUser }) {
 
       {activeTab === "All" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="public-profile-bio-skills-grid">
             <div className="info-card">
               <div className="info-card-title">Bio</div>
               <div className="info-card-content">

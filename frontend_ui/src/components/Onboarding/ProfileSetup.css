@@ -83,3 +83,13 @@
   outline: none;
   border-color: #b7b6b1;
 }
+
+/* ===================================================================
+   Responsive: mobile (≤640px)
+   =================================================================== */
+@media (max-width: 640px) {
+  .onboarding-form-card {
+    padding: 24px 20px;
+    border-radius: 16px;
+  }
+}

@@ -29,7 +29,6 @@ const ROLE_OPTIONS = [
       'Post unlimited custom tasks for free',
       'Access verified local service providers',
       'Secure payment protection system',
-      'Friendly customer support 24/7',
     ],
   },
   {
@@ -40,7 +39,7 @@ const ROLE_OPTIONS = [
     title: 'I want to earn money',
     description: 'I want to offer my services, skills, or labor to build a flexible business on my own schedule.',
     benefits: [
-      'Browse open gigs and send quotes',
+      'Browse open gigs and message clients for more information',
       'Keep 100% of your tips and direct rates',
       'Flexible hours — work when you want',
       'Instant withdrawal to bank account',
@@ -55,7 +54,6 @@ const ROLE_OPTIONS = [
     description: 'I want the full experience: hiring local help and also listing my services to earn extra income.',
     benefits: [
       'Switch between Client and Provider with 1 tap',
-      'Manage all hirings and tasks in one dashboard',
       'Special loyalty commission discounts',
       'All-in-one verified safety profile',
     ],

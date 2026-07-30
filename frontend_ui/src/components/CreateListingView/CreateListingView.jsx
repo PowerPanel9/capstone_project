@@ -317,12 +317,12 @@ function CreateListingView({ onDone, listingId, initialData }) {
             rows={5}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Describe the role"
+            placeholder="Describe the Listing"
           />
         </div>
 
         <div>
-          <label className="form-label">Required Skills</label>
+          <label className="form-label">Preferred Skills</label>
           {/* Show each added skill as a removable tag. */}
           <div className="skills-row">
             {skills.map((skill) => (
@@ -356,7 +356,7 @@ function CreateListingView({ onDone, listingId, initialData }) {
             />
             <button
               type="button"
-              className="price-suggest-btn"
+              className="price-suggest-btn skill-add-btn"
               onClick={addSkill}
             >
               Add

@@ -20,7 +20,6 @@ function OnboardingChrome({ accent, track, children }) {
           <span className="onboarding-logo-name">Side<span style={{ color: '#7B8FC8' }}>Hustle</span></span>
         </div>
         <span className="onboarding-nav-track">Onboarding Portal · {track}</span>
-        <button type="button" className="onboarding-nav-btn">Support</button>
       </nav>
 
       {/* The page's own content goes here */}

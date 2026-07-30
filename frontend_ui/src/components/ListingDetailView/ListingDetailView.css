@@ -432,3 +432,34 @@
     position: static;
   }
 }
+
+/* ===================================================================
+   Responsive: mobile (≤640px)
+   =================================================================== */
+@media (max-width: 640px) {
+  .detail-wrap {
+    padding: 16px;
+  }
+
+  .detail-title {
+    font-size: 22px;
+  }
+
+  .booking-price {
+    font-size: 24px;
+  }
+
+  .detail-img {
+    height: 220px;
+  }
+
+  .confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .confirm-cancel-btn,
+  .confirm-delete-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

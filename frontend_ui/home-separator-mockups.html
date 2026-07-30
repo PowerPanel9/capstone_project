@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Home — Color Separator Mockups</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F1F5F9;
+      padding: 40px 24px;
+      color: #1E2340;
+    }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .subtitle { font-size: 14px; color: #6B7280; margin-bottom: 48px; max-width: 520px; line-height: 1.6; }
+
+    .section { margin-bottom: 64px; max-width: 560px; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #7B8FC8; margin-bottom: 4px; }
+    .section-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .section-desc { font-size: 13px; color: #6B7280; margin-bottom: 20px; line-height: 1.6; }
+
+    /* ── Shared: category section ── */
+    .cat-heading { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 10px; }
+    .cat-strip { display: flex; gap: 10px; }
+    .cat-tile {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: #fff; border: 1px solid #E5E7EB; border-radius: 14px;
+      padding: 12px 10px; min-width: 72px;
+    }
+    .cat-icon { font-size: 20px; }
+    .cat-label { font-size: 11px; font-weight: 600; color: #374151; }
+
+    /* ── Shared: experience grid ── */
+    .exp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .exp-card { display: flex; flex-direction: column; gap: 7px; }
+    .exp-img {
+      width: 100%; aspect-ratio: 2/3; border-radius: 10px;
+      background: linear-gradient(135deg, #AABAE8, #c4aee8);
+      box-shadow: 0 4px 12px rgba(15,23,42,0.15);
+      display: flex; align-items: center; justify-content: center; font-size: 28px;
+    }
+    .exp-img.teal  { background: linear-gradient(135deg, #5eead4, #2dd4bf); }
+    .exp-img.warm  { background: linear-gradient(135deg, #fca5a5, #f87171); }
+    .exp-img.gold  { background: linear-gradient(135deg, #fcd34d, #f59e0b); }
+    .exp-meta { display: flex; align-items: center; gap: 6px; }
+    .exp-avatar {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #EEF2FF; border: 1px solid #dbe4ff;
+      font-size: 10px; font-weight: 700; color: #4F46E5;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .exp-name  { font-size: 11px; font-weight: 600; color: #374151; }
+    .exp-title { font-size: 12px; font-weight: 600; color: #1E2340; }
+
+    /* ── Chip filter row ── */
+    .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .chip { padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; border: 1px solid #dbe4ff; background: #fff; color: #4b5563; }
+    .chip.active { background: #7b8fc8; border-color: #7b8fc8; color: #fff; }
+
+    .feed-label { font-size: 17px; font-weight: 800; color: #1E2340; }
+
+    /* ═══════════════════════════════════
+       OPTION A — Solid brand color line
+    ═══════════════════════════════════ */
+    .sep-solid {
+      height: 3px;
+      background: #7B8FC8;
+      border-radius: 3px;
+      margin: 20px 0 16px;
+    }
+
+    /* ═══════════════════════════════════
+       OPTION B — Gradient line
+    ═══════════════════════════════════ */
+    .sep-gradient {
+      height: 3px;
+      border-radius: 3px;
+      background: linear-gradient(to right, #AABAE8, #7B8FC8, #a78fd4, transparent);
+      margin: 20px 0 16px;
+    }
+
+    /* ═══════════════════════════════════
+       OPTION C — Gradient line + label inline
+    ═══════════════════════════════════ */
+    .sep-labeled {
+      margin: 20px 0 16px;
+    }
+    .sep-labeled-top {
+      height: 3px;
+      border-radius: 3px;
+      background: linear-gradient(to right, #AABAE8, #7B8FC8, #a78fd4, transparent);
+      margin-bottom: 10px;
+    }
+
+    /* ═══════════════════════════════════
+       OPTION D — Double line (thin + thick)
+    ═══════════════════════════════════ */
+    .sep-double {
+      margin: 20px 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sep-double-thin {
+      height: 1px;
+      background: #E5E7EB;
+    }
+    .sep-double-thick {
+      height: 3px;
+      border-radius: 3px;
+      background: #7B8FC8;
+      width: 48px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Client Home — Color Separator Options</h1>
+  <p class="subtitle">Four color-based separators between the category tiles and the experiences grid.</p>
+
+
+  <!-- ═══════════ OPTION A — Solid line ═══════════ -->
+  <div class="section">
+    <div class="section-label">Option A</div>
+    <div class="section-title">Solid color line</div>
+    <div class="section-desc">A clean 3px solid line in the app's brand purple.</div>
+
+    <div class="cat-heading">Browse providers by category</div>
+    <div class="cat-strip">
+      <div class="cat-tile"><div class="cat-icon">🧹</div><div class="cat-label">Cleaning</div></div>
+      <div class="cat-tile"><div class="cat-icon">📚</div><div class="cat-label">Tutoring</div></div>
+      <div class="cat-tile"><div class="cat-icon">🔧</div><div class="cat-label">Plumbing</div></div>
+      <div class="cat-tile"><div class="cat-icon">🌿</div><div class="cat-label">Gardening</div></div>
+    </div>
+
+    <div class="sep-solid"></div>
+
+    <span class="feed-label">Experiences</span>
+    <div class="chip-row" style="margin-top:10px">
+      <div class="chip active">Cleaning</div><div class="chip">Tutoring</div><div class="chip">Beauty</div>
+    </div>
+    <div class="exp-grid">
+      <div class="exp-card"><div class="exp-img">🧹</div><div class="exp-meta"><div class="exp-avatar">JD</div><div class="exp-name">Jane D.</div></div><div class="exp-title">House Cleaning</div></div>
+      <div class="exp-card"><div class="exp-img teal">📚</div><div class="exp-meta"><div class="exp-avatar">MS</div><div class="exp-name">Mark S.</div></div><div class="exp-title">SAT Prep</div></div>
+      <div class="exp-card"><div class="exp-img warm">💅</div><div class="exp-meta"><div class="exp-avatar">AL</div><div class="exp-name">Amy L.</div></div><div class="exp-title">Nail Art</div></div>
+      <div class="exp-card"><div class="exp-img gold">🌿</div><div class="exp-meta"><div class="exp-avatar">RK</div><div class="exp-name">Rob K.</div></div><div class="exp-title">Lawn Care</div></div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ OPTION B — Gradient line ═══════════ -->
+  <div class="section">
+    <div class="section-label">Option B</div>
+    <div class="section-title">Gradient line fading to transparent</div>
+    <div class="section-desc">Starts strong in the brand color and fades out to the right — feels lighter than a full solid line.</div>
+
+    <div class="cat-heading">Browse providers by category</div>
+    <div class="cat-strip">
+      <div class="cat-tile"><div class="cat-icon">🧹</div><div class="cat-label">Cleaning</div></div>
+      <div class="cat-tile"><div class="cat-icon">📚</div><div class="cat-label">Tutoring</div></div>
+      <div class="cat-tile"><div class="cat-icon">🔧</div><div class="cat-label">Plumbing</div></div>
+      <div class="cat-tile"><div class="cat-icon">🌿</div><div class="cat-label">Gardening</div></div>
+    </div>
+
+    <div class="sep-gradient"></div>
+
+    <span class="feed-label">Experiences</span>
+    <div class="chip-row" style="margin-top:10px">
+      <div class="chip active">Cleaning</div><div class="chip">Tutoring</div><div class="chip">Beauty</div>
+    </div>
+    <div class="exp-grid">
+      <div class="exp-card"><div class="exp-img">🧹</div><div class="exp-meta"><div class="exp-avatar">JD</div><div class="exp-name">Jane D.</div></div><div class="exp-title">House Cleaning</div></div>
+      <div class="exp-card"><div class="exp-img teal">📚</div><div class="exp-meta"><div class="exp-avatar">MS</div><div class="exp-name">Mark S.</div></div><div class="exp-title">SAT Prep</div></div>
+      <div class="exp-card"><div class="exp-img warm">💅</div><div class="exp-meta"><div class="exp-avatar">AL</div><div class="exp-name">Amy L.</div></div><div class="exp-title">Nail Art</div></div>
+      <div class="exp-card"><div class="exp-img gold">🌿</div><div class="exp-meta"><div class="exp-avatar">RK</div><div class="exp-name">Rob K.</div></div><div class="exp-title">Lawn Care</div></div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ OPTION C — Gradient line + label ═══════════ -->
+  <div class="section">
+    <div class="section-label">Option C</div>
+    <div class="section-title">Gradient line above the label</div>
+    <div class="section-desc">The color line sits directly above the "Experiences" heading, making it feel like a section opener rather than just a divider.</div>
+
+    <div class="cat-heading">Browse providers by category</div>
+    <div class="cat-strip">
+      <div class="cat-tile"><div class="cat-icon">🧹</div><div class="cat-label">Cleaning</div></div>
+      <div class="cat-tile"><div class="cat-icon">📚</div><div class="cat-label">Tutoring</div></div>
+      <div class="cat-tile"><div class="cat-icon">🔧</div><div class="cat-label">Plumbing</div></div>
+      <div class="cat-tile"><div class="cat-icon">🌿</div><div class="cat-label">Gardening</div></div>
+    </div>
+
+    <div class="sep-labeled" style="margin-top:20px">
+      <div class="sep-labeled-top"></div>
+      <span class="feed-label">Experiences</span>
+    </div>
+    <div class="chip-row" style="margin-top:10px">
+      <div class="chip active">Cleaning</div><div class="chip">Tutoring</div><div class="chip">Beauty</div>
+    </div>
+    <div class="exp-grid">
+      <div class="exp-card"><div class="exp-img">🧹</div><div class="exp-meta"><div class="exp-avatar">JD</div><div class="exp-name">Jane D.</div></div><div class="exp-title">House Cleaning</div></div>
+      <div class="exp-card"><div class="exp-img teal">📚</div><div class="exp-meta"><div class="exp-avatar">MS</div><div class="exp-name">Mark S.</div></div><div class="exp-title">SAT Prep</div></div>
+      <div class="exp-card"><div class="exp-img warm">💅</div><div class="exp-meta"><div class="exp-avatar">AL</div><div class="exp-name">Amy L.</div></div><div class="exp-title">Nail Art</div></div>
+      <div class="exp-card"><div class="exp-img gold">🌿</div><div class="exp-meta"><div class="exp-avatar">RK</div><div class="exp-name">Rob K.</div></div><div class="exp-title">Lawn Care</div></div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ OPTION D — Short underline accent ═══════════ -->
+  <div class="section">
+    <div class="section-label">Option D</div>
+    <div class="section-title">Short accent underline on the heading</div>
+    <div class="section-desc">A thin grey rule spans the full width, then a short thick brand-colored bar sits under the "Experiences" label — like an underline accent.</div>
+
+    <div class="cat-heading">Browse providers by category</div>
+    <div class="cat-strip">
+      <div class="cat-tile"><div class="cat-icon">🧹</div><div class="cat-label">Cleaning</div></div>
+      <div class="cat-tile"><div class="cat-icon">📚</div><div class="cat-label">Tutoring</div></div>
+      <div class="cat-tile"><div class="cat-icon">🔧</div><div class="cat-label">Plumbing</div></div>
+      <div class="cat-tile"><div class="cat-icon">🌿</div><div class="cat-label">Gardening</div></div>
+    </div>
+
+    <div style="margin-top:20px; margin-bottom:8px">
+      <div style="height:1px; background:#E5E7EB; margin-bottom:14px;"></div>
+      <span class="feed-label">Experiences</span>
+      <div style="height:3px; width:80px; background:#7B8FC8; border-radius:3px; margin-top:6px;"></div>
+    </div>
+    <div class="chip-row" style="margin-top:10px">
+      <div class="chip active">Cleaning</div><div class="chip">Tutoring</div><div class="chip">Beauty</div>
+    </div>
+    <div class="exp-grid">
+      <div class="exp-card"><div class="exp-img">🧹</div><div class="exp-meta"><div class="exp-avatar">JD</div><div class="exp-name">Jane D.</div></div><div class="exp-title">House Cleaning</div></div>
+      <div class="exp-card"><div class="exp-img teal">📚</div><div class="exp-meta"><div class="exp-avatar">MS</div><div class="exp-name">Mark S.</div></div><div class="exp-title">SAT Prep</div></div>
+      <div class="exp-card"><div class="exp-img warm">💅</div><div class="exp-meta"><div class="exp-avatar">AL</div><div class="exp-name">Amy L.</div></div><div class="exp-title">Nail Art</div></div>
+      <div class="exp-card"><div class="exp-img gold">🌿</div><div class="exp-meta"><div class="exp-avatar">RK</div><div class="exp-name">Rob K.</div></div><div class="exp-title">Lawn Care</div></div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -65,7 +65,7 @@ function ExperienceDetailView() {
       <p className="experience-detail-description">{experience.description}</p>
 
       {images.length > 0 && (
-        <div className="experience-detail-images">
+        <div className={images.length === 1 ? 'experience-detail-images-single' : 'experience-detail-images-grid'}>
           {images.map((imageSrc, index) => (
             <img
               key={`${experience.id}-${index}`}

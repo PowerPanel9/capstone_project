@@ -123,15 +123,19 @@
    with the hamburger and title, and shrink the title a touch. */
 @media (max-width: 640px) {
   .search-wrap {
-    max-width: 200px;
+    max-width: 160px;
+    flex: 0 1 160px;
+  }
+
+  /* When search is visible the title collapses — keep it from disappearing */
+  .topbar-title {
+    font-size: 14px;
+    flex: 0 0 auto;
+    max-width: 80px;
   }
 
   .topbar {
     gap: 8px;
     padding: 0 12px;
-  }
-
-  .topbar-title {
-    font-size: 14px;
   }
 }

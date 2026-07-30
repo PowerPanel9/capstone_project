@@ -413,12 +413,10 @@
    Responsive: tablet/iPad (≤1024px) and mobile (≤640px)
    =================================================================== */
 
-/* Tablet and below: hide the docked AI side panel and the floating reopen
-   button, and let the feed take the full width. The AI popup is still reachable
-   from the sidebar. */
+/* Tablet and below: hide the docked AI side panel and let the feed take the
+   full width. Keep the floating button so mobile users can still open the AI. */
 @media (max-width: 1024px) {
-  .home-side,
-  .chat-reopen-btn {
+  .home-side {
     display: none;
   }
 
@@ -442,5 +440,23 @@
   /* Experiences go to a single column on phones. */
   .experience-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Filter chips become a single scrollable row instead of wrapping. */
+  .experience-filter-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    padding-bottom: 4px;
+  }
+
+  .experience-filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .experience-filter-chip {
+    flex-shrink: 0;
   }
 }

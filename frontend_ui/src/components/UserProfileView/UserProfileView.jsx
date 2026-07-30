@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Briefcase, FileText, ChevronDown, Check } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
@@ -67,8 +67,22 @@ function toDisplayName(value) {
     .join(" ");
 }
 
-function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListing }) {
+function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListing, onLogout }) {
   const navigate = useNavigate();
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  // Close the settings dropdown when the user clicks outside of it.
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setIsSettingsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Open a direct-message conversation with another user. This mirrors the
   // "Message" button on the listing detail page: we lift the target user (and
@@ -557,18 +571,27 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
         }}
         style={{ cursor: "pointer" }}
       >
-        <ProfilePicture initials="LS" size="xs" />
-        <div className="mini-info">
+        <div className="mini-card-grid">
           <div className="mini-title">{listing.title}</div>
+          <div className="mini-card-status">
+            <span className={`listing-status listing-status-${(listing.status || "OPEN").toLowerCase()}`}>
+              {listingStatusLabel(listing.status)}
+            </span>
+          </div>
           <div className="mini-desc">{listing.description}</div>
-        </div>
-        <div className="listing-status-row">
-          <span className={`listing-status listing-status-${(listing.status || "OPEN").toLowerCase()}`}>
-            {listingStatusLabel(listing.status)}
-          </span>
-          {/* "Mark as Completed" now lives in the application modal (open the
-              accepted applicant from the Applications tab). The listing card just
-              reflects the status here. */}
+          <div className="mini-card-meta">
+            {listing.price != null && (
+              <span className="mini-price">${listing.price}</span>
+            )}
+            {listing.price != null && (listing.category || listing.customCategory) && (
+              <span className="mini-dot">·</span>
+            )}
+            {(listing.category || listing.customCategory) && (
+              <span className="mini-category-tag">
+                {listing.category === "OTHER" ? listing.customCategory : listing.category}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -1024,21 +1047,67 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
             })}
           </div>
 
-          {/* Two-button action row (replaces the mockup's Edit + Share).
-              Left = Edit profile. Right = switch/sign-up for the other mode:
-              a BOTH user switches between views; a single-role user is invited
-              to sign up for the other role. */}
-          <div className="rail-actions">
-            <button type="button" className="btn-primary" onClick={openEditModal}>
-              Edit
+          {/* Settings dropdown — holds Edit Profile, mode toggle, and Log Out. */}
+          <div className="rail-actions-dropdown" ref={settingsRef}>
+            <button
+              type="button"
+              className="actions-trigger"
+              onClick={() => setIsSettingsOpen((prev) => !prev)}
+            >
+              Settings
+              <ChevronDown
+                size={14}
+                className={`menu-arrow ${isSettingsOpen ? "open" : ""}`}
+              />
             </button>
-            <button type="button" className="btn-ghost" onClick={handleToggleModeClick}>
-              {profile.role === "BOTH"
-                ? `Switch to ${userMode === "client" ? "Provider" : "Client"} Mode`
-                : `Sign up as ${userMode === "client" ? "Provider" : "Client"}`}
-            </button>
+
+            {isSettingsOpen && (
+              <div className="actions-menu-dropdown">
+                <button
+                  type="button"
+                  className="actions-menu-item"
+                  onClick={() => { setIsSettingsOpen(false); handleToggleModeClick(); }}
+                >
+                  {profile.role === "BOTH"
+                    ? `Switch to ${userMode === "client" ? "Provider" : "Client"} Mode`
+                    : `Sign up as ${userMode === "client" ? "Provider" : "Client"}`}
+                </button>
+                <button
+                  type="button"
+                  className="actions-menu-item"
+                  onClick={() => { setIsSettingsOpen(false); openEditModal(); }}
+                >
+                  Edit Profile
+                </button>
+                <div className="menu-divider" />
+                <button
+                  type="button"
+                  className="actions-menu-item logout"
+                  onClick={() => { setIsSettingsOpen(false); onLogout?.(); }}
+                >
+                  Log Out
+                </button>
+              </div>
+            )}
           </div>
         </div>
+      </div>
+
+      {/* Providers set up Stripe payouts here so they can receive payments.
+          After onboarding, this box shows once then disappears on refresh (the
+          header "Payment verified" checkmark becomes the lasting indicator).
+          Sits at the top of the rail (above Bio and Skills) so payout setup is
+          the first thing a provider sees until it's done. */}
+      {userMode === "provider" && (
+        <ConnectOnboarding justOnboarded={justOnboarded} />
+      )}
+
+      {/* Bio card in the rail (the mockup's "About" card, renamed to Bio). */}
+      <div className="rail-mini">
+        <h3 className="rail-mini-title">Bio</h3>
+        <p style={{ margin: 0, fontSize: 13, color: "#4B5563", lineHeight: 1.6 }}>
+          {currentUser.bio || "No bio yet."}
+        </p>
       </div>
 
       {/* Skills card in the rail (from the mockup's "Skills" mini-card).
@@ -1116,22 +1185,6 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
 
         {skillError && <p className="error-text">{skillError}</p>}
       </div>
-
-      {/* Bio card in the rail (the mockup's "About" card, renamed to Bio). */}
-      <div className="rail-mini">
-        <h3 className="rail-mini-title">Bio</h3>
-        <p style={{ margin: 0, fontSize: 13, color: "#4B5563", lineHeight: 1.6 }}>
-          {currentUser.bio || "No bio yet."}
-        </p>
-      </div>
-
-      {/* Providers set up Stripe payouts here so they can receive payments.
-          After onboarding, this box shows once then disappears on refresh (the
-          header "Payment verified" checkmark becomes the lasting indicator).
-          Sits under the Bio card in the left rail. */}
-      {userMode === "provider" && (
-        <ConnectOnboarding justOnboarded={justOnboarded} />
-      )}
         </aside>
 
         {/* RIGHT COLUMN: the "feed" — tabs and tab content. */}
@@ -1479,8 +1532,8 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
       </div>{/* .social-layout */}
 
       {isEditModalOpen && (
-        <div className="profile-modal-backdrop">
-          <div className="profile-modal">
+        <div className="profile-modal-backdrop" onClick={closeEditModal}>
+          <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
             <div className="profile-modal-header">
               <h2>Edit Profile</h2>
               <p>Update your public profile details</p>

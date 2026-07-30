@@ -19,3 +19,16 @@
 .public-back-btn:hover {
   color: var(--primary, #7B8FC8);
 }
+
+/* Bio + Skills two-column grid on the All tab */
+.public-profile-bio-skills-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .public-profile-bio-skills-grid {
+    grid-template-columns: 1fr;
+  }
+}

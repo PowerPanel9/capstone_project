@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experience Detail — Portrait Image Mockups</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F8F9FC;
+      color: #1E2340;
+      padding: 32px 24px;
+    }
+
+    h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.4px; }
+    .page-sub { font-size: 14px; color: #6B7280; margin-bottom: 40px; }
+
+    .section { margin-bottom: 60px; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #9CA3AF; margin-bottom: 4px; }
+    .section-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.3px; }
+    .section-desc { font-size: 13px; color: #6B7280; margin-bottom: 20px; line-height: 1.5; }
+
+    .badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+    .badge-bug { background: #FEE2E2; color: #DC2626; }
+    .badge-rec { background: #DCFCE7; color: #16A34A; }
+    .badge-alt { background: #EEF2FF; color: #7B8FC8; }
+
+    /* shared page chrome */
+    .page-chrome {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #E5E7EB;
+      padding: 28px 28px 32px;
+      box-shadow: 0 2px 12px rgba(15,23,42,0.06);
+    }
+
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: #7B8FC8; font-size: 13px; font-weight: 600; cursor: pointer; padding: 4px 0; margin-bottom: 16px; }
+    .exp-title { font-size: 24px; font-weight: 700; color: #1E2340; margin: 0 0 6px; }
+    .exp-poster { font-size: 13px; font-weight: 600; color: #7B8FC8; margin-bottom: 16px; display: block; }
+    .exp-desc { font-size: 14px; line-height: 1.65; color: #374151; margin-bottom: 24px; }
+
+    /* portrait placeholder box — same 2:3 ratio as the home feed cards */
+    .portrait {
+      background: linear-gradient(160deg, #EEF2FF 0%, #DDE4F5 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7B8FC8;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      aspect-ratio: 2 / 3;
+    }
+
+    /* =========================================================
+       OPTION A  — Current (full width portrait = enormous)
+       ========================================================= */
+    .a-images { display: flex; flex-direction: column; gap: 16px; }
+    .a-images .portrait { width: 100%; /* ~720px wide → ~1080px tall */ }
+
+    /* =========================================================
+       OPTION B  — Centered, max-width 300px
+       ========================================================= */
+    .b-images { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+    .b-images .portrait { width: 300px; }
+
+    /* =========================================================
+       OPTION C  — Side-by-side pair (2 per row)
+       ========================================================= */
+    .c-images { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .c-images .portrait { width: 100%; }
+
+    /* =========================================================
+       OPTION D  — Left-aligned, max-width 260px (recommended)
+       ========================================================= */
+    .d-images { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+    .d-images .portrait { width: 260px; }
+
+    /* pros/cons */
+    .pros-cons { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+    .pro, .con { flex: 1; min-width: 160px; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.6; }
+    .pro { background: #F0FDF4; border: 1px solid #BBF7D0; }
+    .con { background: #FFF7F0; border: 1px solid #FDE8CC; }
+    .pro strong { color: #15803D; }
+    .con strong { color: #C2410C; }
+    .pro ul, .con ul { padding-left: 14px; }
+  </style>
+</head>
+<body>
+
+  <h1>Experience Detail — Portrait Image Mockups</h1>
+  <p class="page-sub">All options keep the portrait (2:3) ratio to match the home feed cards. The question is just size and alignment.</p>
+
+  <!-- OPTION A — Current -->
+  <div class="section">
+    <div class="section-label">Option A</div>
+    <div class="section-title">Current <span class="badge badge-bug">Way too large</span></div>
+    <div class="section-desc">
+      <code>width: 100%</code> on a portrait image at 720px column width produces an image over 1000px tall. It crushes everything else on the page.
+    </div>
+    <div class="page-chrome">
+      <div class="back-btn">← Back to home</div>
+      <h1 class="exp-title">Cleaned 3 homes in Williamsburg</h1>
+      <span class="exp-poster">Posted by Jordan M.</span>
+      <p class="exp-desc">Had a great week helping three families deep-clean before their summer moves.</p>
+      <div class="a-images">
+        <div class="portrait">full width — ~1080 px tall 😬</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION B — Centered 300px -->
+  <div class="section">
+    <div class="section-label">Option B</div>
+    <div class="section-title">Centered, 300 px wide <span class="badge badge-alt">Symmetrical</span></div>
+    <div class="section-desc">
+      Portrait image sits centered on the page at 300px wide (450px tall). Feels balanced and clean. Multiple images stack centered one below the other.
+    </div>
+    <div class="page-chrome">
+      <div class="back-btn">← Back to home</div>
+      <h1 class="exp-title">Cleaned 3 homes in Williamsburg</h1>
+      <span class="exp-poster">Posted by Jordan M.</span>
+      <p class="exp-desc">Had a great week helping three families deep-clean before their summer moves. Used eco-friendly products throughout and finished each job ahead of schedule.</p>
+      <div class="b-images">
+        <div class="portrait">300 × 450 px</div>
+        <div class="portrait">300 × 450 px</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION C — 2-column grid -->
+  <div class="section">
+    <div class="section-label">Option C</div>
+    <div class="section-title">Two-column portrait grid <span class="badge badge-alt">Good for multiple photos</span></div>
+    <div class="section-desc">
+      Photos sit side-by-side in pairs (~310px each). Still fully portrait. Great when someone posts 2–4 images — they fill the space nicely without dominating it.
+    </div>
+    <div class="page-chrome">
+      <div class="back-btn">← Back to home</div>
+      <h1 class="exp-title">Cleaned 3 homes in Williamsburg</h1>
+      <span class="exp-poster">Posted by Jordan M.</span>
+      <p class="exp-desc">Had a great week helping three families deep-clean before their summer moves. Used eco-friendly products throughout and finished each job ahead of schedule.</p>
+      <div class="c-images">
+        <div class="portrait">~310 × 465 px</div>
+        <div class="portrait">~310 × 465 px</div>
+        <div class="portrait">~310 × 465 px</div>
+        <div class="portrait">~310 × 465 px</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION D — Left-aligned 260px (recommended) -->
+  <div class="section">
+    <div class="section-label">Option D</div>
+    <div class="section-title">Left-aligned, 260 px wide <span class="badge badge-rec">Recommended</span></div>
+    <div class="section-desc">
+      Portrait image is anchored to the left at 260px wide (390px tall) — compact but clearly visible. Matches the visual weight of the home feed cards. Multiple images stack left-aligned, letting the white space on the right breathe.
+    </div>
+    <div class="page-chrome">
+      <div class="back-btn">← Back to home</div>
+      <h1 class="exp-title">Cleaned 3 homes in Williamsburg</h1>
+      <span class="exp-poster">Posted by Jordan M.</span>
+      <p class="exp-desc">Had a great week helping three families deep-clean before their summer moves. Used eco-friendly products throughout and finished each job ahead of schedule.</p>
+      <div class="d-images">
+        <div class="portrait">260 × 390 px</div>
+        <div class="portrait">260 × 390 px</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="section">
+    <div class="section-title">Quick comparison</div><br/>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#F3F4F6;">
+          <th style="text-align:left;padding:10px 12px;border-bottom:2px solid #E5E7EB;">Option</th>
+          <th style="padding:10px 12px;border-bottom:2px solid #E5E7EB;">Image width</th>
+          <th style="padding:10px 12px;border-bottom:2px solid #E5E7EB;">Image height</th>
+          <th style="padding:10px 12px;border-bottom:2px solid #E5E7EB;">1 photo</th>
+          <th style="padding:10px 12px;border-bottom:2px solid #E5E7EB;">2–4 photos</th>
+          <th style="padding:10px 12px;border-bottom:2px solid #E5E7EB;">Code change</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:10px 12px;border-bottom:1px solid #F3F4F6;font-weight:700;">A — Current</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">720 px</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">~1080 px 😬</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">❌</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">❌</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">—</td>
+        </tr>
+        <tr style="background:#F9FAFB;">
+          <td style="padding:10px 12px;border-bottom:1px solid #F3F4F6;font-weight:700;">B — Centered 300 px</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">300 px</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">450 px</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">✅</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">OK (stacked)</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">2 CSS lines</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 12px;border-bottom:1px solid #F3F4F6;font-weight:700;">C — 2-col grid</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">~310 px each</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">~465 px</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">OK (half-row)</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">✅ Great</td>
+          <td style="text-align:center;padding:10px 12px;border-bottom:1px solid #F3F4F6;">2 CSS lines</td>
+        </tr>
+        <tr style="background:#F9FAFB;">
+          <td style="padding:10px 12px;font-weight:700;">D — Left 260 px ⭐</td>
+          <td style="text-align:center;padding:10px 12px;">260 px</td>
+          <td style="text-align:center;padding:10px 12px;">390 px</td>
+          <td style="text-align:center;padding:10px 12px;">✅ Clean</td>
+          <td style="text-align:center;padding:10px 12px;">✅ Clean</td>
+          <td style="text-align:center;padding:10px 12px;">2 CSS lines</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:16px;font-size:13px;color:#6B7280;line-height:1.6;">
+      ⭐ <strong>Recommendation:</strong> Option D. Left-aligned at 260 px keeps the portrait ratio, feels proportional to the home feed cards, and the text/whitespace next to it makes the page feel open rather than photo-heavy. All options are literally 2 CSS lines to implement.
+    </p>
+  </div>
+
+</body>
+</html>

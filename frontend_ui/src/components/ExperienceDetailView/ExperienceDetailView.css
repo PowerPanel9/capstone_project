@@ -53,15 +53,44 @@
   white-space: pre-wrap;
 }
 
-/* Images stack vertically, each filling the column width. */
-.experience-detail-images {
+/* Single image: centered portrait at a fixed width. */
+.experience-detail-images-single {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: center;
 }
 
-.experience-detail-images img {
-  width: 100%;
+.experience-detail-images-single img {
+  width: 500px;
+  aspect-ratio: 2 / 3;
   border-radius: 16px;
   object-fit: cover;
+}
+
+/* Multiple images: two portrait cards per row. */
+.experience-detail-images-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.experience-detail-images-grid img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+@media (max-width: 640px) {
+  .experience-detail-images-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .experience-detail-images-single img {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .experience-detail-title {
+    font-size: 20px;
+  }
 }

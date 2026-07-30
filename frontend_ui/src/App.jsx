@@ -330,6 +330,7 @@ function App() {
               userMode={userMode}
               onOpenAI={openAI}
               onLogout={handleLogout}
+              onClose={() => setSidebarOpen(false)}
               unreadMessageCount={unreadMessageCount}
             />
           </aside>

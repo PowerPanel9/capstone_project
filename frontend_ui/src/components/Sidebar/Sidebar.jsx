@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Home, User, MessageSquare, Bookmark, Plus, Sparkles, LogOut } from 'lucide-react';
+import { Home, User, MessageSquare, Bookmark, Plus, Sparkles, LogOut, X } from 'lucide-react';
 import LogoMark from '../Logo/Logo';
 import { NavLink } from 'react-router-dom';
 import ProfilePicture from '../ProfilePicture/ProfilePicture';
 import { fullName, initials } from '../../utils/user';
 import './Sidebar.css';
 
-function Sidebar({ currentUser, userMode, onOpenAI, onLogout, unreadMessageCount = 0 }) {
+function Sidebar({ currentUser, userMode, onOpenAI, onLogout, onClose, unreadMessageCount = 0 }) {
   // Small popup that opens when the user clicks their info row at the bottom.
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
@@ -34,6 +34,11 @@ function Sidebar({ currentUser, userMode, onOpenAI, onLogout, unreadMessageCount
       <div className="logo-wrap">
         <LogoMark size={36} />
         <span className="logo-name">Side<span style={{ color: '#7B8FC8' }}>Hustle</span></span>
+        {onClose && (
+          <button className="sidebar-close-btn" onClick={onClose} aria-label="Close menu">
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       <nav>

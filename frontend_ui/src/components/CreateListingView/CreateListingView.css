@@ -174,6 +174,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .price-suggest-btn {
@@ -287,8 +289,49 @@
 .skill-add-row {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
+/* Input grows to fill the row; the Add button stays small next to it. */
 .skill-add-row input {
   margin: 0;
+  flex: 1;
+}
+
+/* Smaller, compact "Add" button so the skills input has more room. */
+.skill-add-btn {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+/* ===================================================================
+   Responsive: mobile (≤640px)
+   =================================================================== */
+@media (max-width: 640px) {
+  /* Tighter outer padding */
+  .create-wrap {
+    padding: 12px;
+  }
+
+  /* Form card padding */
+  .form-card {
+    padding: 20px 16px;
+  }
+
+  /* Category + price two-column grid stacks to one column */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Price suggestion button drops below the label */
+  .rate-label-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .price-suggest-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

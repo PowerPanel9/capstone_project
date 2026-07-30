@@ -20,26 +20,34 @@
   gap: 8px;
 }
 
-/* The "window" between the arrows that clips whatever tiles slide past its
-   edges. `flex: 0 1 auto` means: don't grow past the tiles' natural width (so a
-   wide feed — e.g. when the chat is closed — doesn't leave a gap before the
-   right arrow), but DO shrink when space is tight (chat open) so the arrows can
-   page through. `min-width: 0` is required for a flex item to shrink below its
-   content width. */
+/* The scrollable window between the arrows. overflow-x: auto enables native
+   scroll (trackpad two-finger swipe, touch, mouse wheel) so users don't need
+   the buttons. The fade mask at the right edge dissolves any partially-visible
+   tile instead of hard-cutting it — fixing the half-tile visual bug.
+   `flex: 0 1 auto` + `min-width: 0` let it shrink when space is tight. */
 .category-row {
   flex: 0 1 auto;
   min-width: 0;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
   padding: 4px 0;             /* vertical room so hover lift isn't clipped */
+  scrollbar-width: none;      /* hide scrollbar in Firefox */
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  mask-image: linear-gradient(to right, black 85%, transparent 100%);
 }
 
-/* The wider strip inside the window. It holds all the tiles in a row and is
-   slid sideways with transform (see CategoryGrid.jsx) to animate one step at a
-   time. The gap here (16px) must match TILE_STEP in the JS. */
+/* Hide scrollbar in Chrome/Safari */
+.category-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* The inner strip that holds all tiles in a row. No transform-based sliding
+   any more — scrolling happens on .category-row. The gap here (16px) must
+   match TILE_STEP in the JS (130px tile + 16px gap = 146px). */
 .category-track {
   display: flex;
   gap: 16px;
-  width: max-content;         /* as wide as all tiles, so they don't shrink */
+  width: max-content;         /* as wide as all tiles, so they don't wrap */
 }
 
 /* Compact tile: icon on top, label underneath (Uber-Eats style). A fixed width
@@ -59,12 +67,14 @@
 }
 
 /* Fill mode: used when all tiles already fit (arrows hidden). The tiles grow to
-   fill the full width instead of leaving empty space on the right. Driven from
-   the carousel so we can force the row (the flex "window") to grow too. */
+   fill the full width instead of leaving empty space on the right. */
 
-/* Let the row grow to fill all the space between the (hidden) arrows. */
+/* Let the row grow to fill all the space between the (hidden) arrows, and
+   remove the fade mask since nothing is overflowing. */
 .category-carousel-fill .category-row {
   flex: 1;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 /* The track spans the full row width... */
@@ -151,5 +161,14 @@
 
   .category-heading {
     font-size: 15px;
+  }
+
+  /* Arrows are redundant on touch — hide them to give tiles more room */
+  .category-arrow {
+    display: none;
+  }
+
+  .category-row {
+    flex: 1;
   }
 }
