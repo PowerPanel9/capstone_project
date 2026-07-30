@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Briefcase, FileText, ChevronDown, Check } from "lucide-react";
+import { MapPin, Briefcase, FileText, ChevronDown, Check, Award } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
 import AddressAutocomplete from "../AddressAutocomplete/AddressAutocomplete";
 import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
@@ -122,6 +122,11 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
   // True while experience images are being uploaded to S3, so we can show
   // "Uploading…" and stop the user from saving before the URLs come back.
   const [isUploadingExperienceImages, setIsUploadingExperienceImages] = useState(false);
+  // Which credential is currently uploading from the Experience tab
+  // ("resumeUrl" or "certificationUrl"), so we can show "Uploading…" on the
+  // right button. null means nothing is uploading.
+  const [uploadingCredential, setUploadingCredential] = useState(null);
+  const [credentialError, setCredentialError] = useState("");
   const [experiences, setExperiences] = useState([]);
   const [experienceForm, setExperienceForm] = useState({
     jobTitle: "",
@@ -697,6 +702,48 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
     return (await readJsonSafe(res)) || {};
   };
 
+  // Upload a resume or certification straight from the Experience tab, then
+  // save the returned URL to the backend right away. `fieldName` is
+  // "resumeUrl" or "certificationUrl". This mirrors the skills flow: upload the
+  // file, get a URL, PUT it to the profile, then update local state.
+  const handleCredentialUpload = (fieldName) => async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingCredential(fieldName);
+    setCredentialError("");
+    try {
+      // Step 1: send the file to S3 through the backend and get back a URL.
+      const fileUrl = await uploadFile(file);
+      // Step 2: save just this field to the profile.
+      const updated = await saveProfileFields({ [fieldName]: fileUrl });
+      setProfile((prev) => ({
+        ...prev,
+        [fieldName]: updated?.[fieldName] ?? fileUrl,
+      }));
+    } catch (error) {
+      setCredentialError(error.message || "Could not upload file.");
+    } finally {
+      setUploadingCredential(null);
+      // Reset the input so picking the same file again still fires onChange.
+      event.target.value = "";
+    }
+  };
+
+  // Remove a saved credential (resume or certification) from the Experience tab.
+  const removeCredential = async (fieldName) => {
+    setCredentialError("");
+    try {
+      const updated = await saveProfileFields({ [fieldName]: "" });
+      setProfile((prev) => ({
+        ...prev,
+        [fieldName]: updated?.[fieldName] ?? "",
+      }));
+    } catch (error) {
+      setCredentialError(error.message || "Could not remove file.");
+    }
+  };
+
   // Save a new skills list to the backend right away (used by the Skills page).
   const saveSkills = async (nextSkills) => {
     if (!profile.id) {
@@ -1053,6 +1100,24 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
         </p>
       </div>
 
+      {/* Specialties card in the rail. Only providers pick categories, so this
+          card only shows up for providers/both — a client-only user has
+          nothing to show here. */}
+      {(profile.role === "PROVIDER" || profile.role === "BOTH") && (
+        <div className="rail-mini">
+          <h3 className="rail-mini-title">Specialties</h3>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {currentUser.categories.length > 0 ? (
+              currentUser.categories.map((value) => (
+                <span key={value} className="tag">{categoryLabel(value)}</span>
+              ))
+            ) : (
+              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>No specialties added yet</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Skills card in the rail (from the mockup's "Skills" mini-card).
           Users add/remove skills right here; each change saves to the backend. */}
       <div className="rail-mini">
@@ -1128,24 +1193,6 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
 
         {skillError && <p className="error-text">{skillError}</p>}
       </div>
-
-      {/* Specialties card in the rail. Only providers pick categories, so this
-          card only shows up for providers/both — a client-only user has
-          nothing to show here. */}
-      {(profile.role === "PROVIDER" || profile.role === "BOTH") && (
-        <div className="rail-mini">
-          <h3 className="rail-mini-title">Specialties</h3>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {currentUser.categories.length > 0 ? (
-              currentUser.categories.map((value) => (
-                <span key={value} className="tag">{categoryLabel(value)}</span>
-              ))
-            ) : (
-              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>No specialties added yet</p>
-            )}
-          </div>
-        </div>
-      )}
         </aside>
 
         {/* RIGHT COLUMN: the "feed" — tabs and tab content. */}
@@ -1223,6 +1270,118 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
       {activeTab === "Experience" && (
         <div className="experience-layout">
           <div className="experience-content-column">
+            {/* Credentials: upload + view resume and certification right here on
+                the Experience tab (not only in Edit Profile). Only providers/both
+                have credentials. Each row shows a "View" link if a file is saved,
+                plus a file input to upload or replace it. Uploading needs the S3
+                backend; without it the upload call will error and show a message. */}
+            {(profile.role === "PROVIDER" || profile.role === "BOTH") && (
+              <div className="experience-credentials">
+                <div className="experience-section-title">CREDENTIALS</div>
+                <div className="cred-cards">
+                  {/* Resume card */}
+                  <div className="cred-card">
+                    <div className="cred-card-head">
+                      <div className={`cred-icon ${currentUser.resumeUrl ? "" : "cred-icon-empty"}`}>
+                        <FileText size={18} />
+                      </div>
+                      <div>
+                        <div className="cred-name">Resume</div>
+                        <div className={`cred-status ${currentUser.resumeUrl ? "cred-status-on" : ""}`}>
+                          {currentUser.resumeUrl ? "✓ Uploaded" : "Not uploaded yet"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="cred-actions">
+                      {currentUser.resumeUrl && (
+                        <a
+                          href={currentUser.resumeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="credential-link"
+                        >
+                          View
+                        </a>
+                      )}
+                      <label className="credential-upload-btn">
+                        {uploadingCredential === "resumeUrl"
+                          ? "Uploading…"
+                          : currentUser.resumeUrl
+                          ? "Replace"
+                          : "Upload Resume"}
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,image/*"
+                          hidden
+                          disabled={uploadingCredential !== null}
+                          onChange={handleCredentialUpload("resumeUrl")}
+                        />
+                      </label>
+                      {currentUser.resumeUrl && (
+                        <button
+                          type="button"
+                          className="credential-remove-btn"
+                          onClick={() => removeCredential("resumeUrl")}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Certification card */}
+                  <div className="cred-card">
+                    <div className="cred-card-head">
+                      <div className={`cred-icon ${currentUser.certificationUrl ? "" : "cred-icon-empty"}`}>
+                        <Award size={18} />
+                      </div>
+                      <div>
+                        <div className="cred-name">Certification</div>
+                        <div className={`cred-status ${currentUser.certificationUrl ? "cred-status-on" : ""}`}>
+                          {currentUser.certificationUrl ? "✓ Uploaded" : "Not uploaded yet"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="cred-actions">
+                      {currentUser.certificationUrl && (
+                        <a
+                          href={currentUser.certificationUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="credential-link"
+                        >
+                          View
+                        </a>
+                      )}
+                      <label className="credential-upload-btn">
+                        {uploadingCredential === "certificationUrl"
+                          ? "Uploading…"
+                          : currentUser.certificationUrl
+                          ? "Replace"
+                          : "Upload Certification"}
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,image/*"
+                          hidden
+                          disabled={uploadingCredential !== null}
+                          onChange={handleCredentialUpload("certificationUrl")}
+                        />
+                      </label>
+                      {currentUser.certificationUrl && (
+                        <button
+                          type="button"
+                          className="credential-remove-btn"
+                          onClick={() => removeCredential("certificationUrl")}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {credentialError && <p className="error-text">{credentialError}</p>}
+              </div>
+            )}
             <div className="experience-section-title">MY WORK</div>
             <div className="experience-list">
               {experiences.length > 0 ? (

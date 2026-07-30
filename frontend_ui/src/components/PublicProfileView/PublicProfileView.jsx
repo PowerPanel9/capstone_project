@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MapPin, ChevronLeft, Briefcase, Check } from "lucide-react";
+import { MapPin, ChevronLeft, Briefcase, Check, FileText, Award } from "lucide-react";
 import ProfilePicture from "../ProfilePicture/ProfilePicture";
 import ReviewsPanel from "../ReviewsPanel/ReviewsPanel";
 import { getUserById } from "../../api/users";
@@ -360,6 +360,64 @@ function PublicProfileView({ currentUser }) {
             {activeTab === "Experience" && (
               <div className="experience-layout">
                 <div className="experience-content-column">
+                  {/* Credentials: resume + certification links. Only shown for
+                      providers/both, and only when a file exists. A client
+                      browsing providers can open these to vet them. The URLs
+                      come from getUserById, which already returns both fields. */}
+                  {(user.role === "PROVIDER" || user.role === "BOTH") &&
+                    (user.resumeUrl || user.certificationUrl) && (
+                      <div className="experience-credentials">
+                        <div className="experience-section-title">CREDENTIALS</div>
+                        <div className="cred-cards">
+                          {user.resumeUrl && (
+                            <div className="cred-card">
+                              <div className="cred-card-head">
+                                <div className="cred-icon">
+                                  <FileText size={18} />
+                                </div>
+                                <div>
+                                  <div className="cred-name">Resume</div>
+                                  <div className="cred-status cred-status-on">✓ Uploaded</div>
+                                </div>
+                              </div>
+                              <div className="cred-actions">
+                                <a
+                                  href={user.resumeUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="credential-link"
+                                >
+                                  View Resume
+                                </a>
+                              </div>
+                            </div>
+                          )}
+                          {user.certificationUrl && (
+                            <div className="cred-card">
+                              <div className="cred-card-head">
+                                <div className="cred-icon">
+                                  <Award size={18} />
+                                </div>
+                                <div>
+                                  <div className="cred-name">Certification</div>
+                                  <div className="cred-status cred-status-on">✓ Uploaded</div>
+                                </div>
+                              </div>
+                              <div className="cred-actions">
+                                <a
+                                  href={user.certificationUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="credential-link"
+                                >
+                                  View Certification
+                                </a>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   <div className="experience-section-title">MY WORK</div>
                   <div className="experience-list">
                     {experiences.length > 0 ? (

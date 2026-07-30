@@ -1,6 +1,9 @@
 .home-wrap {
   padding: 24px;
   width: 100%;
+  /* Cap and center the content so it doesn't stretch across a large monitor. */
+  max-width: 1280px;
+  margin: 0 auto;
   /* Two columns: the feed on the left, the AI Assistant panel on the right. */
   display: flex;
   align-items: flex-start;
@@ -163,7 +166,8 @@
 }
 
 .feed-title {
-  font-size: 17px;
+  /* Fluid heading: 17px small screens, up to 22px on large monitors. */
+  font-size: clamp(17px, 0.8vw + 13px, 22px);
   font-weight: 800;
   color: #1E2340;
   letter-spacing: -0.3px;

@@ -18,6 +18,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Only the tiles sit on the white panel — the heading stays on the page
+     background above it. Soft shadow, no hard border (Option 2). */
+  background: #fff;
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 12px rgba(30, 35, 64, 0.06);
 }
 
 /* The scrollable window between the arrows. overflow-x: auto enables native
@@ -161,6 +167,11 @@
 
   .category-heading {
     font-size: 15px;
+  }
+
+  /* Tighter panel padding on phones so tiles keep their room. */
+  .category-carousel {
+    padding: 12px;
   }
 
   /* Arrows are redundant on touch — hide them to give tiles more room */
