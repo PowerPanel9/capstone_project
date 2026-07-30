@@ -46,12 +46,9 @@ function ExperienceDetailView() {
 
   return (
     <div className="experience-detail">
-      {/* Go back to wherever the user came from (home feed, a profile, etc.),
-          same pattern the listing detail page uses (navigate(-1) = browser
-          history back) instead of always landing on the home feed. */}
-      <button className="experience-detail-back" onClick={() => navigate(-1)}>
+      <button className="experience-detail-back" onClick={() => navigate("/home")}>
         <ArrowLeft size={15} />
-        Back
+        Back to home
       </button>
 
       <h1 className="experience-detail-title">{experience.jobTitle}</h1>
