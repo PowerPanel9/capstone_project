@@ -4,7 +4,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 560px;
-  height: 620px;
+  height: min(620px, 85vh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -178,6 +178,7 @@
   border-radius: 16px;
   font-size: 14px;
   line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .ai-bubble.ai {

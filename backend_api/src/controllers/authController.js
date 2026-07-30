@@ -238,7 +238,7 @@ const googleCallback = async (req, res) => {
                     firstName: given_name || 'User',
                     lastName: family_name || '',
                     email: email.toLowerCase(),
-                    imageUrl: picture || null,
+                    profilePicture: picture || null,
                     authProvider: 'google',
                     password: null // OAuth users don't have passwords
                 }

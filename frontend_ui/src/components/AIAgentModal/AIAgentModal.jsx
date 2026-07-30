@@ -150,7 +150,13 @@ function AIAgentModal({ onClose, initialMessage = "", docked = false }) {
                   <Sparkles size={12} />
                 </div>
               )}
-              <div className={`ai-bubble ${msg.from}`}>{msg.text}</div>
+              <div className={`ai-bubble ${msg.from}`}>
+                {msg.from === "ai"
+                  ? msg.text.split(/(?=\d+\.\s)/).map((part, idx) => (
+                      <p key={idx} style={{ margin: "2px 0" }}>{part.trim()}</p>
+                    ))
+                  : msg.text}
+              </div>
             </div>
           ))}
 

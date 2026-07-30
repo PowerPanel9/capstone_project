@@ -8,6 +8,7 @@
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { extractCityStateFromLocation } = require("../utils/location");
 
 // POST /api/bookmarks
 // Save a listing to the current user's bookmarks.
@@ -75,10 +76,19 @@ async function getMyBookmarks(req, res) {
       where: { userId },
       // attach each bookmarked listing AND that listing's owner, so the
       // frontend can render the same cards as the main feed (poster name, etc.)
-      include: { listing: { include: { user: true } } },
+      include: { listing: { include: { user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, location: true } } } } },
       // sort by when the bookmark was created (not the listing), newest first,
       // so the most recently bookmarked listing appears at the top.
       orderBy: { createdAt: "desc" },
+    });
+
+    // Replace the raw location string with just city + state on each listing's user.
+    bookmarks.forEach((bookmark) => {
+      if (bookmark.listing?.user) {
+        const { city, state } = extractCityStateFromLocation(bookmark.listing.user.location);
+        bookmark.listing.user = { ...bookmark.listing.user, city, state };
+        delete bookmark.listing.user.location;
+      }
     });
 
     return res.status(200).json(bookmarks);

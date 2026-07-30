@@ -1,6 +1,9 @@
 .home-wrap {
   padding: 24px;
   width: 100%;
+  /* Cap and center the content so it doesn't stretch across a large monitor. */
+  max-width: 1280px;
+  margin: 0 auto;
   /* Two columns: the feed on the left, the AI Assistant panel on the right. */
   display: flex;
   align-items: flex-start;
@@ -163,7 +166,8 @@
 }
 
 .feed-title {
-  font-size: 17px;
+  /* Fluid heading: 17px small screens, up to 22px on large monitors. */
+  font-size: clamp(17px, 0.8vw + 13px, 22px);
   font-weight: 800;
   color: #1E2340;
   letter-spacing: -0.3px;
@@ -413,12 +417,10 @@
    Responsive: tablet/iPad (≤1024px) and mobile (≤640px)
    =================================================================== */
 
-/* Tablet and below: hide the docked AI side panel and the floating reopen
-   button, and let the feed take the full width. The AI popup is still reachable
-   from the sidebar. */
+/* Tablet and below: hide the docked AI side panel and let the feed take the
+   full width. Keep the floating button so mobile users can still open the AI. */
 @media (max-width: 1024px) {
-  .home-side,
-  .chat-reopen-btn {
+  .home-side {
     display: none;
   }
 
@@ -442,5 +444,23 @@
   /* Experiences go to a single column on phones. */
   .experience-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Filter chips become a single scrollable row instead of wrapping. */
+  .experience-filter-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    padding-bottom: 4px;
+  }
+
+  .experience-filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .experience-filter-chip {
+    flex-shrink: 0;
   }
 }

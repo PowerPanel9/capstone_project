@@ -5,3 +5,7 @@ dist/
 build/
 .DS_Store
 *.log
+
+# Local design mockups (not part of the app)
+frontend_ui/apple-store-redesign-mockups.html
+frontend_ui/home-redesign-mockups.html

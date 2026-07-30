@@ -11,8 +11,8 @@ const {
     getAddressOptions,
 } = require('../controllers/userController');
 
-// Get all users
-router.get('/', getUsers);
+// Get all users (login required; used by the "search people to message" picker)
+router.get('/', requireAuth, getUsers);
 
 // Get a randomized list of providers for the client-mode home feed.
 // Must be declared BEFORE "/:id" so "providers" is not read as an id.
