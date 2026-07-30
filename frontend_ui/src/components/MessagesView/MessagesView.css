@@ -247,6 +247,19 @@
   flex-shrink: 0;
 }
 
+/* Wraps the avatar + name in the chat header so clicking either one goes to
+   the partner's profile page. */
+.chat-header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .chat-header-name {
   font-weight: 700;
   font-size: 14px;

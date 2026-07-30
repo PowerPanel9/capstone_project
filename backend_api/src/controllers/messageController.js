@@ -76,7 +76,7 @@ const sendMessage = async (req, res) => {
         createdAt: true,
         readAt: true,
         sender: {
-          select: { id: true, firstName: true, lastName: true, imageUrl: true },
+          select: { id: true, firstName: true, lastName: true, profilePicture: true },
         },
         listing: {
           select: { id: true, title: true },
@@ -111,7 +111,7 @@ const getConversationWithUser = async (req, res) => {
 
     const otherUser = await prisma.user.findUnique({
       where: { id: otherUserId },
-      select: { id: true, firstName: true, lastName: true, imageUrl: true },
+      select: { id: true, firstName: true, lastName: true, profilePicture: true },
     });
 
     if (!otherUser) {
@@ -170,10 +170,10 @@ const getInbox = async (req, res) => {
         createdAt: true,
         readAt: true,
         sender: {
-          select: { id: true, firstName: true, lastName: true, imageUrl: true },
+          select: { id: true, firstName: true, lastName: true, profilePicture: true },
         },
         recipient: {
-          select: { id: true, firstName: true, lastName: true, imageUrl: true },
+          select: { id: true, firstName: true, lastName: true, profilePicture: true },
         },
       },
     });
