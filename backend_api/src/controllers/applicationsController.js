@@ -73,7 +73,7 @@ async function getMyApplications(req, res) {
 
     const applications = await prisma.application.findMany({
       where: { providerId: req.user.userId },
-      include: { listing: { include: { user: true } } },
+      include: { listing: { include: { user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, location: true } } } } },
       orderBy: { createdAt: "desc" },
     });
 
@@ -95,7 +95,7 @@ async function getReceivedApplications(req, res) {
 
     const applications = await prisma.application.findMany({
       where: { listing: { userId: req.user.userId } },
-      include: { provider: true, listing: true },
+      include: { provider: { select: { id: true, firstName: true, lastName: true, profilePicture: true } }, listing: true },
       orderBy: { createdAt: "desc" },
     });
 
@@ -128,7 +128,7 @@ async function getApplicationsForListing(req, res) {
 
     const applications = await prisma.application.findMany({
       where: { listingId },
-      include: { provider: true },
+      include: { provider: { select: { id: true, firstName: true, lastName: true, profilePicture: true } } },
       orderBy: { createdAt: "desc" },
     });
 

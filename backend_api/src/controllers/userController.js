@@ -1,6 +1,7 @@
 const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 const { forwardGeocode, reverseGeocode, getAddressSuggestions } = require('../utils/geocoder');
+const { extractCityStateFromLocation } = require('../utils/location');
 const stripe = require('../utils/stripe');
 
 const userProfileSelect = {
@@ -49,79 +50,6 @@ function isUnknownPrismaFieldError(error) {
     );
 }
 
-// Full US state names -> 2-letter code. Used to keep the displayed state
-// consistent (always "CA", never "California"), no matter which path produced
-// it (a fresh geocode on save vs. re-parsing the stored address on refresh).
-const US_STATE_NAMES_TO_CODE = {
-    alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA",
-    colorado: "CO", connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA",
-    hawaii: "HI", idaho: "ID", illinois: "IL", indiana: "IN", iowa: "IA",
-    kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
-    massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO",
-    montana: "MT", nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ",
-    "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND",
-    ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA", "rhode island": "RI",
-    "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
-    vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
-    wyoming: "WY",
-};
-
-// Turn a state value into its 2-letter code. An already-abbreviated value
-// (e.g. "CA") is returned as-is; a full name (e.g. "California") is looked up.
-function normalizeStateToCode(stateValue) {
-    if (!stateValue || typeof stateValue !== "string") return "";
-    const trimmed = stateValue.trim();
-    if (/^[A-Za-z]{2}$/.test(trimmed)) return trimmed.toUpperCase();
-    return US_STATE_NAMES_TO_CODE[trimmed.toLowerCase()] || trimmed;
-}
-
-function extractCityStateFromLocation(locationValue) {
-    if (!locationValue || typeof locationValue !== "string") {
-        return { city: "", state: "" };
-    }
-
-    const parts = locationValue
-        .split(",")
-        .map((part) => part.trim())
-        .filter(Boolean);
-
-    const streetLikePattern =
-        /\b(street|st|avenue|ave|boulevard|blvd|road|rd|drive|dr|lane|ln|way|court|ct|place|pl)\b/i;
-    const nonCityPattern =
-        /\b(county|parish|region|district|state|country|usa|united states)\b/i;
-    const parseStateCode = (value) => {
-        const trimmed = value.trim();
-        const abbrMatch = trimmed.match(/\b([A-Z]{2})\b/);
-        if (abbrMatch) return abbrMatch[1];
-        return US_STATE_NAMES_TO_CODE[trimmed.toLowerCase()] || "";
-    };
-
-    // Example: "5867 Fremont Street, Golden Gate, Oakland, Alameda County, California, 94608, USA"
-    for (let i = 0; i < parts.length; i += 1) {
-        const state = parseStateCode(parts[i]);
-        if (!state) continue;
-        for (let j = i - 1; j >= 0; j -= 1) {
-            const candidate = parts[j].replace(/\d+/g, "").trim();
-            if (!candidate) continue;
-            if (streetLikePattern.test(candidate)) continue;
-            if (nonCityPattern.test(candidate)) continue;
-            return { city: candidate, state };
-        }
-    }
-
-    // Example fallback: "Street, City ST 12345"
-    if (parts.length >= 2) {
-        const cityStateZipMatch = parts[1].match(/^(.+?)\s+([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/);
-        if (cityStateZipMatch) {
-            return {
-                city: cityStateZipMatch[1].trim(),
-                state: cityStateZipMatch[2].trim(),
-            };
-        }
-    }
-
-    return { city: "", state: "" };
-}
 
 function withCityState(user, explicitCity, explicitState) {
     if (!user) return user;
@@ -133,12 +61,16 @@ function withCityState(user, explicitCity, explicitState) {
     };
 }
 
-// Get all users
 const getUsers = async (req, res) => {
     try {
         const users = await prisma.user.findMany({
             orderBy: {
                 id: 'asc'
+            },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
             },
         });
 
@@ -148,8 +80,6 @@ const getUsers = async (req, res) => {
     }
 };
 
-// Only the public fields the "browse providers" cards need. This keeps
-// private data (password, email, address, phone) out of the response.
 const providerCardSelect = {
     id: true,
     firstName: true,
@@ -165,29 +95,17 @@ const PROVIDER_CATEGORY_VALUES = [
     "BABYSITTING", "MOVING", "HANDYMAN", "DELIVERY", "OTHER",
 ];
 
-// Get a randomized list of providers for the client-mode home feed.
-// Only users whose role is PROVIDER or BOTH are returned (a CLIENT-only user
-// doesn't offer services, so they shouldn't show up here).
-// Optionally:
-//   ?excludeId=<id>       leaves the logged-in user out of the list.
-//   ?category=CLEANING    keeps only providers who selected that category.
-//   ?search=alex          matches provider name or skills text.
 const getProviders = async (req, res) => {
     try {
-        // Start by requiring the user to actually be a provider.
         const where = {
             role: { in: ["PROVIDER", "BOTH"] },
         };
 
-        // Leave the logged-in user out of their own results, if asked.
         const excludeId = Number(req.query.excludeId);
         if (Number.isInteger(excludeId) && excludeId > 0) {
             where.id = { not: excludeId };
         }
 
-        // When a category is chosen (from a category tile), keep only providers
-        // who selected that category during onboarding. Keep a skills fallback
-        // so older accounts still show up until they re-save onboarding.
         const category = req.query.category;
         if (typeof category === "string" && category.trim()) {
             const normalizedCategory = category.trim();
@@ -207,8 +125,6 @@ const getProviders = async (req, res) => {
             });
         } catch (queryError) {
             if (!isUnknownPrismaFieldError(queryError)) throw queryError;
-            // Fallback for databases that have not run the categories migration:
-            // use the older skills-only filter and omit the categories field.
             const legacyWhere = {
                 role: { in: ["PROVIDER", "BOTH"] },
             };

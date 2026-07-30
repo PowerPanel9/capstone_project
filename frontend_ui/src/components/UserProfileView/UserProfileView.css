@@ -19,7 +19,7 @@
 
 .social-layout {
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: minmax(0, 420px) 1fr;
   gap: 24px;
   align-items: start;
 }
@@ -94,6 +94,39 @@
   flex: 1;
 }
 
+.rail-actions-dropdown {
+  position: relative;
+  margin-top: 16px;
+}
+
+.actions-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--primary, #7B8FC8);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.actions-trigger:hover {
+  background: var(--primary-dark, #6678B8);
+}
+
+.menu-divider {
+  height: 1px;
+  background: #F3F4F6;
+  margin: 4px 6px;
+}
+
 /* Filled + outline buttons, matching the mockup. */
 .btn-primary {
   background: var(--primary, #7B8FC8);
@@ -148,13 +181,53 @@
 }
 
 /* On narrow screens, stack the rail above the feed and stop it sticking. */
-@media (max-width: 860px) {
+@media (max-width: 1024px) {
+  .profile-wrap-social {
+    overflow-x: hidden;
+  }
+
   .social-layout {
     grid-template-columns: 1fr;
+    width: 100%;
   }
 
   .social-rail {
     position: static;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .social-feed {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-wrap {
+    padding: 12px;
+  }
+
+  .profile-wrap-social {
+    padding: 12px;
+  }
+
+  /* Tabs bar scrolls horizontally on mobile instead of wrapping */
+  .tabs-bar {
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  }
+
+  .tabs-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 }
 
@@ -182,7 +255,7 @@
   background: #fff;
   border-radius: 24px;
   border: 1px solid #E5E7EB;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 16px;
 }
 
@@ -192,6 +265,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  border-radius: 24px 24px 0 0;
 }
 
 .profile-body {
@@ -272,22 +346,20 @@
 
 .actions-menu-dropdown {
   position: absolute;
+  left: 0;
   right: 0;
-  top: calc(100% + 8px);
-  display: inline-block;
-  width: max-content;
-  min-width: 0;
+  bottom: calc(100% + 8px);
   background: #fff;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.12);
   padding: 6px;
-  z-index: 10;
+  z-index: 100;
 }
 
 .actions-menu-item {
   display: block;
-  width: auto;
+  width: 100%;
   text-align: left;
   border: none;
   background: transparent;
@@ -392,10 +464,65 @@
   background: #fff;
   border-radius: 16px;
   border: 1px solid #E5E7EB;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   align-items: flex-start;
   gap: 16px;
+}
+
+/* Option C grid layout for listing cards on the profile */
+.mini-card-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  width: 100%;
+}
+
+.mini-card-grid .mini-title {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.mini-card-status {
+  grid-column: 2;
+  grid-row: 1 / 4;
+  align-self: center;
+}
+
+.mini-card-grid .mini-desc {
+  grid-column: 1;
+  grid-row: 2;
+  white-space: normal;
+}
+
+.mini-card-meta {
+  grid-column: 1;
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.mini-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: #7B8FC8;
+}
+
+.mini-dot {
+  color: #D1D5DB;
+  font-size: 12px;
+}
+
+.mini-category-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #EEF2FF;
+  color: #4F46E5;
 }
 
 .mini-info {
@@ -691,6 +818,40 @@
   padding: 14px 16px;
 }
 
+.exp-post-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.exp-action-btn {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #F9FAFB;
+  color: #374151;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.exp-action-btn:hover {
+  background: #E5E7EB;
+}
+
+.exp-action-delete {
+  color: #DC2626;
+  border-color: #FECACA;
+  background: #FEF2F2;
+}
+
+.exp-action-delete:hover {
+  background: #FEE2E2;
+}
+
 .exp-post-meta b {
   font-size: 14px;
   font-weight: 800;
@@ -751,6 +912,132 @@
   font-weight: 800;
   color: #1E2340;
   margin-bottom: 10px;
+}
+
+/* Credentials block (resume + certification) at the top of the Experience tab. */
+.experience-credentials {
+  margin-bottom: 20px;
+}
+
+/* Two side-by-side credential cards (Resume + Certification). */
+.cred-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.cred-card {
+  background: #fff;
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cred-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Gradient icon tile for an uploaded credential; muted when empty. */
+.cred-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #AABAE8, #7B8FC8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.cred-icon-empty {
+  background: #EEF1F8;
+  color: var(--primary-dark, #6678B8);
+}
+
+.cred-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1E2340;
+}
+
+.cred-status {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.cred-status-on {
+  color: #059669;
+}
+
+/* Action row sits at the bottom of the card. */
+.cred-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Stack the two cards on narrow screens. */
+@media (max-width: 640px) {
+  .cred-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.credential-link {
+  display: inline-block;
+  background: #F3F4F6;
+  color: var(--primary-dark, #6678B8);
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.credential-link:hover {
+  background: #E5E7EB;
+  border-color: #9CA3AF;
+}
+
+/* File input styled as a button (the real <input> is hidden inside the label). */
+.credential-upload-btn {
+  display: inline-block;
+  background: var(--primary-dark, #6678B8);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.credential-upload-btn:hover {
+  opacity: 0.9;
+}
+
+.credential-remove-btn {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.credential-remove-btn:hover {
+  text-decoration: underline;
 }
 
 .experience-actions {
@@ -913,6 +1200,16 @@
   color: #111827;
 }
 
+.modal-category-pill {
+  border: 1.5px solid transparent;
+  cursor: pointer;
+}
+
+.modal-category-pill-active {
+  background: var(--primary, #7B8FC8);
+  color: #fff;
+}
+
 .skill-add-row,
 .modal-actions {
   display: flex;
@@ -1002,6 +1299,40 @@
 
   .modal-btn {
     width: 100%;
+  }
+
+  /* Reduce inner padding so name + badge row isn't squeezed */
+  .profile-body {
+    padding: 0 16px 20px;
+  }
+
+  .profile-name {
+    font-size: 20px;
+  }
+
+  /* exp-post action buttons — ensure they're styled on mobile */
+  .exp-post-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .exp-action-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+    background: #F9FAFB;
+    color: #374151;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+  }
+
+  .exp-action-delete {
+    color: #DC2626;
+    border-color: #FECACA;
+    background: #FEF2F2;
   }
 }
 /* Rating stat is clickable to open the reviews modal */
@@ -1257,8 +1588,8 @@
    On big screens use more of the width; keep the single-column stack
    from the earlier @media (max-width: 860px) rule intact.
 =================================================================== */
-@media (max-width: 1200px) {
+@media (min-width: 1025px) and (max-width: 1200px) {
   .social-layout {
-    grid-template-columns: 360px 1fr;
+    grid-template-columns: minmax(0, 360px) 1fr;
   }
 }

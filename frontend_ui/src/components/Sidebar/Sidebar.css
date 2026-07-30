@@ -14,6 +14,32 @@
   flex-shrink: 0;
 }
 
+.sidebar-close-btn {
+  margin-left: auto;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
+  background: #F3F4F6;
+  color: #6B7280;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sidebar-close-btn:hover {
+  background: #E5E7EB;
+  color: #1E2340;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-close-btn {
+    display: flex;
+  }
+}
+
 .logo-icon {
   width: 36px;
   height: 36px;

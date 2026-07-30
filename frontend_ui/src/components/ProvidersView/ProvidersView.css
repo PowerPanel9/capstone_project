@@ -53,7 +53,7 @@
 }
 
 .provider-name {
-  font-size: 15px;
+  font-size: clamp(15px, 0.6vw + 12px, 18px);
   font-weight: 600;
   color: #1E2340;
 }

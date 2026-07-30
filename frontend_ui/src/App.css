@@ -46,6 +46,11 @@
 .home-wrap {
   padding: 24px;
   width: 100%;
+  /* Cap the content width and center it so cards and images don't stretch
+     edge-to-edge (and dwarf the text) on large monitors. Below 1280px the
+     `width: 100%` still lets it shrink to fit smaller screens. */
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 /* Two-column masonry flow. Kept in sync with the same rule in HomeView.css. */

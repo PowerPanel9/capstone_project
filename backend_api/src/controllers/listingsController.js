@@ -9,6 +9,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const stripe = require("../utils/stripe");
+const { extractCityStateFromLocation } = require("../utils/location");
 
 // Check whether a user has Stripe payouts enabled (for the "Payment verified"
 // badge). Returns false if they have no account or the check fails. Never
@@ -121,7 +122,7 @@ async function getAllListings(req, res) {
     const [listings, total] = await Promise.all([
       prisma.listing.findMany({
         where,
-        include: { user: true }, // attach the creator so the frontend can show poster info
+        include: { user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, location: true } } },
         orderBy: { createdAt: "desc" }, // newest listings first for the feed
         skip,
         take: limit,
@@ -131,6 +132,16 @@ async function getAllListings(req, res) {
 
     // hasMore is true when there are still listings beyond this page.
     const hasMore = skip + listings.length < total;
+
+    // Replace the raw location string with just city + state so a user's
+    // full street address is never exposed in the feed response.
+    listings.forEach((listing) => {
+      if (listing.user) {
+        const { city, state } = extractCityStateFromLocation(listing.user.location);
+        listing.user = { ...listing.user, city, state };
+        delete listing.user.location;
+      }
+    });
 
     return res.status(200).json({ listings, page, hasMore, total });
   } catch (error) {
@@ -148,18 +159,21 @@ async function getListingById(req, res) {
 
     const listing = await prisma.listing.findUnique({
       where: { id },
-      include: { user: true }, // attach the creator so the detail view can show poster info
+      include: { user: { select: { id: true, firstName: true, lastName: true, profilePicture: true, location: true, stripeAccountId: true } } },
     });
 
     if (!listing) {
       return res.status(404).json({ error: "Listing not found" });
     }
 
-    // Attach a public "paymentVerified" flag to the listing's owner (for the
-    // "Payment verified" badge on the detail view) and strip the raw account id.
+    // Attach a public "paymentVerified" flag, strip the raw Stripe account id,
+    // and replace the raw location with just city + state.
     if (listing.user) {
-      const { stripeAccountId, ...publicUser } = listing.user;
+      const { stripeAccountId, location, ...publicUser } = listing.user;
+      const { city, state } = extractCityStateFromLocation(location);
       publicUser.paymentVerified = await computePaymentVerified(stripeAccountId);
+      publicUser.city = city;
+      publicUser.state = state;
       listing.user = publicUser;
     }
 

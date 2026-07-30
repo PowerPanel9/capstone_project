@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SideHustle — Concept A Final</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f4f0;
+      color: #111;
+      padding: 48px 32px;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 48px;
+      line-height: 1.6;
+    }
+
+    .section-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 20px;
+      margin-top: 48px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px 24px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      border: 1.5px solid #e8e7e3;
+    }
+
+    .card-dark { background: #111; border-color: #2a2a2a; }
+
+    .variant-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #bbb;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+
+    .card-dark .variant-label { color: #444; }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 80px;
+    }
+
+    .wordmark {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .wordmark-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: #111;
+      line-height: 1;
+      letter-spacing: -0.3px;
+    }
+
+    .wordmark-text-white {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: -0.3px;
+    }
+
+    .note-text {
+      font-size: 11px;
+      color: #aaa;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .card-dark .note-text { color: #555; }
+
+    hr {
+      border: none;
+      border-top: 1px solid #e0dfd9;
+      margin: 48px 0 0;
+    }
+
+    .summary-box {
+      margin-top: 40px;
+      padding: 20px 24px;
+      background: #fff;
+      border-radius: 12px;
+      border-left: 4px solid #7B8FC8;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #444;
+      max-width: 700px;
+    }
+
+    .summary-box strong { color: #111; }
+  </style>
+</head>
+<body>
+
+  <h1>Concept A — Final Direction</h1>
+  <p class="subtitle">
+    Bold S with dollar-sign line · teal to lavender gradient circle<br>
+    "Hustle" in lavender · circle + wordmark layout
+  </p>
+
+  <!-- CHOSEN: light bg -->
+  <p class="section-label">Chosen — Light Background</p>
+  <div class="grid">
+
+    <div class="card" style="border-color: #7B8FC8; border-width: 2px;">
+      <span class="variant-label" style="color:#7B8FC8">Selected</span>
+      <div class="logo-wrap">
+        <div class="wordmark">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="g-chosen" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#4ecdc4"/>
+                <stop offset="100%" stop-color="#7B8FC8"/>
+              </linearGradient>
+            </defs>
+            <circle cx="22" cy="22" r="22" fill="url(#g-chosen)"/>
+            <!-- S drawn first so the dollar line sits on top -->
+            <text x="22" y="30" text-anchor="middle"
+              font-family="Outfit, sans-serif" font-weight="900" font-size="26" fill="white">S</text>
+            <!-- dollar sign vertical line: pokes out above (y=7) and below (y=37) the S -->
+          </svg>
+          <div class="wordmark-text">Side<span style="color:#7B8FC8">Hustle</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- plain dark wordmark for comparison -->
+    <div class="card">
+      <span class="variant-label">Alt — Dark Wordmark</span>
+      <div class="logo-wrap">
+        <div class="wordmark">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="g-alt" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#4ecdc4"/>
+                <stop offset="100%" stop-color="#7B8FC8"/>
+              </linearGradient>
+            </defs>
+            <circle cx="22" cy="22" r="22" fill="url(#g-alt)"/>
+            <text x="22" y="30" text-anchor="middle"
+              font-family="Outfit, sans-serif" font-weight="900" font-size="26" fill="white">S</text>
+          </svg>
+          <div class="wordmark-text">SideHustle</div>
+        </div>
+      </div>
+      <p class="note-text">All-dark wordmark for comparison.</p>
+    </div>
+
+  </div>
+
+  <!-- DARK BG -->
+  <p class="section-label">Dark Background</p>
+  <div class="grid">
+
+    <div class="card card-dark" style="border-color: #7B8FC8; border-width: 2px;">
+      <span class="variant-label" style="color:#7B8FC8">Selected — Dark BG</span>
+      <div class="logo-wrap">
+        <div class="wordmark">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+            <defs>
+              <linearGradient id="g-dk1" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#4ecdc4"/>
+                <stop offset="100%" stop-color="#7B8FC8"/>
+              </linearGradient>
+            </defs>
+            <circle cx="22" cy="22" r="22" fill="url(#g-dk1)"/>
+            <text x="22" y="30" text-anchor="middle"
+              font-family="Outfit, sans-serif" font-weight="900" font-size="26" fill="white">S</text>
+          </svg>
+          <div class="wordmark-text-white">Side<span style="color:#9BAEE0">Hustle</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-dark">
+      <span class="variant-label">Alt — Dark BG</span>
+      <div class="logo-wrap">
+        <div class="wordmark">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+            <defs>
+              <linearGradient id="g-dk2" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#4ecdc4"/>
+                <stop offset="100%" stop-color="#7B8FC8"/>
+              </linearGradient>
+            </defs>
+            <circle cx="22" cy="22" r="22" fill="url(#g-dk2)"/>
+            <text x="22" y="30" text-anchor="middle"
+              font-family="Outfit, sans-serif" font-weight="900" font-size="26" fill="white">S</text>
+          </svg>
+          <div class="wordmark-text-white">SideHustle</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIZE SCALE -->
+  <p class="section-label">Size Scale — 20px · 36px (nav) · 56px · 80px</p>
+  <div class="card" style="display:inline-flex;flex-direction:row;align-items:flex-end;gap:28px;padding:28px 32px">
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <svg width="20" height="20" viewBox="0 0 44 44" fill="none">
+        <defs><linearGradient id="gs1" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#4ecdc4"/><stop offset="100%" stop-color="#7B8FC8"/>
+        </linearGradient></defs>
+        <circle cx="22" cy="22" r="22" fill="url(#gs1)"/>
+        <text x="22" y="30" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="900" font-size="26" fill="white">S</text>
+        <line x1="22" y1="7" x2="22" y2="37" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <span style="font-size:10px;color:#aaa">20px</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <svg width="36" height="36" viewBox="0 0 44 44" fill="none">
+        <defs><linearGradient id="gs2" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#4ecdc4"/><stop offset="100%" stop-color="#7B8FC8"/>
+        </linearGradient></defs>
+        <circle cx="22" cy="22" r="22" fill="url(#gs2)"/>
+        <text x="22" y="30" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="900" font-size="26" fill="white">S</text>
+        <line x1="22" y1="7" x2="22" y2="37" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <span style="font-size:10px;color:#aaa">36px (nav)</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <svg width="56" height="56" viewBox="0 0 44 44" fill="none">
+        <defs><linearGradient id="gs3" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#4ecdc4"/><stop offset="100%" stop-color="#7B8FC8"/>
+        </linearGradient></defs>
+        <circle cx="22" cy="22" r="22" fill="url(#gs3)"/>
+        <text x="22" y="30" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="900" font-size="26" fill="white">S</text>
+        <line x1="22" y1="7" x2="22" y2="37" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <span style="font-size:10px;color:#aaa">56px</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <svg width="80" height="80" viewBox="0 0 44 44" fill="none">
+        <defs><linearGradient id="gs4" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#4ecdc4"/><stop offset="100%" stop-color="#7B8FC8"/>
+        </linearGradient></defs>
+        <circle cx="22" cy="22" r="22" fill="url(#gs4)"/>
+        <text x="22" y="30" text-anchor="middle" font-family="Outfit, sans-serif" font-weight="900" font-size="26" fill="white">S</text>
+        <line x1="22" y1="7" x2="22" y2="37" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <span style="font-size:10px;color:#aaa">80px</span>
+    </div>
+
+  </div>
+
+  <hr />
+
+  <div class="summary-box">
+    <strong>Ready to implement?</strong><br>
+    The vertical line (stroke-width 2.5) is drawn on top of the S so it pokes out above and below,
+    reading as a dollar sign while keeping the bold letter weight.<br><br>
+    Say the word and I'll replace the <code>.nav-logo</code> div in <code>LandingPage.jsx</code> with this SVG.
+  </div>
+
+</body>
+</html>

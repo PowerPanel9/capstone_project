@@ -40,7 +40,9 @@ export async function sendMessage({ recipientId, content, listingId }) {
 }
 
 export async function getUsers() {
-  const response = await api.get("/users");
+  const response = await api.get("/users", {
+    headers: authHeaders(),
+  });
   return Array.isArray(response.data) ? response.data : [];
 }
 

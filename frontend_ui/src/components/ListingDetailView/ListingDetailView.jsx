@@ -8,7 +8,7 @@ import { getListingsByUser } from '../../api/listings';
 import { getReviewsForUser } from '../../api/reviews';
 import './ListingDetailView.css';
 
-function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, onEdit, onMessage, onBack, onApply, backLabel = "Back to listings" }) {
+function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, onEdit, onMessage, onBack, onApply, backLabel = "Back" }) {
   // The owner can edit or delete their own listing, but only while in client
   // mode (both are client actions on a listing they posted).
   const canDelete = isOwner && userMode === "client";
