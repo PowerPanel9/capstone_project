@@ -255,8 +255,8 @@ function PublicProfileView({ currentUser }) {
                   [reviewCount, "Reviews"],
                   [avgRating ? `${avgRating} ★` : "0", "Rating"],
                 ].map(([num, label]) => {
-                  // Only the Rating stat opens the reviews modal.
-                  const clickable = label === "Rating";
+                  // Only the Reviews stat opens the reviews modal.
+                  const clickable = label === "Reviews";
                   return (
                     <div
                       key={label}
@@ -478,7 +478,7 @@ function PublicProfileView({ currentUser }) {
         </div>
       </div>
 
-      {/* Reviews modal — opens only when the Rating stat is clicked. */}
+      {/* Reviews modal — opens only when the Reviews stat is clicked. */}
       {showReviews && (
         <ReviewsPanel
           revieweeId={revieweeId}

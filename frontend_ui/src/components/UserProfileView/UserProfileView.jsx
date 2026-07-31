@@ -1097,8 +1097,8 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
               [reviewCount, "Reviews"],
               [avgRating ? `${avgRating} ★` : "0", "Rating"],
             ].map(([num, label]) => {
-              // Only the Rating stat opens the reviews modal.
-              const clickable = label === "Rating";
+              // Only the Reviews stat opens the reviews modal.
+              const clickable = label === "Reviews";
               return (
                 <div
                   key={label}
@@ -1987,7 +1987,7 @@ function UserProfileView({ userMode, onToggleMode, onMessageUser, onMessageListi
         </div>
       )}
 
-      {/* Reviews modal — opens only when the Rating stat is clicked.
+      {/* Reviews modal — opens only when the Reviews stat is clicked.
           Shows reviews about this profile's user. */}
       {showReviews && (
         <ReviewsPanel
