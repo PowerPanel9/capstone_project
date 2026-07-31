@@ -260,7 +260,7 @@
 }
 
 .profile-banner {
-  height: 128px;
+  height: 160px;
   background: var(--primary-gradient, linear-gradient(to right, #AABAE8, #8B9FD4, #7B8FC8));
   background-size: cover;
   background-position: center;
@@ -279,7 +279,7 @@
 }
 
 .profile-avatar-wrap {
-  margin-top: -40px;
+  margin-top: -30px;
   margin-bottom: 16px;
 }
 
@@ -296,8 +296,8 @@
 }
 
 .profile-avatar {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background: #F3F4F6;
   color: var(--primary-dark, #6678B8);
@@ -306,7 +306,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 36px;
   font-weight: 800;
 }
 
@@ -881,15 +881,13 @@
   padding: 8px 16px 16px;
 }
 
-/* Each photo keeps a steady 16:10 frame so the grid stays tidy, but
-   `object-fit: contain` means the WHOLE image is shown scaled to fit — never
-   cropped, never stretched. Any leftover space around a tall or wide image is
-   filled by the soft gray background so it reads as an intentional frame. */
+/* The frame hugs the image instead of the image being letterboxed inside a
+   fixed frame: the width fills the grid column and the height follows the
+   image's own proportions (`height: auto`), so there's no gray padding around
+   tall or wide photos — the container fits around the image. */
 .exp-post-photos img {
   width: 100%;
-  aspect-ratio: 16 / 10;
-  object-fit: contain;
-  background: #F3F4F6;
+  height: auto;
   border: 1px solid #E5E7EB;
   border-radius: 10px;
   display: block;

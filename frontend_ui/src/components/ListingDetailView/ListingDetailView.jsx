@@ -101,13 +101,13 @@ function ListingDetailView({ listing, userMode, isOwner, hasApplied, onDelete, o
                 <div className="detail-badge-row">
                   <span className="badge">{categoryLabel}</span>
                   <span className="detail-posted">
-                    <Clock size={11} />
+                    <Clock size={20} />
                     Posted {new Date(listing.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 <h1 className="detail-title">{listing.title}</h1>
                 <p className="detail-location">
-                  <MapPin size={13} />
+                  <MapPin size={22} />
                   {listingLocation}
                 </p>
               </div>
