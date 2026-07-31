@@ -19,10 +19,12 @@
 /* Right column holds the floating AI Assistant. `sticky` keeps it pinned near
    the top as the feed scrolls, so it stays visible like a side rail. */
 .home-side {
-  width: 300px;
+  width: 350px;
   flex-shrink: 0;
   position: sticky;
   top: 24px;
+  /* Nudge the panel toward the right edge, past the page's right padding. */
+  margin-right: -12px;
 }
 
 /* Floating round button (bottom-right) that reopens the chat once it's closed.
