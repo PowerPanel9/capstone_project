@@ -1,25 +1,22 @@
-.home-wrap {
+.home-wrap:has(.home-main) {
   padding: 24px;
   width: 100%;
-  /* Cap and center the content so it doesn't stretch across a large monitor. */
-  max-width: 1280px;
-  margin: 0 auto;
-  /* Two columns: the feed on the left, the AI Assistant panel on the right. */
+  max-width: none;
+  margin: 0;
   display: flex;
   align-items: flex-start;
   gap: 24px;
 }
 
-/* Left column grows to fill the space next to the AI panel. */
 .home-main {
   flex: 1;
   min-width: 0;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-/* Right column holds the floating AI Assistant. `sticky` keeps it pinned near
-   the top as the feed scrolls, so it stays visible like a side rail. */
 .home-side {
-  width: 300px;
+  width: 350px;
   flex-shrink: 0;
   position: sticky;
   top: 24px;
@@ -433,6 +430,11 @@
   .experience-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  /* Shorter ratio on tablet so the two-up covers aren't overly tall. */
+  .experience-grid-image {
+    aspect-ratio: 3 / 4;
+  }
 }
 
 /* Mobile: one listing card per row (matches App.css) and tighter feed spacing. */
@@ -441,9 +443,17 @@
     column-count: 1;
   }
 
-  /* Experiences go to a single column on phones. */
+  /* Keep two columns on phones so the portrait covers stay small instead of
+     filling the whole screen width. Tighter gaps to fit. */
   .experience-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 12px;
+    row-gap: 20px;
+  }
+
+  /* A less-tall ratio on phones so cards don't dominate the screen vertically. */
+  .experience-grid-image {
+    aspect-ratio: 3 / 4;
   }
 
   /* Filter chips become a single scrollable row instead of wrapping. */

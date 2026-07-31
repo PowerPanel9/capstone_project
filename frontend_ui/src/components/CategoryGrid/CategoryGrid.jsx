@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import './CategoryGrid.css';
 
 // Custom category icons designed in Figma. Each category has two versions so
@@ -47,8 +46,6 @@ const CATEGORIES = [
 // CategoryGrid shows clickable tiles. Clicking one navigates to the home feed
 // filtered by that category (e.g. /home?category=CLEANING). The "Other" tile
 // works the same way — it lands on all listings whose category is OTHER.
-// One tile's width (130px) plus the row gap (16px). Keep in sync with the CSS.
-const TILE_STEP = 146;
 
 function CategoryGrid({ userMode }) {
   const navigate = useNavigate();
@@ -56,33 +53,46 @@ function CategoryGrid({ userMode }) {
   // Providers see the lavender icons; clients see the teal ones.
   const isClient = userMode === 'client';
 
-  // Whether to show the arrows. We hide them when every tile already fits in the
-  // visible window (e.g. on a wide screen or when the chat panel is closed).
+  // Hide the arrows and turn off looping when every tile already fits.
   const [showArrows, setShowArrows] = useState(true);
 
-  // A ref to the scrollable row so we can call scrollBy from the arrow buttons.
   const rowRef = useRef(null);
 
-  // Measure whether the tiles overflow the row. A ResizeObserver re-runs this
-  // whenever the row's size changes — including when the chat panel opens/closes.
+  // Loop by rendering the categories 3x and parking the scroll in the middle
+  // copy, then jumping back a copy-width whenever it drifts to an edge.
+  const loop = showArrows;
+  const items = loop ? [...CATEGORIES, ...CATEGORIES, ...CATEGORIES] : CATEGORIES;
+
   useEffect(() => {
     const row = rowRef.current;
     if (!row) return;
     const measure = () => {
-      // scrollWidth = full content width; clientWidth = visible width.
-      // +2 tolerance for sub-pixel rounding.
-      setShowArrows(row.scrollWidth > row.clientWidth + 2);
+      const oneCopy = loop ? row.scrollWidth / 3 : row.scrollWidth;
+      setShowArrows(oneCopy > row.clientWidth + 2);
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(row);
     return () => observer.disconnect();
-  }, []);
+  }, [loop]);
 
-  // Arrow buttons scroll the row by exactly one tile. The row also responds to
-  // native scroll (trackpad, mouse wheel, touch swipe) automatically.
-  const next = () => rowRef.current?.scrollBy({ left: TILE_STEP, behavior: 'smooth' });
-  const prev = () => rowRef.current?.scrollBy({ left: -TILE_STEP, behavior: 'smooth' });
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row || !loop) return;
+    row.scrollLeft = row.scrollWidth / 3;
+  }, [loop]);
+
+  // Instant (unanimated) jump keeps the loop seamless.
+  const handleScroll = () => {
+    const row = rowRef.current;
+    if (!row || !loop) return;
+    const copyWidth = row.scrollWidth / 3;
+    if (row.scrollLeft < copyWidth * 0.5) {
+      row.scrollLeft += copyWidth;
+    } else if (row.scrollLeft > copyWidth * 1.5) {
+      row.scrollLeft -= copyWidth;
+    }
+  };
 
   return (
     <div className="category-section">
@@ -90,26 +100,16 @@ function CategoryGrid({ userMode }) {
         {isClient ? 'Browse providers by category' : 'Browse by category'}
       </h2>
 
-      {/* The carousel: a left arrow, the scrollable row of tiles, a right arrow.
-          When all tiles already fit (!showArrows) the arrows are invisible but
-          still take up their space so the tiles don't shift sideways. */}
+      {/* The carousel: a scrollable row of tiles. When all tiles already fit
+          (!showArrows) they grow to fill the width instead of scrolling. */}
       <div className={`category-carousel ${showArrows ? '' : 'category-carousel-fill'}`}>
-        <button
-          className={`category-arrow category-arrow-left ${showArrows ? '' : 'category-arrow-hidden'}`}
-          onClick={prev}
-          aria-label="Previous categories"
-        >
-          <ChevronLeft size={20} />
-        </button>
-
-        {/* .category-row is the scrollable window; the fade mask at the right
-            edge dissolves any partially-visible tile instead of hard-clipping it.
-            .category-track is the wider strip of tiles inside it. */}
-        <div className="category-row" ref={rowRef}>
+        {/* .category-row is the scrollable window; .category-track is the wider
+            strip of tiles inside it. */}
+        <div className="category-row" ref={rowRef} onScroll={handleScroll}>
           <div className="category-track">
-            {CATEGORIES.map(({ value, label, lav, teal }) => (
+            {items.map(({ value, label, lav, teal }, index) => (
               <button
-                key={value}
+                key={`${value}-${index}`}
                 className="category-tile"
                 onClick={() => navigate(`/home?category=${value}`)}
               >
@@ -123,14 +123,6 @@ function CategoryGrid({ userMode }) {
             ))}
           </div>
         </div>
-
-        <button
-          className={`category-arrow category-arrow-right ${showArrows ? '' : 'category-arrow-hidden'}`}
-          onClick={next}
-          aria-label="More categories"
-        >
-          <ChevronRight size={20} />
-        </button>
       </div>
     </div>
   );

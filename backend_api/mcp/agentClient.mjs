@@ -32,6 +32,7 @@ export const runAgent = async (userMessage, userId) => {
     command: "node",
     args: [SERVER_PATH],
     cwd: BACKEND_DIR,
+    env: process.env,
   });
   const mcp = new Client({ name: "sidehustle-agent", version: "1.0.0" });
   await mcp.connect(transport);
@@ -96,7 +97,7 @@ BAD EXAMPLES:
         messages: messages,
         tools: openaiTools,
         tool_choice: "auto",
-        max_tokens: 300,
+        max_completion_tokens: 2000,
       });
 
       const responseMessage = response.choices[0].message;

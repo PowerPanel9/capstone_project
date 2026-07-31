@@ -1480,7 +1480,14 @@
    With no uploaded photo, the default gradient slowly drifts so the
    header quietly feels alive. A real banner image is left untouched. */
 .profile-banner-animated {
-  background: linear-gradient(120deg, #AABAE8, #8B9FD4, #7B8FC8, #8B9FD4, #AABAE8);
+  background: linear-gradient(
+    120deg,
+    var(--primary-light, #AABAE8),
+    var(--primary, #8B9FD4),
+    var(--primary-dark, #7B8FC8),
+    var(--primary, #8B9FD4),
+    var(--primary-light, #AABAE8)
+  );
   background-size: 300% 300%;
   animation: bannerDrift 12s ease-in-out infinite;
 }
