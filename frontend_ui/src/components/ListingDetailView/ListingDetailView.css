@@ -89,7 +89,7 @@
 }
 
 .detail-posted {
-  font-size: 12px;
+  font-size: 16px;
   color: #9CA3AF;
   display: inline-flex;
   align-items: center;
@@ -105,7 +105,7 @@
 }
 
 .detail-location {
-  font-size: 14px;
+  font-size: 16px;
   color: #9CA3AF;
   display: inline-flex;
   align-items: center;
@@ -370,7 +370,7 @@
 }
 
 .about-text {
-  font-size: 14px;
+  font-size: 16px;
   color: #4B5563;
   line-height: 1.7;
 }
@@ -386,14 +386,14 @@
   color: #374151;
   padding: 8px 16px;
   border-radius: 12px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
 }
 
 /* Muted "None" text shown when a listing has no required skills. */
 .skill-tag-none {
   color: #9CA3AF;
-  font-size: 14px;
+  font-size: 16px;
   font-style: italic;
 }
 
