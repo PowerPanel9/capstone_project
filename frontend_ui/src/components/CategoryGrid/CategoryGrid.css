@@ -10,36 +10,36 @@
   margin-bottom: 16px;
 }
 
-/* Carousel wrapper: the arrows sit on the left/right, the scrolling row of
-   tiles in the middle. `position: relative` lets us place the arrows over the
-   ends of the row. */
+/* Carousel wrapper: holds the scrolling row of tiles. */
 .category-carousel {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  /* Only the tiles sit on the white panel — the heading stays on the page
-     background above it. Soft shadow, no hard border (Option 2). */
-  background: #fff;
+  /* Frosted-glass panel: a semi-transparent white with a blur behind it, so the
+     page background shows through softly. A thin translucent border and layered
+     shadows give it the "floating glass" look. */
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 20px;
   padding: 16px 20px;
-  box-shadow: 0 2px 12px rgba(30, 35, 64, 0.06);
+  box-shadow: 0 8px 32px rgba(30, 35, 64, 0.1);
 }
 
-/* The scrollable window between the arrows. overflow-x: auto enables native
-   scroll (trackpad two-finger swipe, touch, mouse wheel) so users don't need
-   the buttons. The fade mask at the right edge dissolves any partially-visible
-   tile instead of hard-cutting it — fixing the half-tile visual bug.
-   `flex: 0 1 auto` + `min-width: 0` let it shrink when space is tight. */
+/* The scrollable window. overflow-x: auto enables native scroll (trackpad
+   swipe, touch, mouse wheel). Fills the full panel width now that the arrows
+   are gone. The soft fade on both edges hints "there's more to scroll" and
+   softens the partial (peeking) tiles at each side. */
 .category-row {
-  flex: 0 1 auto;
+  flex: 1;
   min-width: 0;
   overflow-x: auto;
   overflow-y: visible;
   padding: 4px 0;             /* vertical room so hover lift isn't clipped */
   scrollbar-width: none;      /* hide scrollbar in Firefox */
-  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
-  mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 44px, black calc(100% - 44px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 44px, black calc(100% - 44px), transparent 100%);
 }
 
 /* Hide scrollbar in Chrome/Safari */
@@ -72,11 +72,8 @@
   transition: transform 0.15s;
 }
 
-/* Fill mode: used when all tiles already fit (arrows hidden). The tiles grow to
-   fill the full width instead of leaving empty space on the right. */
-
-/* Let the row grow to fill all the space between the (hidden) arrows, and
-   remove the fade mask since nothing is overflowing. */
+/* Fill mode: used when all tiles already fit. The tiles grow to fill the full
+   width, and there's nothing to scroll — so drop the edge fade. */
 .category-carousel-fill .category-row {
   flex: 1;
   -webkit-mask-image: none;
@@ -119,42 +116,12 @@
   line-height: 1.2;
 }
 
-/* Round arrow buttons at the ends of the carousel. */
-.category-arrow {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid #E5E7EB;
-  background: #fff;
-  color: #1E2340;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.category-arrow:hover {
-  background: #F3F4F6;
-  border-color: var(--primary, #7B8FC8);
-}
-
-/* Arrows still take up their space (so the tiles don't shift) but are invisible
-   and can't be clicked when every category already fits. */
-.category-arrow-hidden {
-  visibility: hidden;
-  pointer-events: none;
-}
-
 /* ===================================================================
    Responsive: mobile (≤640px)
    =================================================================== */
 
 /* Smaller category tiles and icons on phones so more fit and they don't
-   dominate the screen. (TILE_STEP in the JS is the desktop value; the carousel
-   still slides — just by slightly more than one tile on mobile, which is fine.) */
+   dominate the screen. */
 @media (max-width: 640px) {
   .category-tile {
     width: 84px;
@@ -172,14 +139,5 @@
   /* Tighter panel padding on phones so tiles keep their room. */
   .category-carousel {
     padding: 12px;
-  }
-
-  /* Arrows are redundant on touch — hide them to give tiles more room */
-  .category-arrow {
-    display: none;
-  }
-
-  .category-row {
-    flex: 1;
   }
 }

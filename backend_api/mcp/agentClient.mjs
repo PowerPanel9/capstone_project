@@ -102,10 +102,6 @@ BAD EXAMPLES:
 
       const responseMessage = response.choices[0].message;
 
-      // Debug: shows why a reply may be empty (e.g. finish_reason "length"
-      // means the model ran out of tokens, often on reasoning tokens).
-      console.log("🔎 finish_reason:", response.choices[0].finish_reason, "usage:", response.usage);
-
       if (!responseMessage.tool_calls || responseMessage.tool_calls.length === 0) {
         return responseMessage.content || "I couldn't generate a response.";
       }
