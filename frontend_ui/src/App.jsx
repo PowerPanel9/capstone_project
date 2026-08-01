@@ -24,7 +24,7 @@ import AuthFailure from './components/AuthFailure';
 import ConnectReturn from './components/ConnectOnboarding/ConnectReturn';
 import ListingCard from './components/ListingCard/ListingCard';
 import { getExperiences } from './api/experiences';
-import { getProviders, updateUser } from './api/users';
+import { getProviders, updateUser, getUserById } from './api/users';
 import { getListings, getListingById, deleteListing } from './api/listings';
 import { getRecommendedListings } from './api/recommendations';
 import { getBookmarks, addBookmark, removeBookmark } from './api/bookmarks';
@@ -80,6 +80,23 @@ function App() {
         const parsedUser = JSON.parse(savedUser);
         setIsAuthenticated(true);
         setCurrentUser(parsedUser);
+
+        // The saved copy in localStorage can be stale (e.g. it was saved at
+        // login, before the user uploaded a profile picture). Re-fetch the
+        // full, current user from the backend so app-wide things like the
+        // sidebar avatar show the latest profilePicture. If this fails we just
+        // keep the saved copy.
+        if (parsedUser?.id) {
+          getUserById(parsedUser.id)
+            .then((freshUser) => {
+              if (!freshUser) return;
+              setCurrentUser(freshUser);
+              localStorage.setItem('user', JSON.stringify(freshUser));
+            })
+            .catch((error) => {
+              console.error('Could not refresh current user:', error);
+            });
+        }
       } catch (error) {
         console.error('Error parsing saved user:', error);
         // Clear invalid data

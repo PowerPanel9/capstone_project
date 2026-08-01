@@ -96,7 +96,7 @@ function Sidebar({ currentUser, userMode, onOpenAI, onLogout, onClose, unreadMes
           aria-expanded={isUserMenuOpen}
           aria-haspopup="menu"
         >
-          <ProfilePicture initials={initials(currentUser)} size="xs" />
+          <ProfilePicture initials={initials(currentUser)} src={currentUser?.profilePicture} size="xs" />
           <div style={{ minWidth: 0, textAlign: 'left' }}>
             <p className="user-name">{fullName(currentUser)}</p>
             <p className="user-handle">{userMode === 'client' ? 'Client' : 'Provider'}</p>
