@@ -881,13 +881,13 @@
   padding: 8px 16px 16px;
 }
 
-/* The frame hugs the image instead of the image being letterboxed inside a
-   fixed frame: the width fills the grid column and the height follows the
-   image's own proportions (`height: auto`), so there's no gray padding around
-   tall or wide photos — the container fits around the image. */
+/* Each photo fills its grid column at a fixed, compact height so the post
+   card stays small even when the photos are tall portraits. `object-fit:
+   cover` fills the frame (no gray bars) and lightly crops the edges to fit. */
 .exp-post-photos img {
   width: 100%;
-  height: auto;
+  height: 240px;
+  object-fit: cover;
   border: 1px solid #E5E7EB;
   border-radius: 10px;
   display: block;
