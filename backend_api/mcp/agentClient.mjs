@@ -63,7 +63,7 @@ Available tools:
 - save_conversation: Save conversation history (auto-save after major actions)
 - get_conversation_history: Retrieve past conversations
 
-After completing major actions (creating listing, matching, searching), save the conversation with save_conversation.`;
+Only call save_conversation if the user explicitly asks to save the conversation.`;
 
     // role: "developer" = operator-level instructions the model treats as higher authority
     // than anything in a user message — prevents users from overriding these rules via chat.
