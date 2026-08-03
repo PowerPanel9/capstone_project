@@ -152,7 +152,7 @@ function AIAgentModal({ onClose, initialMessage = "", docked = false }) {
               )}
               <div className={`ai-bubble ${msg.from}`}>
                 {msg.from === "ai"
-                  ? msg.text.split(/(?=\d+\.\s)/).map((part, idx) => (
+                  ? msg.text.split("\n").filter((part) => part.trim() !== "").map((part, idx) => (
                       <p key={idx} style={{ margin: "2px 0" }}>{part.trim()}</p>
                     ))
                   : msg.text}
