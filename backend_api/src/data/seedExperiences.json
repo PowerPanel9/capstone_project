@@ -65,5 +65,69 @@
     "images": [
       "https://i.pinimg.com/1200x/07/cc/6a/07cc6af8ded77c047af1377d3222ac0b.jpg"
     ]
+  },
+  {
+    "poster": { "firstName": "Morgan", "lastName": "Davis" },
+    "jobTitle": "At-Home Soft Glam Makeup",
+    "category": "BEAUTY",
+    "description": "Created a soft glam makeup look for a graduation event, including skin prep, lashes, and long-wear setting so it stayed fresh for photos.",
+    "images": [
+      "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=1200&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=1200&auto=format&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Morgan", "lastName": "Davis" },
+    "jobTitle": "Protective Braiding Install",
+    "category": "BEAUTY",
+    "description": "Completed medium knotless braids with clean parts and lightweight finishing. Included scalp care tips for longer style life.",
+    "images": [
+      "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=1200&auto=format&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Jamie", "lastName": "Thompson" },
+    "jobTitle": "Salon Suite Sanitizing Reset",
+    "category": "CLEANING",
+    "description": "Sanitized stations, mirrors, floors, and product shelves in a busy salon suite before reopening day. Focused on touchpoints and safe product handling.",
+    "images": [
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1200&auto=format&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Taylor", "lastName": "Kim" },
+    "jobTitle": "Weekend SAT Math Bootcamp",
+    "category": "TUTORING",
+    "description": "Ran a two-day SAT math bootcamp with timed sections, strategy drills, and targeted review for algebra and word problems.",
+    "images": [
+      "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=1200&auto=format&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Riley", "lastName": "Patel" },
+    "jobTitle": "Same-Day Grocery Drop-Off Route",
+    "category": "DELIVERY",
+    "description": "Handled five same-day grocery drop-offs for seniors in one afternoon. Planned route efficiently and delivered each order with care.",
+    "images": [
+      "https://images.unsplash.com/photo-1584473457409-ce7a0f2c2d2e?q=80&w=1200&auto=format&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Casey", "lastName": "Martinez" },
+    "jobTitle": "Dog Walking and Pet Check-Ins",
+    "category": "OTHER",
+    "description": "Provided twice-daily dog walks and evening feeding check-ins for a week. Sent photo updates and activity notes to the owner each day.",
+    "images": [
+      "https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=1200&auto=format&fit=crop"
+    ]
+  },
+  {
+    "poster": { "firstName": "Alex", "lastName": "Rivera" },
+    "jobTitle": "Emergency Drain Snake Service",
+    "category": "PLUMBING",
+    "description": "Cleared a backed-up shower drain and tested flow after cleanup. Also replaced a worn drain cover to prevent future clogs.",
+    "images": [
+      "https://images.unsplash.com/photo-1581579188871-45ea61f2a06d?q=80&w=1200&auto=format&fit=crop"
+    ]
   }
 ]
