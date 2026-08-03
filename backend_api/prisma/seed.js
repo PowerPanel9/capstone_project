@@ -42,6 +42,17 @@ const seedExperiences = JSON.parse(
   fs.readFileSync(path.join(dataDir, "seedExperiences.json"), "utf-8")
 );
 
+const BAY_AREA_CITIES = [
+  "San Francisco, CA",
+  "Oakland, CA",
+  "San Jose, CA",
+  "Berkeley, CA",
+  "Palo Alto, CA",
+  "Fremont, CA",
+  "San Mateo, CA",
+  "Santa Clara, CA",
+];
+
 // Turn poster info into email for lookups
 function seedEmail(poster) {
   return `${poster.firstName}.${poster.lastName}@seed.local`.toLowerCase();
@@ -61,6 +72,15 @@ function normalizeSeedCategories(categories, fallbackCategory) {
 function seedProfilePicture(firstName, lastName) {
   const seed = encodeURIComponent(`${firstName || ""} ${lastName || ""}`.trim() || "User");
   return `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}`;
+}
+
+function mapToBayAreaCity(seedKey) {
+  const source = String(seedKey || "");
+  let hash = 0;
+  for (let i = 0; i < source.length; i += 1) {
+    hash = (hash * 31 + source.charCodeAt(i)) >>> 0;
+  }
+  return BAY_AREA_CITIES[hash % BAY_AREA_CITIES.length];
 }
 
 async function main() {
@@ -158,6 +178,7 @@ async function main() {
   for (const item of seedListings) {
     // Create the listing owner (poster) if not already created
     const posterEmail = seedEmail(item.poster);
+    const bayAreaLocation = mapToBayAreaCity(posterEmail);
     let owner = createdProviders[posterEmail];
 
     if (!owner) {
@@ -167,7 +188,7 @@ async function main() {
       // required skills.
       const derivedBio =
         item.poster.bio ||
-        `${item.poster.firstName} offers ${item.category.toLowerCase()} services in ${item.poster.location}. Reliable, friendly, and happy to help with your next task.`;
+        `${item.poster.firstName} offers ${item.category.toLowerCase()} services in ${bayAreaLocation}. Reliable, friendly, and happy to help with your next task.`;
       const derivedSkills =
         item.poster.skills ||
         (Array.isArray(item.skillsRequired) && item.skillsRequired.length > 0
@@ -178,7 +199,7 @@ async function main() {
         data: {
           firstName: item.poster.firstName,
           lastName: item.poster.lastName,
-          location: item.poster.location,
+          location: bayAreaLocation,
           email: posterEmail,
           password: "seed-password",
           authProvider: "local",
@@ -205,7 +226,7 @@ async function main() {
         price: item.price,
         skillsRequired: item.skillsRequired,
         imageUrl: item.imageUrl,
-        location: item.poster.location,
+        location: bayAreaLocation,
         userId: owner.id,
       },
     });
