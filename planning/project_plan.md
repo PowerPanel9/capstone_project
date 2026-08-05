@@ -36,7 +36,7 @@ The main purpose of our project is to create a centralized platform that connect
 | Client | The user who needs a job done. | Can be interchangeable |
 | Provider | The user who is looking for a job. | Can be interchangeable |
 
-> Note: A single account can act as both — `is_client` on the `user` table determines the active role (see Data Model). "A client can switch to provider and vice versa."
+> Note: A single account can act as both. The `role` column on the `user` table uses a `UserRole` enum: `CLIENT`, `PROVIDER`, or `BOTH`. Role is selected during the onboarding flow. "A client can switch to provider and vice versa."
 
 ### User Personas
 
@@ -74,30 +74,30 @@ The main purpose of our project is to create a centralized platform that connect
 
 ### Core User Stories
 
-| # | User Story (As a... I want... so that...) | Role | Feature Area |
-|---|---|---|---|
-| 1 | As a client, I want to be able to see a provider's skills, so I can know if they can complete the job I want. | Client | Skills Page |
-| 2 | As a client, I need a list of plumbers near me who can quickly fix my sink. | Client | Location Near Me |
-| 3 | As a provider, I want to fill out my bio, so my personality can shine through to clients. | Provider | Bio |
-| 4 | As a client, I want to be able to show that a job listing has been completed or filled, so I don't get any more providers applying to my listing. | Client | Completed Listing |
-| 5 | As a provider, I want to be able to talk with my client about the job, so I can get more information about a listing. | Both | Inbox |
-| 6 | As a client, I want to know which provider is qualified and trustworthy for the job, so I can ensure that my job gets done efficiently and effectively. | Client | Reviews |
-| 7 | As a client, I want to be able to post my listings with images, so providers can see a visual of the service to be completed. | Client | Post Listings |
-| 8 | As a client, I want to be able to post a listing with no images, so I can maintain my privacy regarding the service I need completed. | Client | Post Listing |
-| 9 | As a provider, I want to display my previous work, so I can attract new clients. | Provider | Skills Tab |
-| 10 | As a provider, I want to set my profile, so I can attract parents looking for a babysitter. | Provider | User Profile |
-| 11 | As a client, I want to be able to see all the applicants under my listing, so I can identify providers relevant to the specific listing. | Client | Listing Page |
-| 12 | As a provider, I want to be able to click into a listing, so I can get more information about the listing. | Provider | Listing Page |
-| 13 | As a provider, I want to be able to scroll through posted listings and see which ones may interest me. | Provider | Feed Scroll |
+| # | User Story (As a... I want... so that...) | Role | Feature Area | Status |
+|---|---|---|---|---|
+| 1 | As a client, I want to be able to see a provider's skills, so I can know if they can complete the job I want. | Client | Skills Page | Shipped |
+| 2 | As a client, I need a list of plumbers near me who can quickly fix my sink. | Client | Location Near Me | Shipped (via location field + search) |
+| 3 | As a provider, I want to fill out my bio, so my personality can shine through to clients. | Provider | Bio | Shipped |
+| 4 | As a client, I want to be able to show that a job listing has been completed or filled, so I don't get any more providers applying to my listing. | Client | Completed Listing | Shipped |
+| 5 | As a provider, I want to be able to talk with my client about the job, so I can get more information about a listing. | Both | Inbox | Shipped |
+| 6 | As a client, I want to know which provider is qualified and trustworthy for the job, so I can ensure that my job gets done efficiently and effectively. | Client | Reviews | Shipped |
+| 7 | As a client, I want to be able to post my listings with images, so providers can see a visual of the service to be completed. | Client | Post Listings | Shipped (via S3 image upload) |
+| 8 | As a client, I want to be able to post a listing with no images, so I can maintain my privacy regarding the service I need completed. | Client | Post Listing | Shipped |
+| 9 | As a provider, I want to display my previous work, so I can attract new clients. | Provider | Experience Tab | Shipped (via Experience model) |
+| 10 | As a provider, I want to set my profile, so I can attract parents looking for a babysitter. | Provider | User Profile | Shipped (including onboarding flow) |
+| 11 | As a client, I want to be able to see all the applicants under my listing, so I can identify providers relevant to the specific listing. | Client | Listing Page | Shipped |
+| 12 | As a provider, I want to be able to click into a listing, so I can get more information about the listing. | Provider | Listing Page | Shipped |
+| 13 | As a provider, I want to be able to scroll through posted listings and see which ones may interest me. | Provider | Feed Scroll | Shipped |
 
 ### AI Feature User Stories
 
-| # | User Story (As a... I want... so that...) | Role | Feature Area |
-|---|---|---|---|
-| AI 1 | As a client, I want to be matched to someone who can do garden work. | Client | AI Matching |
-| AI 2 | As a provider, I want to use AI to see the best-priced jobs that apply to my skills. | Provider | AI Sorting |
-| AI 3 | As a client, I want to see a suggested price for my job listing, so more people will apply and consider my listing. | Client | AI Listing Price |
-| AI 4 | As a client, I want to see a list of braiders that match my style, so I can choose one who will do my hair. | Client | AI Search |
+| # | User Story (As a... I want... so that...) | Role | Feature Area | Status |
+|---|---|---|---|---|
+| AI 1 | As a client, I want to be matched to someone who can do garden work. | Client | AI Matching | Shipped |
+| AI 2 | As a provider, I want to use AI to see the best-priced jobs that apply to my skills. | Provider | AI Sorting / Personalized Feed | Shipped |
+| AI 3 | As a client, I want to see a suggested price for my job listing, so more people will apply and consider my listing. | Client | AI Listing Price | Shipped |
+| AI 4 | As a client, I want to see a list of braiders that match my style, so I can choose one who will do my hair. | Client | AI Search / Chat | Shipped |
 
 ### Decisions Log — User Stories
 
@@ -116,104 +116,160 @@ The main purpose of our project is to create a centralized platform that connect
    
    - Components implied: Navbar, ListingCard, SearchBar, FilterBar, Footer
 
-2. **Screen name:** _(e.g., Listing Detail)_ — link:
-   - Components implied:
-3. **Screen name:** _(e.g., Profile)_ — link:
-   - Components implied:
+2. **Screen name:** Listing Detail
+   - Components implied: ListingDetailView, ApplicationModal, ProviderApplicationModal, ApplicationDetailModal
+
+3. **Screen name:** User Profile
+   - Components implied: UserProfileView, PublicProfileView, ReviewsPanel, ExperienceDetailView
 
 ---
 
-
 ## 6. Data Model
+
+> This section reflects the final shipped schema (Prisma ORM). All types are exact.
 
 ### `user`
 
 | Column Name | Type | Description |
 |---|---|---|
-| id | Integer | Primary key |
-| first_name | Text | First name of the user |
-| last_name | Text | Last name of the user |
-| image_url | Text | Profile picture of the user |
-| email | Text | Email of the user for sign in |
-| password | Text | Password (encrypted) of the user |
-| created_at | Date | Date of profile creation |
-| bio | Text | Description of the user |
-| skills | Text[] | Hold a list of skills for providers |
-| location | // figure out what type | Set up map and nearby location feature based off current location of the user |
-| resume_url | Text | Optional link to resume |
-| certification_url | Text | Optional link to any certifications |
+| id | Int | Primary key |
+| first_name | String | First name of the user |
+| last_name | String | Last name of the user |
+| profile_picture | String? | Profile picture URL |
+| image_url | String? | Banner picture URL |
+| email | String (unique) | Email of the user for sign in |
+| password | String? | Bcrypt-hashed password (null for OAuth users) |
+| auth_provider | String | "local" or "google" |
+| role | UserRole enum | CLIENT, PROVIDER, or BOTH — set during onboarding |
+| created_at | DateTime | Date of profile creation |
+| bio | String? | Description of the user |
+| categories | String[] | Provider service categories picked during onboarding |
+| skills | String[] | List of skills for providers |
+| location | String? | Text-based location |
+| resume_url | String? | Optional link to resume |
+| certification_url | String? | Optional link to certifications |
+| stripe_account_id | String? | Provider's Stripe Connect (Express) account ID |
+| stripe_customer_id | String? | Client's Stripe Customer ID |
+
+> **Cut from original plan:** `is_client` boolean replaced by `role` enum (`UserRole`). `location` stored as text (not coordinates) — LocationIQ was scoped out due to API key complexity.
 
 ### `listing`
 
 | Column Name | Type | Description |
 |---|---|---|
-| id | Integer | Primary key |
-| title | Text | Title/header of the job listing |
-| image_url _(upload — complicated, need tool recommendation)_ | Text | Optional picture of job listing |
-| user_id | Integer | Id of the user who created the listing, relates to user (Foreign key) |
-| is_bookmarked | Boolean | Shows whether a listing has been bookmarked by the user |
-| description | Text | Description of the job |
-| price | Number | How much the listing pays |
-| skills_required | Text[] | The highlighted skills needed for the listing |
-| location | Text | Where this job/service is needed |
-| status | Enum(Text) | Enums like completed, in progress, or open |
-| created_by_agent | Boolean | Whether this listing was created by the AI agent or manually by the user |
+| id | Int | Primary key |
+| title | String | Title/header of the job listing |
+| category | ListingCategory enum | Required category for filtering |
+| custom_category | String? | Free-text, only used when category = OTHER |
+| image_url | String? | Optional picture (S3 upload) |
+| user_id | Int | FK → user (creator) |
+| description | String | Description of the job |
+| price | Decimal | How much the listing pays |
+| skills_required | String[] | Highlighted skills needed |
+| location | String | Where this job/service is needed |
+| status | ListingStatus enum | OPEN, IN_PROGRESS, or COMPLETED |
+| created_by_agent | Boolean | True if AI created this listing |
+| created_at | DateTime | Creation timestamp |
+
+### `experience`
+
+> **Not in original plan — built during development.**
+
+| Column Name | Type | Description |
+|---|---|---|
+| id | Int | Primary key |
+| user_id | Int | FK → user (who posted it) |
+| job_title | String | Short title of the experience |
+| category | ListingCategory enum | Category of the experience |
+| custom_category | String? | Free-text for OTHER category |
+| description | String | Longer write-up |
+| images | String[] | Base64 image data URLs |
+| created_at | DateTime | Creation timestamp |
 
 ### `bookmark`
 
 | Column Name | Type | Description |
 |---|---|---|
-| id | Integer | Primary key |
-| listing_id | Integer | Id of the listing being bookmarked (Foreign key) |
-| user_id | Integer | Id of the user who bookmarked the listing (Foreign key) |
-| created_at | Date | When the listing gets bookmarked by the user |
+| id | Int | Primary key |
+| listing_id | Int | FK → listing (cascade on delete) |
+| user_id | Int | FK → user |
+| created_at | DateTime | When the listing was bookmarked |
+
+> Unique constraint on `(user_id, listing_id)` prevents duplicate bookmarks.
 
 ### `review`
 
 | Column Name | Type | Description |
 |---|---|---|
-| id | Integer | Primary key |
-| stars | Number | The number of stars a user rates another user, minimum 1 and maximum 5 |
-| reviewee_id | Integer | Id of the person receiving the review, relates to user (Foreign key) |
-| reviewer_id | Integer | Id of the user leaving the review, relates to user (Foreign key) |
-| title | Text | Title/header of the review |
-| description | Text | Description of the review |
-| image_url | Text | Optional picture for the review |
-| created_at | Date | When the review was left |
+| id | Int | Primary key |
+| stars | Int | 1–5 rating |
+| reviewee_id | Int | FK → user (receiving review) |
+| reviewer_id | Int | FK → user (writing review) |
+| title | String | Title/header of the review |
+| description | String | Description of the review |
+| image_url | String? | Optional picture |
+| created_at | DateTime | When the review was left |
 
 ### `message`
 
 | Column Name | Type | Description |
 |---|---|---|
-| id | Integer | Primary key |
-| user_id_from | Integer | Id of the user sending the message, relates to user (Foreign key) |
-| user_id_to | Integer | Id of the user receiving the message, relates to user (Foreign key) |
-| content | Text | Message is being sent/received |
-| image_url | Text | Optional picture that can be attached to the message |
-| created_at | Date | When a message is created so the conversation can be filtered with the most recent messages |
+| id | Int | Primary key |
+| user_id_from | Int | FK → user (sender) |
+| user_id_to | Int | FK → user (recipient) |
+| content | String | Message content |
+| image_url | String? | Optional attached picture |
+| listing_id | Int? | Optional FK → listing (SetNull on delete) |
+| created_at | DateTime | When the message was sent |
+| read_at | DateTime? | When recipient read it; null = unread |
+
+> **Added from original plan:** `listing_id` context field and `read_at` timestamp.
 
 ### `application`
 
 | Column Name | Type | Description |
 |---|---|---|
-| id | Integer | Primary key |
-| provider_id | Integer | Id of provider who applied, relates to user (Foreign key) |
-| listing_id | Integer | Id of the listing they applied to, relates to listing (Foreign key) |
-| status | Enum(Text) | Enums like pending, accepted, or rejected |
-| created_at | Date | Date that the provider applied to the listing |
-| first_name | Text | First name of the user applying |
-| last_name | Text | Last name of the user applying |
-| phone | Text | Phone number of the user applying |
+| id | Int | Primary key |
+| provider_id | Int | FK → user (applicant) |
+| listing_id | Int | FK → listing (cascade on delete) |
+| status | ApplicationStatus enum | PENDING, ACCEPTED, or REJECTED |
+| phone | String? | Contact phone |
+| message | String? | Short note from the applicant |
+| created_at | DateTime | When the application was submitted |
+
+> **Changed from original plan:** `first_name` and `last_name` columns removed; applicant info pulled from the linked `user` record instead. `message` field added.
+
+### `payment`
+
+> **Not in original plan — built during development.**
+
+| Column Name | Type | Description |
+|---|---|---|
+| id | Int | Primary key |
+| listing_id | Int | FK → listing (cascade on delete) |
+| application_id | Int? | FK → application (SetNull on delete) |
+| client_id | Int | FK → user (payer) |
+| provider_id | Int | FK → user (payee) |
+| amount | Int | Amount in cents |
+| currency | String | Default "usd" |
+| status | PaymentStatus enum | PENDING, HELD, RELEASED, or REFUNDED |
+| stripe_payment_intent_id | String? | Stripe charge ID |
+| stripe_transfer_id | String? | Stripe release transfer ID |
+| transfer_group | String? | Links charge to transfer |
+| stripe_invoice_id | String? | Receipt invoice ID |
+| invoice_url | String? | Hosted invoice URL |
+| created_at | DateTime | Creation timestamp |
+| updated_at | DateTime | Last update timestamp |
 
 ### `agent_conversation`
 
 | Column Name | Type | Description |
 |---|---|---|
-| id | Integer | Primary key |
-| user_id | Integer | The user who started the conversation, relates to user |
-| messages | JSON | The full messages history between user and agent |
-| action_taken | Text | What the agent did – "matched_providers", "matched_listings", "created_listing" |
-| created_at | Date | When the conversation happened |
+| id | Int | Primary key |
+| user_id | Int | FK → user (who started the conversation) |
+| messages | Json | Full message history |
+| action_taken | String | "matched_providers" \| "matched_listings" \| "created_listing" |
+| created_at | DateTime | When the conversation happened |
 
 ---
 
@@ -234,13 +290,24 @@ The main purpose of our project is to create a centralized platform that connect
 | CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
 |---|---|---|---|---|---|---|---|
 | Create | POST | `/api/listings` | Create a new listing | `{ title, category, custom_category, image_url, description, price, skills_required, location }` | `{ id, title, category, custom_category, description, price, skills_required, location, image_url, status, user_id, created_at }` | 400 if missing required fields, 400 if invalid category, 400 if category is OTHER and custom_category missing, 401 if not authenticated | 7, 8 |
-| Read | GET | `/api/listings` | Get all listings (supports `?search=`, `?category=`, `?custom_category=`, `?location=` filters for the search bar) | — | `[{ id, title, category, custom_category, description, price, skills_required, location, image_url, status, user_id }]` | 400 if invalid category, 404 if listing is not found | 12, 13 |
+| Read | GET | `/api/listings` | Get all listings (supports `?search=`, `?category=`, `?custom_category=`, `?location=` filters) | — | `[{ id, title, category, custom_category, description, price, skills_required, location, image_url, status, user_id }]` | 400 if invalid category, 404 if listing is not found | 12, 13 |
 | Read | GET | `/api/listings/:id` | Get one listing by ID | — | `{ id, title, category, custom_category, description, price, skills_required, location, image_url, status, user_id }` | 404 if listing is not found | 11, 12 |
-| Read | GET | `/api/listings/user/:user_id` | Get all listings by a specific user | — | `[{ id, title, category, custom_category, description, price, skills_required, location, status }]` | 404 if user not found | 11 |
-| Update | PUT | `/api/listings/:id` | Update a listing | `{ title, category, custom_category, description, price, skills_required, location, image_url, status }` | `{ id, title, category, custom_category, description, price, skills_required, location, image_url, status }` | 400 if invalid category, 400 if category is OTHER and custom_category missing, 404 if listing not found, 401 if not owner | 4, 7 |
-
-> **Note on `custom_category`:** required only when `category` is `OTHER` (free text the user types, e.g. "dog walking"). For any fixed category it is ignored and stored as `null`. The search bar matches it partially and case-insensitively, and the main `?search=` keyword also searches this field.
+| Read | GET | `/api/listings/user/:user_id` | Get all listings by a specific user | — | `[{ id, title, category, ... }]` | 404 if user not found | 11 |
+| Update | PUT | `/api/listings/:id` | Update a listing | `{ title, category, custom_category, description, price, skills_required, location, image_url, status }` | `{ id, title, ... }` | 400 if invalid category, 404 if listing not found, 401 if not owner | 4, 7 |
 | Delete | DELETE | `/api/listings/:id` | Delete a listing | — | `{ message: "Listing deleted successfully" }` | 404 if listing not found, 401 if not owner | 7 |
+
+### Experience
+
+> **Not in original plan — built during development.** Providers post past work to attract clients.
+
+| CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
+|---|---|---|---|---|---|---|---|
+| Create | POST | `/api/experiences` | Create an experience | `{ job_title, category, custom_category, description, images }` | `{ id, job_title, category, description, images, user_id, created_at }` | 400 if missing required fields, 401 if not authenticated | 9 |
+| Read | GET | `/api/experiences` | Get all experiences (randomized for client feed) | — | `[{ id, job_title, category, description, images, user_id }]` | — | 9 |
+| Read | GET | `/api/experiences/user/:userId` | Get experiences by a specific user | — | `[{ id, job_title, ... }]` | 404 if user not found | 9 |
+| Read | GET | `/api/experiences/:id` | Get one experience by ID | — | `{ id, job_title, ... }` | 404 if not found | 9 |
+| Update | PUT | `/api/experiences/:id` | Update an experience | `{ job_title, category, description, images }` | `{ id, job_title, ... }` | 404 if not found, 401 if not owner | 9 |
+| Delete | DELETE | `/api/experiences/:id` | Delete an experience | — | `{ message: "Experience deleted" }` | 404 if not found, 401 if not owner | 9 |
 
 ### Review
 
@@ -263,9 +330,9 @@ The main purpose of our project is to create a centralized platform that connect
 
 | CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
 |---|---|---|---|---|---|---|---|
-| Create | POST | `/api/applications` | Apply to a listing | `{ listing_id, first_name, last_name, phone }` | `{ id, provider_id, listing_id, status, created_at, first_name, last_name, phone }` | 400 if already applied, 401 if not authenticated, 404 if listing not found | 12 |
-| Read | GET | `/api/applications/listing/:listing_id` | Get all applications for a listing (client view) | — | `[{ id, provider_id, listing_id, status, created_at, first_name, last_name, phone }]` | 404 if no listing found, 401 if not authenticated | 11 |
-| Read | GET | `/api/applications/user` | Get all applications by current user (provider view) | — | `[{ id, provider_id, listing_id, status, created_at, first_name, last_name, phone }]` | 401 if not authenticated | 12 |
+| Create | POST | `/api/applications` | Apply to a listing | `{ listing_id, phone, message }` | `{ id, provider_id, listing_id, status, created_at, phone, message }` | 400 if already applied, 401 if not authenticated, 404 if listing not found | 12 |
+| Read | GET | `/api/applications/listing/:listing_id` | Get all applications for a listing (client view) | — | `[{ id, provider_id, listing_id, status, created_at, phone, message }]` | 404 if no listing found, 401 if not authenticated | 11 |
+| Read | GET | `/api/applications/user` | Get all applications by current user (provider view) | — | `[{ id, provider_id, listing_id, status, created_at }]` | 401 if not authenticated | 12 |
 | Update | PUT | `/api/applications/:id` | Accept or reject an application | `{ status }` | `{ id, provider_id, listing_id, status }` | 404 if application not found, 401 if not listing owner | 11 |
 | Delete | DELETE | `/api/applications/:id` | Withdraw an application (provider view) | — | `{ message: "Application withdraw" }` | 404 if application not found, 401 if not applicant | 12 |
 
@@ -277,13 +344,55 @@ The main purpose of our project is to create a centralized platform that connect
 | Read | GET | `/api/bookmarks` | Get all bookmarks for current user | — | `[{ id, listing_id, user_id, created_at }]` | 401 if not authenticated | 13 |
 | Delete | DELETE | `/api/bookmarks/:id` | Remove a bookmark | — | `{ message: "Bookmark removed successfully" }` | 404 if bookmark not found, 401 if not owner | 13 |
 
+### Payments (Stripe)
+
+> **Not in original plan as a full feature — designed and built during Sprint 3/4.**
+
+| CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases |
+|---|---|---|---|---|---|---|
+| Create | POST | `/api/payments/create-intent` | Client starts paying for an accepted application | `{ listing_id, application_id }` | `{ client_secret, payment_id }` | 401, 400 if application not accepted |
+| Update | POST | `/api/payments/:id/release` | Client releases held funds to provider | — | `{ status: "RELEASED" }` | 401, 404 |
+| Create | POST | `/api/payments/:id/invoice` | Generate a receipt (Stripe invoice) | — | `{ invoice_url }` | 401, 500 |
+| Read | GET | `/api/payments/listing/:listingId` | Get payment status for a listing | — | `{ id, status, amount, ... }` | 401, 404 |
+
+### Stripe Connect (Provider Onboarding)
+
+> **Not in original plan — built during development to support Stripe payouts.**
+
+| CRUD | HTTP Verb | Endpoint | Description |
+|---|---|---|---|
+| Create | POST | `/api/connect/onboard` | Create or reuse a provider Express account; returns hosted onboarding link |
+| Read | GET | `/api/connect/status` | Check whether a provider has finished Stripe Connect onboarding |
+
 ### Agent
 
 | CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape | Error Cases | User Stories |
 |---|---|---|---|---|---|---|---|
-| Create | POST | `/api/agent/match` | Send a query to the AI agent for provider or listing matching | `{ query, user_id, context: { skills, location, recent_listings } }` | `{ results: [{ id, name, skills, location, match_score, reason }], agent_message, action_taken }` | 401 if not authenticated, 500 if agent fails | AI 1, AI 2, AI 4 |
-| Create | POST | `/api/agent/create-listing` | Send a description to the agent to create a listing | `{ query, user_id }` | `{ listing: { title, description, price, skills_required, location, status }, agent_message }` | 400 if agent can't extract enough info, 401 if not authenticated, 500 if agent fails | AI 3 |
-| Read | GET | `/api/agent/history/:user_id` | Get past agent interactions | — | `[{ query, action, results, created_at }]` | 401 if not authenticated | AI 1, AI 3 |
+| Create | POST | `/api/agent/match` | Send a query to the AI agent for provider or listing matching | `{ query, user_id, context: { skills, location, recent_listings } }` | `{ results: [...], agent_message, action_taken }` | 401 if not authenticated, 500 if agent fails | AI 1, AI 2, AI 4 |
+| Create | POST | `/api/agent/create-listing` | Send a description to the agent to create a listing | `{ query, user_id }` | `{ listing: { ... }, agent_message }` | 400 if agent can't extract enough info, 401, 500 | AI 3 |
+| Read | GET | `/api/agent/history/:user_id` | Get past agent interactions | — | `[{ query, action, results, created_at }]` | 401 | AI 1, AI 3 |
+
+### Price Intelligence
+
+> **Not in original plan — built as a standalone AI service.**
+
+| CRUD | HTTP Verb | Endpoint | Description | Request Shape | Response Shape |
+|---|---|---|---|---|---|
+| Create | POST | `/api/prices/recommendations` | Get price suggestions based on similar listings | `{ category, location, description }` | `{ recommendedPrice, priceRange, similarListings, reasoning }` |
+
+### Recommendations (Personalized Feed)
+
+> **Not in original plan — built as a standalone AI service.**
+
+| CRUD | HTTP Verb | Endpoint | Description | Response Shape |
+|---|---|---|---|---|
+| Read | GET | `/api/recommendations` | Get open listings re-ordered by AI to match the logged-in provider's skills | `{ listings, personalized, message? }` |
+
+### Upload
+
+| CRUD | HTTP Verb | Endpoint | Description |
+|---|---|---|---|
+| Create | POST | `/api/upload` | Upload an image to S3; returns a public URL |
 
 ---
 
@@ -294,20 +403,21 @@ The main purpose of our project is to create a centralized platform that connect
 | State Variable | Type | Initial Value | Owner | Trigger |
 |---|---|---|---|---|
 | current_user | object or null | null | App | Successful login/logout |
-| is_client | boolean | false | App | Set on login based on user data |
+| role | enum (CLIENT/PROVIDER/BOTH) | null | App | Set on login based on user data |
 | listings | array | [] | App | Fetch on home page load, new listing posted |
 | selected_listing | object or null | null | App | User clicks a listing card |
 | applications | array | [] | App | Fetch when clients view their listing |
 | conversations | array | [] | App | Fetch when inbox is open |
-| messages | array | [] | Messages | User opens up a conversation |
+| messages | array | [] | MessagesView | User opens up a conversation |
 | reviews | array | [] | Profile | Fetch when profile is loaded |
+| experiences | array | [] | Profile | Fetch when profile is loaded |
 | is_loading | boolean | false | App | Any API call start and end |
 | error | string or null | null | App | Any failed API call |
-| search_query | string | "" | Home | User types in search bar |
-| agent_query | string | "" | AI Agent Component | User types a description |
+| search_query | string | "" | HomeView | User types in search bar |
+| agent_query | string | "" | AIAgentModal | User types a description |
 | agent_status | string | "idle" | App | Agent starts, finishes, or errors |
 | agent_result | array | [] | App | Agent returns matches |
-| agent_messages | array | [] | AI Agent Component | Each step the agent takes |
+| agent_messages | array | [] | AIAgentModal | Each step the agent takes |
 | agent_action | string or null | null | App | Tells app whether agent is matching or creating |
 | pending_listing | object or null | null | App | Agent extracted listing info, waiting for user confirmation |
 | agent_error | string or null | null | App | Agent call fails |
@@ -316,48 +426,66 @@ The main purpose of our project is to create a centralized platform that connect
 
 ## 9. AI Feature Specification
 
-**What it does for the user** (one sentence, from the user's perspective)
-- The AI Agent helps users find the right provider using plain language the client tells it; it can also create a listing automatically on a client's behalf without them filling out a form.
+### AI Features Shipped
 
-**Where in the app it lives** (which screen, which component triggers it)
-- A chat-style input box accessible from the home/feed page for both clients and providers (AI 4)
-- On the listing detail page, recommended providers appear automatically after a listing is posted (AI 1, AI 2)
+Four distinct AI features were built and shipped:
 
-**Input:** what data or context gets sent to the AI API
+#### 1. AI Chatbot (Matching + Listing Creation)
+**What it does:** A chat-style modal where users describe what they need in plain language. The agent matches providers or listings, or creates a listing on the user's behalf.
 
+**Where:** `AIAgentModal` component, triggered from the home feed.
+
+**Input:**
 ```
 {
-  query: string,        // the user's plain language description
-  user_id: integer,     // so agent knows who is asking
-  is_client: boolean,   // so agent knows whether to search providers or listings
+  query: string,
+  user_id: integer,
+  is_client: boolean,
   context: {
-    skills: [],          // user's own skills (if provider)
-    location: string,    // user's location
-    recent_listings: []  // listings the user recently viewed
+    skills: [],
+    location: string,
+    recent_listings: []
   }
 }
 ```
 
-**Output:** what shape does the response take
-
+**Output:**
 ```
 {
-  agent_message: string,  // friendly explanation of results
-  results: [
-    {
-      id: integer,
-      name: string,
-      skills: [],
-      location: string,
-      match_score: number,
-      reason: string       // why the agent recommended this person
-    }
-  ],
-  action_taken: string    // "matched_providers" or "matched_listings"
+  agent_message: string,
+  results: [{ id, name, skills, location, match_score, reason }],
+  action_taken: string
 }
 ```
 
-**Validation:** what makes a good response vs. a bad one? How will you know if the AI is producing useful output?
+**Endpoints:** `POST /api/agent/match`, `POST /api/agent/create-listing`, `GET /api/agent/history/:user_id`
+
+#### 2. Price Intelligence
+**What it does:** Analyzes existing open listings in the same category and location to suggest a competitive price when a client creates a listing.
+
+**Where:** `CreateListingView` — price suggestion appears as the user selects a category.
+
+**Endpoint:** `POST /api/prices/recommendations`
+
+**Output:** `{ recommendedPrice, priceRange, similarListings, reasoning }`
+
+#### 3. Personalized Feed (Provider)
+**What it does:** When a provider views the home feed, the AI re-orders open listings to surface the jobs that best match their skills and history first. Each card shows a `reason` string explaining the match.
+
+**Where:** `HomeView` — replaces the default newest-first order for logged-in providers.
+
+**Endpoint:** `GET /api/recommendations`
+
+#### 4. AI Applicant Ranking
+**What it does:** When a client views applicants for their listing, the AI ranks them best-fit first with a short reason per applicant.
+
+**Where:** `ListingDetailView` — applicants tab for listing owners.
+
+**Service:** `applicantRankingService.js`
+
+---
+
+### Validation
 
 _Good response:_
 - Returns at least 1 relevant result that matches the user's described need
@@ -369,24 +497,13 @@ _Bad response:_
 - Returns providers or listings that have no relation to the user's query
 - Creates a listing with missing required fields like price or skills
 - Returns an empty results array with no explanation
-- Hallucinates provider names or listing details not in your database
+- Hallucinates provider names or listing details not in the database
 
-_How you'll know it's working:_
-- Test with at least 5 different query types during Week 8
-- Confirm that skills extracted by the agent match actual skills in your database
-- Confirm listing creation always hits `POST /api/listings` and appears in the database
-- Check that `match_score` correlates with how relevant the result actually is
-
-**Endpoint:** which backend route handles the AI call (reference API contracts above)
-- Match providers or listings → `POST /api/agent/match`
-- Create a listing using agent → `POST /api/agent/create-listing`
-- Get past agent conversations → `GET /api/agent/history/:user_id`
-
-**Fallback:** what does the user see if the AI call fails or returns a poor result?
-- Agent call fails entirely → "Something went wrong. Try searching manually below." with a link to the browse page
+### Fallback Behavior
+- Agent call fails entirely → "Something went wrong. Try searching manually below."
 - Agent returns no results → "I couldn't find any matches for that. Try adjusting your description or browse all listings."
 - Agent can't extract enough info to create a listing → "I need a bit more detail — can you tell me the price range and what skills are needed?"
-- Agent takes too long (timeout) → A loading indicator for up to 10 seconds, then "This is taking longer than usual. Please try again."
+- Agent takes too long → Loading indicator, then "This is taking longer than usual. Please try again."
 
 ### AI Feature Decisions Log
 
@@ -396,24 +513,47 @@ _How you'll know it's working:_
 | Chat-style input instead of forms | Users describe what they need in plain language. | Search filters with dropdowns. | More flexible but less precise. |
 | Store conversation history | Users can review past AI interactions. | Only store final results. | Uses more storage but helpful for debugging. |
 | Separate match and create endpoints | Different actions need different validation. | Single `/api/agent` endpoint. | Clearer API but more routes to maintain. |
+| Built price intelligence as a separate service (not the chatbot) | Price suggestions needed at listing creation time, not conversationally. | Add pricing to the agent chatbot. | Simpler UX — a suggestion appears inline without requiring chat. |
+| Built personalized feed as a separate service | Provider feed re-ordering is automatic, not user-initiated — doesn't fit chat UX. | Surface it through the AI chatbot. | Feed personalizes silently; no extra interaction step for the user. |
+| Built applicant ranking as a separate service | Ranking happens when a client opens their applicants list, not in chat. | Manual sort by application date. | Clients see best fits first without extra effort; AI handles the comparison. |
+| Anti-hallucination guard in ranking and recommendation services | AI is only allowed to re-order real IDs from the database, never invent new ones. | Trust AI output directly. | Prevents fabricated provider names/listings from ever reaching the UI. |
+
+---
+
+## 10. Features Built But Not in Original Plan
+
+These features were scoped and built during development and were not in the Sprint 1 plan:
+
+| Feature | Description | Where It Lives |
+|---|---|---|
+| Experience model and CRUD | Providers post past work (images + write-up) to attract clients | `ExperienceDetailView`, `/api/experiences` |
+| Stripe payment flow (escrow model) | Client pays → funds held → released on job completion | `PaymentModal`, `/api/payments` |
+| Stripe Connect onboarding | Providers connect their bank account to receive payouts | `ConnectOnboarding`, `/api/connect` |
+| Image upload via S3 | Photos for listings, reviews, and experiences stored in AWS S3 | `uploadController`, `/api/upload` |
+| Onboarding flow | Multi-step welcome → role selection → profile setup → provider services | `Onboarding/` components |
+| AI applicant ranking | Applicants on a listing ranked best-fit first by AI | `applicantRankingService.js` |
+| AI personalized feed | Provider home feed re-ordered by AI based on skills | `recommendationService.js` |
+| Google OAuth | Sign in with Google in addition to email/password | `authController`, `AuthSuccess`/`AuthFailure` components |
+| Read receipts on messages | `read_at` timestamp on each message | `message` model |
+| Stripe webhook handler | Handles Stripe payment lifecycle events server-side | `webhookController` |
 
 ---
 
 ## Decisions Log
 
-_(Standing section — maintained throughout Sprints 1–4. Record significant decisions about architecture, scope, AI feature design, or workflow.)_
-
 | Decision | Context | Alternatives Considered | Tradeoffs |
 |---|---|---|---|
-| Decided to use LocationIQ APIs for locations and address storage | Locations stored in logitudes and latitudes format instead of text formats.| Mapbox| Mapbox required to put down your credit card before accessing tokens. |
-| Using dayjs library for time and date for booking and displaying | dayjs is a library that helps in storing times and dates in databases and bookings. | Doing it manually. | Doing it manually is hard and takes alot of time. |
-|Make separate AI agent, and bookmark endpoints. | Because our AI feature will require an AI agent | Putting bookmark as a boolen in listing.|  Would bookmark everything instead of one listing | 
-| Made a separate model for bookmark | Bookmark is a many to many relationship.| Bookmark was apart of listing datamodel. | Would bookmark everything instead of one listing.|
-| **Sprint 2:** Use Stripe for payment processing | Need secure payment handling for job completion transactions between clients and providers. | PayPal, Square, manual payment tracking (Venmo/Zelle), building custom payment system. | Stripe has best developer docs and security, but charges 2.9% + $0.30 per transaction. PayPal is familiar but harder API. Manual payment has no fees but no protection. Custom system too risky for student project. |
-| **Sprint 2:** Add fixed category filter buttons to homepage | Users need quick way to filter listings by service type (Cleaning, Tutoring, Tech, etc.) instead of scrolling through everything. | Search bar only, dynamic categories from database, tag-based system. | Fixed categories are simple to implement but don't scale if new service types emerge. Dynamic would be flexible but requires admin panel. Tags are most flexible but confusing UX. |
-| **Sprint 2:** Add toggle switch for client/provider homepage views | Single user can be both client and provider, needs different homepage layouts for each role. | Separate dashboard pages (/client-home, /provider-home), unified view showing both, prompt user to select role on login. | Toggle is convenient but adds UI complexity. Separate pages would be clearer but requires more navigation. Unified view would be simplest but less tailored to each use case. |
-| **Sprint 2:** Wire reviews to user profile page | Reviews should display on provider profiles so clients can evaluate trustworthiness (User Story 6). | Keep reviews separate page, show reviews in listing detail only, hide reviews until MVP launch. | Showing on profile is most intuitive and matches user story. Separate page adds extra navigation. Listing-only reviews don't help evaluate provider across all jobs. |
-| **Sprint 2:** Deploy website to production | Need live URL for demo, testing, and capstone presentation. | Vercel (frontend only), Render (full-stack), Railway, Heroku, AWS. | Render offers free tier for full-stack PERN apps with Postgres. Vercel is frontend-only. Railway/Heroku require payment. AWS too complex for student project. |
-| **Sprint 2:** Implement edit listing feature | Clients need ability to update listing details after posting (price, description, status) per User Story 4. | No edit (delete and repost), admin-only edit, time-limited edit window. | Full edit capability gives best UX and matches user story. No edit is frustrating. Admin-only doesn't scale. Time limit adds unnecessary complexity. |
+| Switched from LocationIQ to plain text location | LocationIQ required credit card for production access; location stored as a searchable text field instead of coordinates. | LocationIQ, Mapbox | Text search is simpler and works for MVP; no geofencing or radius search. |
+| Used dayjs library for time and date | Helps with storing and displaying dates without manual parsing. | Manual date handling | Dayjs saves time; adds one dependency. |
+| Made bookmark a separate model | Bookmark is a many-to-many relationship between user and listing. | Boolean on listing | A separate model correctly handles the many-to-many case. |
+| Used Prisma ORM instead of raw SQL | Prisma gives type-safe database access and migration tooling. | pg with raw SQL | Prisma speeds up development; students must learn schema files instead of raw SQL. |
+| Used `UserRole` enum instead of `is_client` boolean | A single boolean can't represent "both" — users can be clients and providers. | Two booleans (`is_client`, `is_provider`) | Enum is cleaner and extensible. |
+| Implemented Stripe escrow model (hold → release) | Clients need to trust funds are safe; providers need guaranteed payment. | Direct transfer, manual payment | Escrow protects both sides but adds complexity (two Stripe operations per job). |
+| Built Google OAuth | Reduces friction at registration; many users prefer not creating a new password. | Email/password only | OAuth adds auth complexity but improves conversion. |
+| **Sprint 2:** Add fixed category filter buttons to homepage | Users need quick way to filter listings by service type instead of scrolling through everything. | Search bar only, dynamic categories from database | Fixed categories are simple; don't scale if new service types emerge — handled by the OTHER + custom_category pattern. |
+| **Sprint 2:** Add toggle switch for client/provider homepage views | Single user can be both client and provider, needs different layouts. | Separate dashboard pages, unified view | Toggle is convenient but adds UI complexity. |
+| **Sprint 2:** Wire reviews to user profile page | Reviews should display on provider profiles so clients can evaluate trustworthiness. | Separate reviews page | Showing on profile is most intuitive and matches user story 6. |
+| **Sprint 2:** Deploy website to production | Need live URL for demo, testing, and presentation. | Vercel, Railway, Heroku, AWS | Render offers free tier for full-stack PERN apps with Postgres. |
+| **Sprint 2:** Implement edit listing feature | Clients need ability to update listing details after posting. | No edit (delete and repost) | Full edit capability gives best UX and matches user story 4. |
 
 ---

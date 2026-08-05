@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SideHustle Tech Stack Mockups</title>
+  <style>
+    :root {
+      --teal: #4ecdc4;
+      --lavender: #7b8fc8;
+      --dark: #0d0f14;
+      --card: #151820;
+      --border: rgba(123, 143, 200, 0.24);
+      --text: #e8eaf0;
+      --muted: rgba(232, 234, 240, 0.68);
+      --gradient: linear-gradient(135deg, #4ecdc4, #7b8fc8);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #090b10;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 22px 56px;
+    }
+
+    .hero {
+      margin-bottom: 22px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      background: radial-gradient(circle at top right, rgba(78, 205, 196, 0.12), transparent 45%),
+        radial-gradient(circle at bottom left, rgba(123, 143, 200, 0.17), transparent 45%),
+        var(--card);
+    }
+
+    h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 2.2vw, 2.35rem); }
+    p { margin: 0; color: var(--muted); }
+
+    .grad {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    .mockup {
+      margin-top: 18px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--card);
+      overflow: hidden;
+    }
+
+    .mockup-head {
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .mockup-head h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: 0.02em;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--teal);
+      white-space: nowrap;
+    }
+
+    .content { padding: 16px; }
+
+    /* Mockup A: Layered map */
+    .stack-rows {
+      display: grid;
+      gap: 10px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .layer {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(78, 205, 196, 0.08);
+      color: var(--teal);
+      padding: 10px 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+    }
+    .chips {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: #0f121a;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      background: rgba(123, 143, 200, 0.16);
+      border: 1px solid rgba(123, 143, 200, 0.4);
+      color: #dbe2ff;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 0.82rem;
+    }
+
+    /* Mockup B: Request flow */
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+    .flow-col {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #10131b;
+    }
+    .flow-col h3 {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+      color: var(--teal);
+      letter-spacing: 0.01em;
+    }
+    .flow-col ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .flow-col li { margin-bottom: 6px; }
+    .arrow {
+      margin: 10px 0;
+      text-align: center;
+      color: #9fb4ff;
+      font-size: 0.9rem;
+    }
+    .api-strip {
+      margin-top: 14px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #d2d7ef;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Mockup C: Card grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .grid-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #10131b;
+      padding: 12px;
+    }
+    .grid-card h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      color: #d7ddf8;
+    }
+    .grid-card .chip { margin: 0 5px 6px 0; display: inline-block; }
+
+    @media (max-width: 900px) {
+      .row { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1><span class="grad">SideHustle</span> Tech Stack Mockups</h1>
+      <p>Three page directions using the real technologies in your capstone: frontend, backend, AI, payments, storage, auth, and realtime messaging.</p>
+    </section>
+
+    <section class="mockup">
+      <div class="mockup-head">
+        <h2>Mockup A — Layered Architecture</h2>
+        <span class="badge">Best for demo day overview</span>
+      </div>
+      <div class="content stack-rows">
+        <div class="row">
+          <div class="layer">Frontend / Client</div>
+          <div class="chips">
+            <span class="chip">React 19</span><span class="chip">Vite</span><span class="chip">React Router</span><span class="chip">Axios</span><span class="chip">Lucide React</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="layer">Backend API</div>
+          <div class="chips">
+            <span class="chip">Node.js</span><span class="chip">Express 5</span><span class="chip">CORS</span><span class="chip">Morgan</span><span class="chip">dotenv</span><span class="chip">Zod</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="layer">Authentication</div>
+          <div class="chips">
+            <span class="chip">JWT</span><span class="chip">bcrypt</span><span class="chip">Google OAuth</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="layer">Realtime + Messaging</div>
+          <div class="chips">
+            <span class="chip">Socket.IO</span><span class="chip">socket.io-client</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="layer">Database Layer</div>
+          <div class="chips">
+            <span class="chip">PostgreSQL</span><span class="chip">Prisma ORM</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="layer">Payments + File Storage</div>
+          <div class="chips">
+            <span class="chip">Stripe API</span><span class="chip">Stripe Connect</span><span class="chip">Stripe Webhooks</span><span class="chip">AWS S3</span><span class="chip">multer</span><span class="chip">@aws-sdk/client-s3</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="layer">AI + Integrations</div>
+          <div class="chips">
+            <span class="chip">OpenAI API</span><span class="chip">Anthropic Claude API</span><span class="chip">MCP SDK</span><span class="chip">EmailJS</span><span class="chip">node-geocoder</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mockup">
+      <div class="mockup-head">
+        <h2>Mockup B — Request/Response Flow</h2>
+        <span class="badge">Best for teaching full-stack flow</span>
+      </div>
+      <div class="content">
+        <div class="flow">
+          <div class="flow-col">
+            <h3>1) Client App</h3>
+            <ul>
+              <li>React views and components</li>
+              <li>Axios + fetch for HTTP calls</li>
+              <li>Socket.IO client for live chat updates</li>
+              <li>Stripe.js checkout confirmation</li>
+            </ul>
+          </div>
+          <div class="flow-col">
+            <h3>2) Express API</h3>
+            <ul>
+              <li>Route handlers for listings, users, payments</li>
+              <li>JWT middleware for protected requests</li>
+              <li>Multer upload handling</li>
+              <li>AI service orchestration and MCP agent route</li>
+            </ul>
+          </div>
+          <div class="flow-col">
+            <h3>3) Data + Services</h3>
+            <ul>
+              <li>Prisma ORM to PostgreSQL</li>
+              <li>Stripe Connect and webhook events</li>
+              <li>AWS S3 for image storage</li>
+              <li>OpenAI / Anthropic / EmailJS / Google OAuth</li>
+            </ul>
+          </div>
+        </div>
+        <div class="arrow">Client → API → Database/Services → API → Client</div>
+        <div class="api-strip">
+          <strong>API examples:</strong>
+          <span>/api/listings</span>
+          <span>/api/payments</span>
+          <span>/api/messages</span>
+          <span>/api/recommendations</span>
+          <span>/api/agent</span>
+          <span>/api/upload</span>
+          <span>/api/connect</span>
+          <span>/api/webhooks/stripe</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="mockup">
+      <div class="mockup-head">
+        <h2>Mockup C — Capability Grid</h2>
+        <span class="badge">Best for resume / portfolio page</span>
+      </div>
+      <div class="content grid">
+        <article class="grid-card">
+          <h3>UI & Navigation</h3>
+          <span class="chip">React</span><span class="chip">Vite</span><span class="chip">React Router</span><span class="chip">Lucide</span>
+        </article>
+        <article class="grid-card">
+          <h3>API & Runtime</h3>
+          <span class="chip">Node.js</span><span class="chip">Express</span><span class="chip">CORS</span><span class="chip">Morgan</span><span class="chip">dotenv</span>
+        </article>
+        <article class="grid-card">
+          <h3>Data Layer</h3>
+          <span class="chip">PostgreSQL</span><span class="chip">Prisma</span>
+        </article>
+        <article class="grid-card">
+          <h3>Security & Auth</h3>
+          <span class="chip">JWT</span><span class="chip">bcrypt</span><span class="chip">Google OAuth</span><span class="chip">Zod</span>
+        </article>
+        <article class="grid-card">
+          <h3>Payments & Commerce</h3>
+          <span class="chip">Stripe</span><span class="chip">Stripe Connect</span><span class="chip">Webhooks</span>
+        </article>
+        <article class="grid-card">
+          <h3>Storage & Uploads</h3>
+          <span class="chip">AWS S3</span><span class="chip">Multer</span><span class="chip">Presigned Upload Flow</span>
+        </article>
+        <article class="grid-card">
+          <h3>Realtime Features</h3>
+          <span class="chip">Socket.IO</span><span class="chip">Live Messaging</span>
+        </article>
+        <article class="grid-card">
+          <h3>AI Features</h3>
+          <span class="chip">OpenAI</span><span class="chip">Anthropic</span><span class="chip">Recommendations</span><span class="chip">Applicant Ranking</span>
+        </article>
+        <article class="grid-card">
+          <h3>Extra Integrations</h3>
+          <span class="chip">EmailJS</span><span class="chip">MCP SDK</span><span class="chip">node-geocoder</span><span class="chip">Nodemon</span>
+        </article>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
